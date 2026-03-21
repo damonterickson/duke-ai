@@ -37,12 +37,22 @@ export default function RootLayout() {
     init();
   }, []);
 
-  // Hydrate stores once DB is ready
+  // Hydrate stores once DB is ready (with timeout for web)
   useEffect(() => {
     if (!dbReady) return;
-    loadProfile();
-    loadScores();
-    loadConversations();
+    async function hydrate() {
+      try {
+        await Promise.race([
+          Promise.all([loadProfile(), loadScores(), loadConversations()]),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Hydration timeout')), 3000)),
+        ]);
+      } catch (error) {
+        console.warn('Store hydration failed (may be web):', error);
+        // Force loaded state so the app renders
+        useProfileStore.setState({ isLoaded: true });
+      }
+    }
+    hydrate();
   }, [dbReady, loadProfile, loadScores, loadConversations]);
 
   // Onboarding gate
