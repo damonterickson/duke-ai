@@ -18,16 +18,20 @@ export default function RootLayout() {
   const loadScores = useScoresStore((s) => s.loadFromSQLite);
   const loadConversations = useConversationsStore((s) => s.loadFromSQLite);
 
-  // Initialize database and MMKV on mount
+  // Initialize database and MMKV on mount (with timeout for web)
   useEffect(() => {
     async function init() {
       try {
         initMMKV();
-        await initDatabase();
+        // Timeout after 3s to handle environments where SQLite hangs (e.g., web)
+        await Promise.race([
+          initDatabase(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB init timeout')), 3000)),
+        ]);
         setDbReady(true);
       } catch (error) {
-        console.error('Failed to initialize database:', error);
-        setDbReady(true); // Continue anyway, with degraded functionality
+        console.warn('Database init failed (may be web environment):', error);
+        setDbReady(true); // Continue with degraded functionality
       }
     }
     init();
