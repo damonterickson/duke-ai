@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
-import { initDatabase } from '../src/services/storage';
-import { initMMKV, getOnboardingComplete } from '../src/services/storage';
+import { initDatabase, initKVCache, getOnboardingComplete } from '../src/services/storage';
 import { useProfileStore } from '../src/stores/profile';
 import { useScoresStore } from '../src/stores/scores';
 import { useConversationsStore } from '../src/stores/conversations';
@@ -22,15 +21,16 @@ export default function RootLayout() {
   useEffect(() => {
     async function init() {
       try {
-        initMMKV();
-        // Timeout after 3s to handle environments where SQLite hangs (e.g., web)
+        // Init KV cache first (AsyncStorage — always works)
+        await initKVCache();
+        // Then init SQLite (with timeout for web)
         await Promise.race([
           initDatabase(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('DB init timeout')), 3000)),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB init timeout')), 5000)),
         ]);
         setDbReady(true);
       } catch (error) {
-        console.warn('Database init failed (may be web environment):', error);
+        console.warn('Database init failed:', error);
         setDbReady(true); // Continue with degraded functionality
       }
     }

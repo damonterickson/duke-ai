@@ -5,7 +5,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import { MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── SQLite Database ─────────────────────────────────────────────────
 
@@ -361,40 +361,50 @@ export async function markQuerySent(id: number): Promise<void> {
   );
 }
 
-// ─── MMKV Cache ──────────────────────────────────────────────────────
+// ─── KV Cache (AsyncStorage — works in Expo Go) ─────────────────────
 
-let mmkv: MMKV | null = null;
+// In-memory cache for synchronous reads (populated from AsyncStorage on init)
+const kvCache: Record<string, string> = {};
+let kvInitialized = false;
 
-export function initMMKV(): MMKV {
-  if (!mmkv) {
-    mmkv = new MMKV({ id: 'duke-ai-cache' });
+export async function initKVCache(): Promise<void> {
+  if (kvInitialized) return;
+  try {
+    const keys = ['cached_briefing', 'cached_recommendation', 'app_settings', 'onboarding_complete'];
+    const pairs = await AsyncStorage.multiGet(keys);
+    for (const [key, value] of pairs) {
+      if (value !== null) kvCache[key] = value;
+    }
+    kvInitialized = true;
+  } catch (error) {
+    console.warn('KV cache init failed:', error);
+    kvInitialized = true;
   }
-  return mmkv!;
 }
 
-function getMMKV(): MMKV {
-  if (!mmkv) {
-    return initMMKV();
-  }
-  return mmkv;
+// Keep the old export name for compatibility
+export function initMMKV(): void {
+  // No-op synchronously — actual init is async via initKVCache()
 }
 
 // Briefing cache
 export function getCachedBriefing(): string | undefined {
-  return getMMKV().getString('cached_briefing');
+  return kvCache['cached_briefing'];
 }
 
 export function setCachedBriefing(briefing: string): void {
-  getMMKV().set('cached_briefing', briefing);
+  kvCache['cached_briefing'] = briefing;
+  AsyncStorage.setItem('cached_briefing', briefing).catch(() => {});
 }
 
 // Recommendation cache
 export function getCachedRecommendation(): string | undefined {
-  return getMMKV().getString('cached_recommendation');
+  return kvCache['cached_recommendation'];
 }
 
 export function setCachedRecommendation(recommendation: string): void {
-  getMMKV().set('cached_recommendation', recommendation);
+  kvCache['cached_recommendation'] = recommendation;
+  AsyncStorage.setItem('cached_recommendation', recommendation).catch(() => {});
 }
 
 // Settings
@@ -405,7 +415,7 @@ export interface AppSettings {
 }
 
 export function getSettings(): AppSettings {
-  const raw = getMMKV().getString('app_settings');
+  const raw = kvCache['app_settings'];
   if (!raw) return {};
   try {
     return JSON.parse(raw) as AppSettings;
@@ -415,14 +425,17 @@ export function getSettings(): AppSettings {
 }
 
 export function setSettings(settings: AppSettings): void {
-  getMMKV().set('app_settings', JSON.stringify(settings));
+  const json = JSON.stringify(settings);
+  kvCache['app_settings'] = json;
+  AsyncStorage.setItem('app_settings', json).catch(() => {});
 }
 
 // Onboarding
 export function getOnboardingComplete(): boolean {
-  return getMMKV().getBoolean('onboarding_complete') ?? false;
+  return kvCache['onboarding_complete'] === 'true';
 }
 
 export function setOnboardingComplete(complete: boolean): void {
-  getMMKV().set('onboarding_complete', complete);
+  kvCache['onboarding_complete'] = String(complete);
+  AsyncStorage.setItem('onboarding_complete', String(complete)).catch(() => {});
 }
