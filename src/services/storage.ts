@@ -5,7 +5,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import { MMKV } from 'react-native-mmkv';
+import { createMMKV, type MMKV } from 'react-native-mmkv';
 
 // ─── SQLite Database ─────────────────────────────────────────────────
 
@@ -254,7 +254,7 @@ export async function updateCourse(id: number, row: Partial<Omit<CourseRow, 'id'
 
   await database.runAsync(
     `UPDATE courses SET ${fields.join(', ')} WHERE id = ?`,
-    ...values
+    ...(values as SQLite.SQLiteBindValue[])
   );
 }
 
@@ -367,9 +367,9 @@ let mmkv: MMKV | null = null;
 
 export function initMMKV(): MMKV {
   if (!mmkv) {
-    mmkv = new MMKV({ id: 'duke-ai-cache' });
+    mmkv = createMMKV({ id: 'duke-ai-cache' });
   }
-  return mmkv;
+  return mmkv!;
 }
 
 function getMMKV(): MMKV {
