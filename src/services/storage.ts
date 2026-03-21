@@ -5,7 +5,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import { createMMKV, type MMKV } from 'react-native-mmkv';
+import { MMKV } from 'react-native-mmkv';
 
 // ─── SQLite Database ─────────────────────────────────────────────────
 
@@ -367,7 +367,7 @@ let mmkv: MMKV | null = null;
 
 export function initMMKV(): MMKV {
   if (!mmkv) {
-    mmkv = createMMKV({ id: 'duke-ai-cache' });
+    mmkv = new MMKV({ id: 'duke-ai-cache' });
   }
   return mmkv!;
 }
