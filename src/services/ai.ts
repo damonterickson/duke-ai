@@ -12,7 +12,7 @@ import { getCachedBriefing, setCachedBriefing } from './storage';
 // ─── Constants ───────────────────────────────────────────────────────
 
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const CHAT_MODEL = process.env.EXPO_PUBLIC_AI_MODEL ?? 'meta-llama/llama-3.1-8b-instruct:free';
+const CHAT_MODEL = process.env.EXPO_PUBLIC_AI_MODEL ?? 'nvidia/nemotron-3-super-120b-a12b:free';
 const BRIEFING_MODEL = process.env.EXPO_PUBLIC_AI_BRIEFING_MODEL ?? CHAT_MODEL;
 const MAX_TOKENS_CHAT = 1024;
 const MAX_TOKENS_INSIGHT = 256;
