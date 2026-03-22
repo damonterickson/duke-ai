@@ -1,55 +1,41 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
   ScrollView,
   StyleSheet,
   SafeAreaView,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  VGlassPanel,
-  VMetricCard,
-  VFAB,
-  VChatSheet,
-  VSkeletonLoader,
-  VCard,
-  VInsightCard,
-} from '../../src/components';
-import type { ChatMessage } from '../../src/components';
-import { colors, typography, spacing } from '../../src/theme/tokens';
+import { MaterialIcons } from '@expo/vector-icons';
+import { VConicGauge, VGlassPanel, VProgressBar } from '../../src/components';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing, roundness } from '../../src/theme/tokens';
 import { useProfileStore } from '../../src/stores/profile';
 import { useScoresStore } from '../../src/stores/scores';
-import { useConversationsStore } from '../../src/stores/conversations';
-import { useGoalsStore } from '../../src/stores/goals';
-import { generateBriefing, streamChat, consumeBriefingGoalActions, isLastBriefingLocal, setLocalFallbackData } from '../../src/services/ai';
-import type { GoalAction } from '../../src/services/goalEngine';
-import type { AIMessage } from '../../src/services/ai';
-import { getCachedBriefing } from '../../src/services/storage';
-import { buildContext } from '../../src/engine/context';
-import type { CadetProfile, OMLResult } from '../../src/engine/oml';
-import type { ConversationTurn } from '../../src/engine/context';
+import { useEngagementStore } from '../../src/stores/engagement';
+import { useSquadStore } from '../../src/stores/squad';
+import { calculateOML } from '../../src/engine/oml';
+import type { CadetProfile } from '../../src/engine/oml';
+import omlConfig from '../../src/data/oml-config.json';
+import acftTables from '../../src/data/acft-tables.json';
 
-export default function AdvisorScreen() {
+export default function MissionScreen() {
   const router = useRouter();
+  const { colors, isDark } = useTheme();
   const profile = useProfileStore();
   const scores = useScoresStore();
-  const conversations = useConversationsStore();
-  const goalsStore = useGoalsStore();
+  const engagement = useEngagementStore();
+  const squad = useSquadStore();
 
-  const [briefing, setBriefing] = useState<string | null>(null);
-  const [briefingLoading, setBriefingLoading] = useState(true);
-  const [chatVisible, setChatVisible] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [insightCards, setInsightCards] = useState<Array<{ icon: string; label: string; text: string }>>([]);
-  const [briefingIsLocal, setBriefingIsLocal] = useState(false);
+  const headerBg = isDark ? colors.surface_container_high : '#343c0a';
+  const latestScore = scores.scoreHistory[0];
 
-  // Build a CadetProfile from store state for context engine
-  const buildCadetProfile = useCallback((): CadetProfile | null => {
+  // Build OML from profile + scores
+  const omlResult = useMemo(() => {
     if (!profile.yearGroup || !profile.gender || !profile.ageBracket) return null;
-    const latestScore = scores.scoreHistory[0];
-    return {
+    const cadet: CadetProfile = {
       gpa: latestScore?.gpa ?? 0,
       mslGpa: latestScore?.msl_gpa ?? 0,
       acftScores: {},
@@ -62,501 +48,167 @@ export default function AdvisorScreen() {
       gender: profile.gender,
       ageBracket: profile.ageBracket,
     };
-  }, [profile, scores.scoreHistory]);
-
-  // Build minimal OML result for context
-  const buildOmlResult = useCallback((): OMLResult => {
-    const latestScore = scores.scoreHistory[0];
-    return {
-      totalScore: latestScore?.total_oml ?? 0,
-      pillarScores: {
-        academic: 0,
-        leadership: 0,
-        physical: 0,
-      },
-      marginalGains: {},
-    };
-  }, [scores.scoreHistory]);
-
-  // Helper: parse insight cards from briefing text
-  const parseInsightCards = useCallback((text: string, isLocal: boolean) => {
-    const cards: Array<{ icon: string; label: string; text: string }> = [];
-
-    if (isLocal) {
-      // For local briefings, generate cards from data
-      const activeGoals = goalsStore.getActiveGoals();
-      const omlResult = buildOmlResult();
-
-      // Card 1: Weakest pillar opportunity from marginal gains
-      if (omlResult.marginalGains && Object.keys(omlResult.marginalGains).length > 0) {
-        const topGain = Object.entries(omlResult.marginalGains)
-          .sort(([, a], [, b]) => b - a)[0];
-        if (topGain) {
-          cards.push({
-            icon: 'psychology',
-            label: "Today's Priority",
-            text: `Focus on ${topGain[0].replace(/[+\-]/g, ' ').trim()} for up to +${topGain[1].toFixed(1)} OML points.`,
-          });
-        }
-      }
-
-      // Card 2: Goal closest to completion or "Set your first goal"
-      if (activeGoals.length > 0) {
-        const withPct = activeGoals.map((g) => {
-          const current = g.current_value ?? 0;
-          const pct = g.target_value > 0 ? Math.round((current / g.target_value) * 100) : 0;
-          return { ...g, pct };
-        }).sort((a, b) => b.pct - a.pct);
-        const top = withPct[0];
-        cards.push({
-          icon: 'military_tech',
-          label: 'Goal Progress',
-          text: top.pct > 0
-            ? `${top.title} is ${top.pct}% complete. Keep pushing toward your target!`
-            : `You have ${activeGoals.length} active goal${activeGoals.length > 1 ? 's' : ''} set. Track your progress!`,
-        });
-      } else {
-        cards.push({
-          icon: 'military_tech',
-          label: 'Goals',
-          text: 'Set your first goal to start tracking your progress toward a stronger OML.',
-        });
-      }
-    } else {
-      // For AI briefings, parse sections
-      const priorityMatch = text.match(/(?:TODAY'S PRIORITY|PRIORITY)[:\s]*(.+?)(?=\n\n|\n[0-9]|\nGOAL|$)/is);
-      const goalMatch = text.match(/(?:GOAL UPDATE|GOAL)[:\s]*(.+?)(?=\n\n|$)/is);
-
-      if (priorityMatch) {
-        cards.push({
-          icon: 'psychology',
-          label: "Today's Priority",
-          text: priorityMatch[1].trim().replace(/^\*+|\*+$/g, '').trim(),
-        });
-      }
-
-      if (goalMatch) {
-        cards.push({
-          icon: 'military_tech',
-          label: 'Goal Update',
-          text: goalMatch[1].trim().replace(/^\*+|\*+$/g, '').trim(),
-        });
-      }
-
-      // If parsing didn't find sections, create a generic card from the briefing
-      if (cards.length === 0 && text.length > 0) {
-        cards.push({
-          icon: 'psychology',
-          label: 'Vanguard AI Insight',
-          text: text.length > 200 ? text.substring(0, 197) + '...' : text,
-        });
-      }
+    try {
+      return calculateOML(cadet, omlConfig as any, acftTables as any);
+    } catch {
+      return null;
     }
+  }, [profile, latestScore]);
 
-    return cards;
-  }, [goalsStore, buildOmlResult]);
+  const omlTotal = omlResult?.totalScore ?? latestScore?.total_oml ?? 0;
+  const omlProgress = Math.min(omlTotal / 1000, 1);
+  const percentile = squad.totalCadets > 0
+    ? Math.round(((squad.totalCadets - squad.individualRank) / squad.totalCadets) * 100)
+    : 0;
 
-  // Generate briefing on mount
-  useEffect(() => {
-    async function loadBriefing() {
-      setBriefingLoading(true);
-      const cached = getCachedBriefing();
-      if (cached) {
-        setBriefing(cached);
-        setBriefingLoading(false);
-      }
+  const mission = engagement.activeMission;
+  const topBranch = engagement.branchFit[0];
 
-      const cadetProfile = buildCadetProfile();
-      const omlResult = buildOmlResult();
-      const activeGoals = goalsStore.getActiveGoals();
-
-      // Set local fallback data for the AI service
-      setLocalFallbackData(
-        cadetProfile,
-        omlResult,
-        activeGoals,
-        scores.scoreHistory
-      );
-
-      if (!cadetProfile) {
-        setBriefingLoading(false);
-        setBriefingIsLocal(true);
-        setInsightCards(parseInsightCards('', true));
-        return;
-      }
-
-      const contextJson = buildContext(
-        cadetProfile,
-        omlResult,
-        [],
-        undefined,
-        activeGoals,
-        scores.scoreHistory
-      );
-      try {
-        const newBriefing = await generateBriefing(contextJson);
-        setBriefing(newBriefing);
-
-        const isLocal = isLastBriefingLocal();
-        setBriefingIsLocal(isLocal);
-        setInsightCards(parseInsightCards(newBriefing, isLocal));
-
-        // Process goal actions from briefing
-        const goalActions = consumeBriefingGoalActions();
-        if (goalActions && goalActions.length > 0) {
-          for (const action of goalActions) {
-            try {
-              switch (action.type) {
-                case 'create':
-                  await goalsStore.addGoal({
-                    title: action.title,
-                    category: action.category,
-                    metric: action.metric,
-                    target_value: action.target_value,
-                    current_value: null,
-                    baseline_value: 0,
-                    deadline: action.deadline,
-                    status: 'active',
-                    created_by: 'ai',
-                    oml_impact: action.oml_impact ?? null,
-                    completed_at: null,
-                  });
-                  break;
-                case 'update':
-                  await goalsStore.updateGoalProgress(action.goal_id, action.current_value);
-                  break;
-                case 'complete':
-                  await goalsStore.completeGoal(action.goal_id);
-                  break;
-              }
-            } catch (err) {
-              console.warn('[BRIEFING] Failed to apply goal action:', action.type, err);
-            }
-          }
-        }
-      } catch (err) {
-        console.error('Failed to generate briefing:', err);
-        setBriefingIsLocal(true);
-        setInsightCards(parseInsightCards('', true));
-      } finally {
-        setBriefingLoading(false);
-      }
-    }
-    loadBriefing();
-  }, [buildCadetProfile, buildOmlResult, goalsStore, scores.scoreHistory, parseInsightCards]);
-
-  // Load existing chat messages from store
-  useEffect(() => {
-    const msgs: ChatMessage[] = conversations.messages.map((m, i) => ({
-      id: String(m.id ?? i),
-      text: m.content,
-      sender: m.role === 'user' ? 'user' as const : 'ai' as const,
-    }));
-    setChatMessages(msgs);
-  }, [conversations.messages]);
-
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      console.log('[CHAT] handleSendMessage called with:', text);
-      const userMsg: ChatMessage = {
-        id: `user_${Date.now()}`,
-        text,
-        sender: 'user',
-      };
-      setChatMessages((prev) => [...prev, userMsg]);
-      try {
-        await conversations.addMessage('user', text);
-      } catch (err) {
-        console.warn('[CHAT] Failed to persist user message:', err);
-      }
-
-      // Create AI placeholder
-      const aiMsgId = `ai_${Date.now()}`;
-      const aiMsg: ChatMessage = { id: aiMsgId, text: '', sender: 'ai' };
-      setChatMessages((prev) => [...prev, aiMsg]);
-      setIsStreaming(true);
-
-      let contextJson = '{}';
-      try {
-        const cadetProfile = buildCadetProfile();
-        const omlResult = buildOmlResult();
-        const history: ConversationTurn[] = conversations.messages.map((m) => ({
-          role: m.role as 'user' | 'assistant',
-          content: m.content,
-          timestamp: Date.now(),
-        }));
-        contextJson = cadetProfile
-          ? buildContext(cadetProfile, omlResult, history)
-          : '{}';
-      } catch (err) {
-        console.warn('[CHAT] Failed to build context:', err);
-      }
-
-      const aiMessages: AIMessage[] = [
-        { role: 'user' as const, content: text },
-      ];
-
-      console.log('[CHAT] Calling streamChat...');
-      let fullText = '';
-      await streamChat(aiMessages, contextJson, {
-        onToken: (token) => {
-          fullText += token;
-          const currentText = fullText;
-          setChatMessages((prev) =>
-            prev.map((m) => (m.id === aiMsgId ? { ...m, text: currentText } : m)),
-          );
-        },
-        onComplete: async (complete: string, goalActions?: GoalAction[]) => {
-          setChatMessages((prev) =>
-            prev.map((m) => (m.id === aiMsgId ? { ...m, text: complete } : m)),
-          );
-          await conversations.addMessage('assistant', complete);
-
-          if (goalActions && goalActions.length > 0) {
-            for (const action of goalActions) {
-              try {
-                switch (action.type) {
-                  case 'create':
-                    await goalsStore.addGoal({
-                      title: action.title,
-                      category: action.category,
-                      metric: action.metric,
-                      target_value: action.target_value,
-                      current_value: null,
-                      baseline_value: 0,
-                      deadline: action.deadline,
-                      status: 'active',
-                      created_by: 'ai',
-                      oml_impact: action.oml_impact ?? null,
-                      completed_at: null,
-                    });
-                    break;
-                  case 'update':
-                    await goalsStore.updateGoalProgress(action.goal_id, action.current_value);
-                    break;
-                  case 'complete':
-                    await goalsStore.completeGoal(action.goal_id);
-                    break;
-                }
-              } catch (err) {
-                console.warn('[CHAT] Failed to apply goal action:', action.type, err);
-              }
-            }
-          }
-
-          setIsStreaming(false);
-        },
-        onError: (error) => {
-          const errorText =
-            error.message === 'OFFLINE'
-              ? "I've saved your question. I'll respond when you're back online."
-              : 'Vanguard AI is temporarily unavailable. Please try again.';
-          setChatMessages((prev) =>
-            prev.map((m) => (m.id === aiMsgId ? { ...m, text: errorText } : m)),
-          );
-          setIsStreaming(false);
-        },
-      });
-    },
-    [conversations, buildCadetProfile, buildOmlResult, goalsStore],
-  );
-
-  const latestScore = scores.scoreHistory[0];
-  const totalOml = latestScore?.total_oml ?? null;
-  const gpa = latestScore?.gpa ?? null;
-  const acftTotal = latestScore?.acft_total ?? null;
+  // Pillar scores (normalized 0-1)
+  const physical = latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0;
+  const academic = latestScore?.gpa ? Math.min(latestScore.gpa / 4.0, 1) : 0;
+  const leadership = latestScore?.leadership_eval ? Math.min(latestScore.leadership_eval / 100, 1) : 0;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: headerBg }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: headerBg }]}>
+        <Text style={styles.headerText}>DUKE VANGUARD</Text>
+        <TouchableOpacity onPress={() => router.push('/profile')} accessibilityLabel="Settings">
+          <MaterialIcons name="settings" size={24} color="#ffffff" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
-        style={styles.scroll}
+        style={[styles.scroll, { backgroundColor: colors.surface }]}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <Text style={styles.header} accessibilityRole="header">
-          Vanguard AI
-        </Text>
-        <Text style={styles.subtitle}>Your OML Mentor</Text>
+        {/* OML Performance Ring */}
+        <View style={styles.gaugeSection}>
+          <VConicGauge
+            progress={omlProgress}
+            size={160}
+            strokeWidth={12}
+            label={omlTotal > 0 ? String(Math.round(omlTotal)) : '--'}
+            sublabel="OML Score"
+          />
+          <View style={styles.gaugeInfo}>
+            <Text style={[styles.percentileText, { color: colors.on_surface }]}>
+              {percentile > 0 ? `Top ${100 - percentile}%` : '--'}
+            </Text>
+            <Text style={[styles.tierText, { color: colors.outline }]}>
+              {engagement.tier}
+            </Text>
+          </View>
+        </View>
 
-        {/* Briefing Card */}
-        <VGlassPanel
-          style={styles.briefingPanel}
-          accessibilityLabel="Daily briefing from Vanguard AI"
-        >
-          {briefingLoading ? (
-            <View style={styles.briefingLoading}>
-              <VSkeletonLoader width="100%" height={16} />
-              <VSkeletonLoader width="80%" height={16} style={{ marginTop: spacing[2] }} />
-              <VSkeletonLoader width="60%" height={16} style={{ marginTop: spacing[2] }} />
-            </View>
-          ) : (
+        {/* Active Mission Card */}
+        <Text style={[styles.sectionTitle, { color: colors.on_surface }]}>Active Mission</Text>
+        <VGlassPanel style={styles.missionCard}>
+          {mission ? (
             <>
-              <Text style={styles.briefingTitle}>Daily Briefing</Text>
-              <Text style={styles.briefingText}>
-                {briefing ?? 'Enter your scores to get a personalized briefing.'}
-              </Text>
+              <Text style={[styles.missionTitle, { color: colors.on_surface }]}>{mission.title}</Text>
+              <Text style={[styles.missionLocation, { color: colors.outline }]}>{mission.location}</Text>
+              <Text style={[styles.missionDesc, { color: colors.on_surface }]}>{mission.description}</Text>
+              <TouchableOpacity
+                style={[styles.acceptBtn, { backgroundColor: colors.primary }]}
+                accessibilityLabel="Accept Brief"
+              >
+                <Text style={[styles.acceptBtnText, { color: colors.on_primary }]}>Accept Brief</Text>
+              </TouchableOpacity>
             </>
+          ) : (
+            <Text style={[styles.emptyText, { color: colors.outline }]}>
+              Complete your profile to get daily missions.
+            </Text>
           )}
         </VGlassPanel>
 
-        {/* Key Metrics */}
-        <View style={styles.metricsRow}>
-          <VMetricCard
-            value={totalOml != null ? String(Math.round(totalOml)) : '--'}
-            label="OML Score"
-            style={styles.metricCard}
-            accessibilityLabel={
-              totalOml != null
-                ? `OML Score: ${Math.round(totalOml)} out of 1000`
-                : 'OML Score: not yet calculated'
-            }
-          />
-          <VMetricCard
-            value={gpa != null ? gpa.toFixed(2) : '--'}
-            label="GPA"
-            style={styles.metricCard}
-            accessibilityLabel={
-              gpa != null ? `GPA: ${gpa.toFixed(2)}` : 'GPA: not yet entered'
-            }
-          />
-          <VMetricCard
-            value={acftTotal != null ? String(Math.round(acftTotal)) : '--'}
-            label="ACFT"
-            style={styles.metricCard}
-            accessibilityLabel={
-              acftTotal != null
-                ? `ACFT Score: ${Math.round(acftTotal)} out of 600`
-                : 'ACFT Score: not yet entered'
-            }
-          />
+        {/* Achievement Grid */}
+        <Text style={[styles.sectionTitle, { color: colors.on_surface }]}>Achievements</Text>
+        <View style={styles.achievementRow}>
+          <View style={[styles.achieveCard, { backgroundColor: colors.surface_container }]}>
+            <MaterialIcons name="local-fire-department" size={24} color={colors.primary} />
+            <Text style={[styles.achieveValue, { color: colors.on_surface }]}>{engagement.streak}</Text>
+            <Text style={[styles.achieveLabel, { color: colors.outline }]}>Streak</Text>
+          </View>
+          <View style={[styles.achieveCard, { backgroundColor: colors.surface_container }]}>
+            <MaterialIcons name="trending-up" size={24} color={colors.primary} />
+            <Text style={[styles.achieveValue, { color: colors.on_surface }]}>
+              {squad.totalCadets > 0 ? `Top ${Math.round((squad.individualRank / squad.totalCadets) * 100)}%` : '--'}
+            </Text>
+            <Text style={[styles.achieveLabel, { color: colors.outline }]}>Ranking</Text>
+          </View>
+          <View style={[styles.achieveCard, { backgroundColor: colors.surface_container }]}>
+            <MaterialIcons name="my-location" size={24} color={colors.primary} />
+            <Text style={[styles.achieveValue, { color: colors.on_surface }]}>
+              {topBranch ? topBranch.branch : '--'}
+            </Text>
+            <Text style={[styles.achieveLabel, { color: colors.outline }]}>
+              {topBranch ? `${topBranch.percentage}% Fit` : 'Set up profile'}
+            </Text>
+          </View>
         </View>
 
-        {/* AI Insight Cards */}
-        {insightCards.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>AI Insights</Text>
-            {insightCards.map((card, i) => (
-              <VInsightCard
-                key={i}
-                icon={card.icon}
-                label={card.label}
-                text={card.text}
-                style={styles.insightCard}
-              />
-            ))}
-          </>
-        )}
-
-        {/* Optimization Paths */}
-        <Text style={styles.sectionTitle}>Optimization Paths</Text>
-        <VCard tier="low" style={styles.pathCard}>
-          <Text style={styles.pathTitle}>Academic {gpa != null ? '- ACTIVE' : '- AVAILABLE'}</Text>
-          <Text style={styles.pathDesc}>
-            {gpa != null
-              ? `Current GPA: ${gpa.toFixed(2)}. Raise it to unlock more OML points.`
-              : 'Add your GPA to see academic optimization opportunities.'}
-          </Text>
-        </VCard>
-        <VCard tier="low" style={styles.pathCard}>
-          <Text style={styles.pathTitle}>Physical {acftTotal != null ? '- ACTIVE' : '- AVAILABLE'}</Text>
-          <Text style={styles.pathDesc}>
-            {acftTotal != null
-              ? `Current ACFT: ${Math.round(acftTotal)}. Every 10 points adds to your OML.`
-              : 'Log your ACFT scores to see fitness optimization opportunities.'}
-          </Text>
-        </VCard>
-        <VCard tier="low" style={styles.pathCard}>
-          <Text style={styles.pathTitle}>Leadership {latestScore?.leadership_eval != null ? '- ACTIVE' : '- AVAILABLE'}</Text>
-          <Text style={styles.pathDesc}>
-            {latestScore?.leadership_eval != null
-              ? `Leadership eval: ${latestScore.leadership_eval}. Add command roles and extracurriculars for more impact.`
-              : 'Log command roles and extracurriculars to maximize your leadership pillar.'}
-          </Text>
-        </VCard>
+        {/* Strategic Readiness */}
+        <Text style={[styles.sectionTitle, { color: colors.on_surface }]}>Strategic Readiness</Text>
+        <View style={styles.readinessRow}>
+          <Text style={[styles.readinessLabel, { color: colors.on_surface }]}>Physical</Text>
+          <VProgressBar progress={physical} />
+        </View>
+        <View style={styles.readinessRow}>
+          <Text style={[styles.readinessLabel, { color: colors.on_surface }]}>Academic</Text>
+          <VProgressBar progress={academic} />
+        </View>
+        <View style={styles.readinessRow}>
+          <Text style={[styles.readinessLabel, { color: colors.on_surface }]}>Leadership</Text>
+          <VProgressBar progress={leadership} />
+        </View>
       </ScrollView>
-
-      {/* FAB for chat */}
-      <VFAB
-        icon={'\u2728'}
-        onPress={() => setChatVisible(true)}
-        accessibilityLabel="Open AI chat"
-      />
-
-      {/* Chat Sheet */}
-      <VChatSheet
-        messages={chatMessages}
-        onSend={handleSendMessage}
-        visible={chatVisible}
-        accessibilityLabel="Chat with Vanguard AI"
-      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing[4],
-    paddingBottom: spacing[16],
-  },
+  safeArea: { flex: 1 },
   header: {
-    ...typography.headline_lg,
-    color: colors.on_surface,
-    marginTop: spacing[2],
-  },
-  subtitle: {
-    ...typography.body_md,
-    color: colors.outline,
-    marginBottom: spacing[4],
-  },
-  briefingPanel: {
-    marginBottom: spacing[4],
-  },
-  briefingLoading: {
-    gap: spacing[2],
-  },
-  briefingTitle: {
-    ...typography.title_sm,
-    color: colors.primary,
-    marginBottom: spacing[2],
-  },
-  briefingText: {
-    ...typography.body_md,
-    color: colors.on_surface,
-  },
-  metricsRow: {
     flexDirection: 'row',
-    gap: spacing[3],
-    marginBottom: spacing[4],
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing[4],
+    paddingVertical: spacing[3],
   },
-  metricCard: {
-    flex: 1,
-  },
-  sectionTitle: {
+  headerText: {
     ...typography.title_md,
-    color: colors.on_surface,
-    marginBottom: spacing[3],
+    color: '#ffffff',
+    letterSpacing: 2,
+    fontWeight: '700',
   },
-  insightCard: {
-    marginBottom: spacing[3],
+  scroll: { flex: 1 },
+  content: { padding: spacing[4], paddingBottom: spacing[16] },
+  gaugeSection: { alignItems: 'center', marginBottom: spacing[6] },
+  gaugeInfo: { alignItems: 'center', marginTop: spacing[2] },
+  percentileText: { ...typography.title_sm },
+  tierText: { ...typography.label_sm, textTransform: 'uppercase', letterSpacing: 1 },
+  sectionTitle: { ...typography.title_md, marginBottom: spacing[3], marginTop: spacing[2] },
+  missionCard: { marginBottom: spacing[4] },
+  missionTitle: { ...typography.title_md, marginBottom: spacing[1] },
+  missionLocation: { ...typography.label_sm, marginBottom: spacing[2] },
+  missionDesc: { ...typography.body_md, marginBottom: spacing[3] },
+  acceptBtn: { paddingVertical: spacing[2], paddingHorizontal: spacing[4], borderRadius: roundness.md, alignSelf: 'flex-start' },
+  acceptBtnText: { ...typography.label_lg },
+  emptyText: { ...typography.body_md, textAlign: 'center', paddingVertical: spacing[4] },
+  achievementRow: { flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] },
+  achieveCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[2],
+    borderRadius: roundness.lg,
   },
-  pathCard: {
-    marginBottom: spacing[3],
-  },
-  pathTitle: {
-    ...typography.title_sm,
-    color: colors.on_surface,
-    marginBottom: spacing[1],
-  },
-  pathDesc: {
-    ...typography.body_sm,
-    color: colors.outline,
-  },
+  achieveValue: { ...typography.title_sm, marginTop: spacing[1] },
+  achieveLabel: { ...typography.label_sm, marginTop: spacing[1] },
+  readinessRow: { marginBottom: spacing[3] },
+  readinessLabel: { ...typography.label_lg, marginBottom: spacing[1] },
 });
