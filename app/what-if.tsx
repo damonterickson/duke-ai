@@ -28,10 +28,10 @@ export default function WhatIfScreen() {
   const currentAcft = latestScore?.acft_total ?? 0;
   const currentLeadership = latestScore?.leadership_eval ?? 0;
 
-  const [whatIfGpa, setWhatIfGpa] = useState(String(currentGpa || ''));
-  const [whatIfAcft, setWhatIfAcft] = useState(String(currentAcft || ''));
+  const [whatIfGpa, setWhatIfGpa] = useState(String(currentGpa || '3.50'));
+  const [whatIfAcft, setWhatIfAcft] = useState(String(currentAcft || '480'));
   const [whatIfLeadership, setWhatIfLeadership] = useState(
-    String(currentLeadership || ''),
+    String(currentLeadership || '85'),
   );
 
   // Simple OML estimation (proportional to pillar weights)
