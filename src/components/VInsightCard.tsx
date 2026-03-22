@@ -44,9 +44,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: `rgba(75, 83, 32, 0.10)`, // primary_container at 10%
+    backgroundColor: `rgba(69, 0, 132, 0.10)`, // primary_container at 10%
     borderLeftWidth: 4,
-    borderLeftColor: colors.primary,
+    borderLeftColor: '#d9b9ff', // primary color (purple)
     borderTopRightRadius: roundness.lg,
     borderBottomRightRadius: roundness.lg,
     padding: spacing[5],

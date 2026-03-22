@@ -65,6 +65,7 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
   const isCompleted = status === 'completed';
   const icon = categoryIcons[category];
   const percentText = `${Math.round(progress * 100)}%`;
+  const highProgress = progress > 0.8;
 
   // Format values for display
   const currentDisplay = currentValue % 1 === 0 ? String(Math.round(currentValue)) : currentValue.toFixed(2);
@@ -103,7 +104,10 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
       </View>
 
       {/* Progress bar */}
-      <View style={styles.progressContainer}>
+      <View style={[
+        styles.progressContainer,
+        highProgress && styles.progressGlow,
+      ]}>
         <VProgressBar
           progress={progress}
           height={6}
@@ -187,6 +191,14 @@ const styles = StyleSheet.create({
   progressContainer: {
     marginTop: spacing[3],
     marginBottom: spacing[3],
+  },
+  progressGlow: {
+    // Secondary-colored glow when >80% complete
+    shadowColor: '#dbc585',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 3,
   },
   bottomRow: {
     gap: spacing[1],

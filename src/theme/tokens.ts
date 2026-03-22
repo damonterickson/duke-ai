@@ -1,10 +1,10 @@
 /**
- * Modern Vanguard Design Tokens
- * "Tactical Precision" — Duke Vanguard Design System
+ * Kinetic Command Design Tokens
+ * "The Tactical Vanguard" — Duke Vanguard Design System
  */
 
 // ---------------------------------------------------------------------------
-// Colors
+// Colors (Light — legacy, kept for light-mode fallback)
 // ---------------------------------------------------------------------------
 
 export const colors = {
@@ -39,60 +39,100 @@ export const colors = {
 } as const;
 
 // ---------------------------------------------------------------------------
+// Dark Colors (Kinetic Command palette — default)
+// ---------------------------------------------------------------------------
+
+export const darkColors = {
+  // Primary (Command Purple)
+  primary: '#d9b9ff',
+  primary_container: '#450084',
+  on_primary: '#460185',
+  on_primary_container: '#b27ff5',
+
+  // Secondary (Duke Gold)
+  secondary: '#dbc585',
+  secondary_container: '#544511',
+  on_secondary: '#3c2f00',
+  on_secondary_container: '#c9b475',
+
+  // Tertiary (Tactical Olive)
+  tertiary: '#c3cc8c',
+  tertiary_container: '#2c3303',
+  on_tertiary: '#2d3404',
+
+  // Surface Tiers (The Void)
+  surface: '#151317',
+  surface_container_lowest: '#0f0d11',
+  surface_container_low: '#1d1b1f',
+  surface_container: '#211f23',
+  surface_container_high: '#2c292d',
+  surface_container_highest: '#373438',
+
+  // On-colors
+  on_surface: '#e7e1e6',
+
+  // Semantic
+  error: '#ffb4ab',
+  error_container: '#93000a',
+  outline: '#968d9d',
+  outline_variant: '#4b4452',
+} as const;
+
+// ---------------------------------------------------------------------------
 // Typography
 // ---------------------------------------------------------------------------
 
 export const fontFamilies = {
-  display: 'PublicSans-Regular',
-  display_medium: 'PublicSans-Medium',
-  headline: 'PublicSans-Regular',
-  headline_medium: 'PublicSans-Medium',
-  body: 'PublicSans-Regular',
-  body_medium: 'PublicSans-Medium',
-  label: 'Inter-Medium',
-  label_regular: 'Inter-Regular',
+  display: 'PublicSans-Black',
+  display_medium: 'PublicSans-Bold',
+  headline: 'PublicSans-Bold',
+  headline_medium: 'PublicSans-Bold',
+  body: 'Inter-Regular',
+  body_medium: 'Inter-Medium',
+  label: 'SpaceGrotesk-Medium',
+  label_regular: 'SpaceGrotesk-Regular',
 } as const;
 
 export const typography = {
   display_lg: {
     fontFamily: fontFamilies.display,
     fontSize: 57,
-    fontWeight: '400' as const,
+    fontWeight: '900' as const,
     letterSpacing: -0.25,
     lineHeight: 64,
   },
   display_md: {
     fontFamily: fontFamilies.display,
     fontSize: 45,
-    fontWeight: '400' as const,
+    fontWeight: '900' as const,
     letterSpacing: 0,
     lineHeight: 52,
   },
   display_sm: {
     fontFamily: fontFamilies.display,
     fontSize: 36,
-    fontWeight: '400' as const,
+    fontWeight: '900' as const,
     letterSpacing: 0,
     lineHeight: 44,
   },
   headline_lg: {
     fontFamily: fontFamilies.headline,
     fontSize: 32,
-    fontWeight: '400' as const,
+    fontWeight: '700' as const,
     letterSpacing: 0,
     lineHeight: 40,
   },
   headline_md: {
     fontFamily: fontFamilies.headline,
     fontSize: 28,
-    fontWeight: '400' as const,
+    fontWeight: '700' as const,
     letterSpacing: 0,
     lineHeight: 36,
   },
   headline_sm: {
     fontFamily: fontFamilies.headline,
     fontSize: 24,
-    fontWeight: '400' as const,
+    fontWeight: '700' as const,
     letterSpacing: 0,
     lineHeight: 32,
   },
@@ -162,7 +202,7 @@ export const typography = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Spacing  (base = 4px, tokens 1–16)
+// Spacing  (base = 4px, tokens 1-16)
 // ---------------------------------------------------------------------------
 
 export const spacing = {
@@ -185,47 +225,89 @@ export const spacing = {
 } as const;
 
 // ---------------------------------------------------------------------------
-// Roundness
+// Roundness (sharper for Kinetic Command military feel)
 // ---------------------------------------------------------------------------
 
 export const roundness = {
   sm: 2,
-  md: 6,
+  md: 4,
   lg: 8,
   xl: 12,
 } as const;
 
 // ---------------------------------------------------------------------------
-// Glassmorphism preset
+// Glassmorphism preset (Kinetic Command — dark mode)
 // ---------------------------------------------------------------------------
 
 export const glass = {
-  overlayColor: 'rgba(245, 250, 255, 0.80)',
-  blurIntensity: 12,
+  overlayColor: 'rgba(33, 31, 35, 0.60)',
+  blurIntensity: 16,
 } as const;
 
 // ---------------------------------------------------------------------------
-// Ghost-border preset (Rule 3)
+// Ghost-border preset (Rule 3 — outline_variant at 15%)
 // ---------------------------------------------------------------------------
 
 export const ghostBorder = {
-  color: 'rgba(200, 199, 184, 0.20)', // outline_variant at 20%
+  color: 'rgba(75, 68, 82, 0.15)', // outline_variant (#4b4452) at 15%
   width: 1.5,
 } as const;
 
 // ---------------------------------------------------------------------------
-// Gradient presets
+// Gradient presets (Kinetic Command)
 // ---------------------------------------------------------------------------
 
 export const gradients = {
   primaryCta: {
-    colors: ['#343c0a', '#4b5320'] as const,
+    colors: ['#450084', '#d9b9ff'] as const,
     start: { x: 0, y: 0 },
     end: { x: 1, y: 1 },
   },
-  tertiaryProgress: {
-    colors: ['#735c00', '#cca730'] as const,
+  goldReward: {
+    colors: ['#544511', '#dbc585'] as const,
     start: { x: 0, y: 0.5 },
     end: { x: 1, y: 0.5 },
+  },
+  /** @deprecated Use goldReward instead. Kept for backward compatibility. */
+  tertiaryProgress: {
+    colors: ['#544511', '#dbc585'] as const,
+    start: { x: 0, y: 0.5 },
+    end: { x: 1, y: 0.5 },
+  },
+} as const;
+
+// ---------------------------------------------------------------------------
+// Glow Drops (replaces traditional shadows)
+// ---------------------------------------------------------------------------
+
+export const glowDrops = {
+  level0: undefined,
+  level1: {
+    shadowColor: '#450084',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  level2: {
+    shadowColor: '#450084',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 30,
+    elevation: 8,
+  },
+  level3: {
+    shadowColor: '#450084',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.25,
+    shadowRadius: 40,
+    elevation: 12,
+  },
+  gold: {
+    shadowColor: '#dbc585',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 30,
+    elevation: 4,
   },
 } as const;

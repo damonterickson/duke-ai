@@ -98,13 +98,24 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing[3],
     paddingHorizontal: spacing[6],
-    borderRadius: roundness.lg,
+    borderRadius: roundness.sm,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
+    // Glow Drop shadow for primary buttons
+    shadowColor: '#450084',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 6,
   },
   secondaryBg: {
     backgroundColor: colors.surface_container_low,
+    // Secondary glow
+    shadowColor: '#544511',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 30,
   },
   tertiaryBg: {
     backgroundColor: 'transparent',

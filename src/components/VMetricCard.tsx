@@ -20,7 +20,7 @@ const trendArrows: Record<TrendDirection, string> = {
 };
 
 const trendColors: Record<TrendDirection, string> = {
-  up: colors.primary,
+  up: colors.tertiary,
   down: colors.error,
   flat: colors.outline,
 };

@@ -44,5 +44,11 @@ const styles = StyleSheet.create({
     borderRadius: roundness.lg,
     padding: spacing[4],
     // No border — Rule 1
+    // Glow Drop shadow (primary_container tinted, low opacity)
+    shadowColor: '#450084',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 3,
   },
 });
