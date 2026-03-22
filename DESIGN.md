@@ -2,7 +2,7 @@
 
 ## Creative North Star: "Tactical Precision"
 
-Every pixel serves a purpose. Iron Vanguard's interface communicates with the quiet confidence of a well-maintained field manual: structured, purposeful, and devoid of unnecessary ornamentation. Surfaces layer like topographic contours; color is deployed with strategic intent; motion is deliberate, never decorative.
+Every pixel serves a purpose. Duke Vanguard's interface communicates with the quiet confidence of a well-maintained field manual: structured, purposeful, and devoid of unnecessary ornamentation. Surfaces layer like topographic contours; color is deployed with strategic intent; motion is deliberate, never decorative.
 
 ---
 

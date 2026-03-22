@@ -1,4 +1,4 @@
-# Iron Vanguard — Project Instructions
+# Duke Vanguard — Project Instructions
 
 ## Overview
 AI-First OML optimizer for Army ROTC cadets. Expo React Native app with OpenRouter API integration.

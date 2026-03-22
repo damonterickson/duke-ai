@@ -12,7 +12,7 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         <View style={styles.hero}>
           <Text style={styles.brand} accessibilityRole="header">
-            Iron Vanguard
+            Duke Vanguard
           </Text>
           <Text style={styles.tagline}>Your OML Mentor</Text>
           <Text style={styles.description}>

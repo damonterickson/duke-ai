@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Iron Vanguard",
+    "name": "Duke Vanguard",
     "slug": "duke-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "scheme": "ironvanguard",
+    "scheme": "dukevanguard",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ironvanguard.app"
+      "bundleIdentifier": "com.dukevanguard.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +23,7 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "package": "com.ironvanguard.app",
+      "package": "com.dukevanguard.app",
       "predictiveBackGestureEnabled": false
     },
     "web": {
