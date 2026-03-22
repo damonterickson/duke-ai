@@ -35,6 +35,7 @@ import { useScoresStore } from '../../src/stores/scores';
 import { useProfileStore } from '../../src/stores/profile';
 import { useGoalsStore } from '../../src/stores/goals';
 import { getCachedBriefing } from '../../src/services/storage';
+import { isLastBriefingLocal, getLastBriefingTimestamp } from '../../src/services/ai';
 
 type GoalCategory = 'gpa' | 'acft' | 'leadership' | 'oml';
 
@@ -158,6 +159,26 @@ export default function DashboardScreen() {
 
   const insightText = briefingText ?? 'Increase your ACFT composite to 580 to jump 12 positions in the OML ranking.';
 
+  // Briefing timestamp
+  const briefingTimestamp = getLastBriefingTimestamp();
+  const briefingIsLocal = isLastBriefingLocal();
+
+  function formatBriefingTimestamp(): string {
+    if (briefingIsLocal) return 'Offline briefing \u2014 connect for AI insights';
+    if (!briefingTimestamp) return '';
+    const now = Date.now();
+    const diffMs = now - briefingTimestamp;
+    const diffMinutes = Math.floor(diffMs / 60000);
+    if (diffMinutes < 1) return 'Last updated: just now';
+    if (diffMinutes < 60) return `Last updated: ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+    const date = new Date(briefingTimestamp);
+    const hours = date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 || 12;
+    return `Last updated: Today at ${displayHours}:${minutes} ${ampm}`;
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -209,6 +230,11 @@ export default function DashboardScreen() {
               text={insightText}
               style={styles.insightCard}
             />
+            {formatBriefingTimestamp() !== '' && (
+              <Text style={styles.briefingTimestamp}>
+                {formatBriefingTimestamp()}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -588,6 +614,11 @@ const styles = StyleSheet.create({
   },
   insightCard: {
     // Inherits VInsightCard styling
+  },
+  briefingTimestamp: {
+    ...typography.label_sm,
+    color: colors.outline,
+    marginTop: spacing[2],
   },
 
   // ── Stat Cards ──

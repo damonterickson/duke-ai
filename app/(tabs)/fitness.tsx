@@ -22,6 +22,7 @@ import {
   insertACFTAssessment,
   type ACFTAssessmentRow,
 } from '../../src/services/storage';
+import { generateMicroInsight } from '../../src/services/ai';
 
 interface EventInput {
   label: string;
@@ -86,6 +87,10 @@ export default function FitnessScreen() {
       .reduce((sum, v) => sum + v, 0);
 
     try {
+      // Calculate OML delta from previous assessment
+      const prevTotal = assessments.length > 0 ? (assessments[0]?.total ?? 0) : 0;
+      const omlDelta = Math.round((total - prevTotal) * 10) / 10;
+
       await insertACFTAssessment({
         deadlift: isNaN(deadlift) ? null : deadlift,
         power_throw: isNaN(powerThrow) ? null : powerThrow,
@@ -100,6 +105,24 @@ export default function FitnessScreen() {
       setEventValues({});
       setShowForm(false);
       await loadAssessments();
+
+      // Show post-entry micro-insight
+      const deltaText = omlDelta !== 0
+        ? ` (${omlDelta > 0 ? '+' : ''}${omlDelta} pts vs previous)`
+        : '';
+      Alert.alert(
+        'Assessment Saved',
+        `ACFT total: ${Math.round(total)}${deltaText}`
+      );
+
+      // Fire-and-forget AI enhancement
+      generateMicroInsight('{}', `logged ACFT score of ${Math.round(total)}`, omlDelta)
+        .then((insight) => {
+          if (insight) {
+            Alert.alert('Vanguard AI', insight);
+          }
+        })
+        .catch(() => {});
     } catch (error) {
       console.error('Failed to save assessment:', error);
       Alert.alert('Error', 'Failed to save assessment. Please try again.');

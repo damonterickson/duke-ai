@@ -9,6 +9,9 @@
 import { checkConnectivity, queueQuery } from './offline';
 import { getCachedBriefing, setCachedBriefing, getAICoachEnabled } from './storage';
 import { parseGoalActions, type GoalAction } from './goalEngine';
+import { generateLocalBriefing } from './localBriefing';
+import type { CadetProfile, OMLResult } from '../engine/oml';
+import type { GoalRow, ScoreHistoryRow } from './storage';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -210,20 +213,118 @@ export async function generateBriefing(contextJson: string): Promise<string> {
   return result.text;
 }
 
+// ─── Local Fallback Data Holder ─────────────────────────────────────
+
+let _localFallbackData: {
+  profile: CadetProfile | null;
+  omlResult: OMLResult | null;
+  goals: GoalRow[];
+  scoreHistory: ScoreHistoryRow[];
+} = { profile: null, omlResult: null, goals: [], scoreHistory: [] };
+
+/**
+ * Set the local data used for fallback briefings when the API is unavailable.
+ * Call this before generateBriefing/generateBriefingWithGoals.
+ */
+export function setLocalFallbackData(
+  profile: CadetProfile | null,
+  omlResult: OMLResult | null,
+  goals: GoalRow[],
+  scoreHistory: ScoreHistoryRow[]
+): void {
+  _localFallbackData = { profile, omlResult, goals, scoreHistory };
+}
+
+/** Whether the last briefing came from the local fallback (not AI). */
+let _lastBriefingIsLocal = false;
+
+/**
+ * Returns true if the most recent briefing was generated locally (offline fallback).
+ */
+export function isLastBriefingLocal(): boolean {
+  return _lastBriefingIsLocal;
+}
+
+/** Timestamp (ms since epoch) of when the last briefing was generated/received. */
+let _lastBriefingTimestamp: number | null = null;
+
+/**
+ * Returns the timestamp of the most recent briefing, or null if none.
+ */
+export function getLastBriefingTimestamp(): number | null {
+  return _lastBriefingTimestamp;
+}
+
+/**
+ * Internal helper: make a single briefing API call.
+ */
+async function _fetchBriefing(
+  systemPrompt: string,
+): Promise<{ ok: boolean; text: string }> {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${getApiKey()}`,
+      'HTTP-Referer': 'https://dukevanguard.app',
+      'X-Title': 'Duke Vanguard',
+    },
+    body: JSON.stringify({
+      model: BRIEFING_MODEL,
+      max_tokens: MAX_TOKENS_INSIGHT,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content:
+            `Generate a daily briefing for this ROTC cadet with these sections:
+1. OML STATUS: Current score, trend direction, percentile estimate. Reference specific numbers.
+2. TODAY'S PRIORITY: The single highest-impact action for today. Be specific — name the exercise, the study topic, or the leadership opportunity. Explain the OML impact.
+3. GOAL UPDATE: If the cadet has active goals, report progress on the closest-to-completion goal.
+Keep each section to 1-2 sentences. Be direct and specific — use the cadet's actual numbers.`,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    return { ok: false, text: '' };
+  }
+
+  const data = await response.json();
+  const rawText: string = data.choices?.[0]?.message?.content ?? '';
+  return { ok: true, text: rawText };
+}
+
+/**
+ * Generate a local fallback briefing from cached data.
+ */
+function _getLocalBriefing(): string {
+  const { profile, omlResult, goals, scoreHistory } = _localFallbackData;
+  return generateLocalBriefing(profile, omlResult, goals, scoreHistory);
+}
+
 /**
  * Generate a daily briefing with explicit goal actions in the return value.
  */
 export async function generateBriefingWithGoals(contextJson: string): Promise<BriefingResult> {
   const apiKey = getApiKey();
-  const cached = getCachedBriefing();
 
+  // No API key — use local briefing immediately
   if (!apiKey) {
-    return { text: cached ?? 'Configure your API key to get personalized briefings.' };
+    _lastBriefingIsLocal = true;
+    _lastBriefingTimestamp = Date.now();
+    const localText = _getLocalBriefing();
+    return { text: localText };
   }
 
   const isOnline = await checkConnectivity();
   if (!isOnline) {
-    return { text: cached ?? 'You\'re offline. Your briefing will update when you reconnect.' };
+    _lastBriefingIsLocal = true;
+    _lastBriefingTimestamp = Date.now();
+    const cached = getCachedBriefing();
+    const localText = cached ?? _getLocalBriefing();
+    return { text: localText };
   }
 
   const aiCoachEnabled = getAICoachEnabled();
@@ -231,53 +332,43 @@ export async function generateBriefingWithGoals(contextJson: string): Promise<Br
     ? `${VANGUARD_SYSTEM_PROMPT}\n${GOAL_MANAGEMENT_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`
     : `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
 
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://dukevanguard.app',
-        'X-Title': 'Duke Vanguard',
-      },
-      body: JSON.stringify({
-        model: BRIEFING_MODEL,
-        max_tokens: MAX_TOKENS_INSIGHT,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          {
-            role: 'user',
-            content:
-              'Generate a concise daily briefing (3-4 sentences). Cover: current OML standing, the single highest-impact action to take today, and an encouraging closer. Be specific with numbers from my profile.',
-          },
-        ],
-      }),
-    });
+  // Try up to 2 times (initial + 1 retry with backoff)
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (attempt > 0) {
+        // Exponential backoff: 1s for first retry
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      }
 
-    if (!response.ok) {
-      return { text: cached ?? 'Unable to generate briefing right now. Check back later.' };
+      const result = await _fetchBriefing(systemPrompt);
+
+      if (result.ok && result.text) {
+        const { displayText, actions } = aiCoachEnabled
+          ? parseGoalActions(result.text)
+          : { displayText: result.text, actions: [] as GoalAction[] };
+
+        setCachedBriefing(displayText);
+        _lastBriefingIsLocal = false;
+        _lastBriefingTimestamp = Date.now();
+        return {
+          text: displayText,
+          goalActions: actions.length > 0 ? actions : undefined,
+        };
+      }
+
+      // Non-ok but didn't throw — continue to retry
+    } catch (error) {
+      console.warn(`[AI] Briefing attempt ${attempt + 1} failed:`, error);
+      // Continue to next attempt or fallback
     }
-
-    const data = await response.json();
-    const rawText: string = data.choices?.[0]?.message?.content ?? '';
-
-    if (rawText) {
-      // Parse goal actions from response if AI Coach is enabled
-      const { displayText, actions } = aiCoachEnabled
-        ? parseGoalActions(rawText)
-        : { displayText: rawText, actions: [] as GoalAction[] };
-
-      setCachedBriefing(displayText);
-      return {
-        text: displayText,
-        goalActions: actions.length > 0 ? actions : undefined,
-      };
-    }
-
-    return { text: cached || 'No briefing available.' };
-  } catch {
-    return { text: cached ?? 'Unable to generate briefing right now. Check back later.' };
   }
+
+  // Both attempts failed — use local briefing (NEVER return "No briefing available")
+  _lastBriefingIsLocal = true;
+  _lastBriefingTimestamp = Date.now();
+  const cached = getCachedBriefing();
+  const localText = cached ?? _getLocalBriefing();
+  return { text: localText };
 }
 
 /**
@@ -323,5 +414,61 @@ export async function generateInsight(
     return data.choices?.[0]?.message?.content ?? '';
   } catch {
     return '';
+  }
+}
+
+/**
+ * Generate a micro-insight for a post-entry event.
+ *
+ * If the API is unavailable, returns a local template string.
+ * This function should NOT block the UI — call it fire-and-forget.
+ */
+export async function generateMicroInsight(
+  contextJson: string,
+  event: string,
+  omlDelta: number
+): Promise<string> {
+  // Build local fallback first
+  const localFallback = omlDelta !== 0
+    ? `That ${event} moved your OML by ${omlDelta > 0 ? '+' : ''}${omlDelta.toFixed(1)} points.`
+    : `Logged: ${event}.`;
+
+  const apiKey = getApiKey();
+  if (!apiKey) return localFallback;
+
+  try {
+    const isOnline = await checkConnectivity();
+    if (!isOnline) return localFallback;
+
+    const systemPrompt = `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
+
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://dukevanguard.app',
+        'X-Title': 'Duke Vanguard',
+      },
+      body: JSON.stringify({
+        model: BRIEFING_MODEL,
+        max_tokens: 100,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: `The cadet just ${event}. The OML impact is ${omlDelta > 0 ? '+' : ''}${omlDelta.toFixed(1)} points. Give a single encouraging sentence about this specific action and its OML impact. Be specific with numbers.`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) return localFallback;
+
+    const data = await response.json();
+    const text = data.choices?.[0]?.message?.content ?? '';
+    return text || localFallback;
+  } catch {
+    return localFallback;
   }
 }

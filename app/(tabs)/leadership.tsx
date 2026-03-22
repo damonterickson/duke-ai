@@ -23,6 +23,7 @@ import {
   deleteLeadershipEntry,
   type LeadershipEntryRow,
 } from '../../src/services/storage';
+import { generateMicroInsight } from '../../src/services/ai';
 
 const ENTRY_TYPES = ['Command Role', 'Staff Position', 'Extracurricular', 'Achievement'];
 
@@ -58,9 +59,12 @@ export default function LeadershipScreen() {
     }
 
     try {
+      const entryTitle = title.trim();
+      const entryPoints = points ? parseFloat(points) : 0;
+
       await insertLeadershipEntry({
         type: entryType,
-        title: title.trim(),
+        title: entryTitle,
         description: description.trim() || null,
         points: points ? parseFloat(points) : null,
         start_date: null,
@@ -71,6 +75,26 @@ export default function LeadershipScreen() {
       setPoints('');
       setShowForm(false);
       await loadEntries();
+
+      // Show post-entry micro-insight
+      const pointsText = entryPoints > 0 ? ` (+${entryPoints} leadership points)` : '';
+      Alert.alert(
+        'Entry Saved',
+        `${entryType}: ${entryTitle}${pointsText}`
+      );
+
+      // Fire-and-forget AI enhancement
+      generateMicroInsight(
+        '{}',
+        `logged ${entryType} "${entryTitle}"`,
+        entryPoints
+      )
+        .then((insight) => {
+          if (insight) {
+            Alert.alert('Vanguard AI', insight);
+          }
+        })
+        .catch(() => {});
     } catch (error) {
       console.error('Failed to add leadership entry:', error);
       Alert.alert('Error', 'Failed to save entry. Please try again.');
