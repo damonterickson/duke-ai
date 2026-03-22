@@ -9,16 +9,16 @@ import {
   Pressable,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   VCard,
   VButton,
   VInput,
   VProgressBar,
-  VInsightCard,
   VEmptyState,
   VSkeletonLoader,
 } from '../../src/components';
-import { colors, typography, spacing, roundness } from '../../src/theme/tokens';
+import { colors, typography, spacing, roundness, gradients } from '../../src/theme/tokens';
 import {
   getCourses,
   insertCourse,
@@ -34,7 +34,6 @@ const GRADE_POINTS: Record<string, number> = {
   F: 0.0,
 };
 
-/** Quality points this course contributes to GPA (grade_point * credits). */
 function getQualityPoints(grade: string, credits: number): number {
   const gp = GRADE_POINTS[grade.toUpperCase()] ?? 0;
   return parseFloat((gp * credits).toFixed(1));
@@ -145,10 +144,10 @@ export default function AcademicsScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContent}>
-          <VSkeletonLoader width="100%" height={120} />
+          <VSkeletonLoader width="100%" height={160} />
           <VSkeletonLoader width="100%" height={80} style={{ marginTop: spacing[3] }} />
-          <VSkeletonLoader width="100%" height={48} style={{ marginTop: spacing[3] }} />
-          <VSkeletonLoader width="100%" height={48} style={{ marginTop: spacing[3] }} />
+          <VSkeletonLoader width="100%" height={60} style={{ marginTop: spacing[3] }} />
+          <VSkeletonLoader width="100%" height={60} style={{ marginTop: spacing[3] }} />
         </View>
       </SafeAreaView>
     );
@@ -171,7 +170,11 @@ export default function AcademicsScreen() {
   const gpa = calculateGPA(courses);
   const mslGpa = calculateMslGPA(courses);
   const totalCredits = courses.reduce((sum, c) => sum + c.credits, 0);
-  const gpaPercent = Math.min((gpa / 4.0) * 100, 100);
+  const academicEstimate = Math.min((gpa / 4.0) * 40, 40);
+
+  // Separate MSL courses for highlight treatment
+  const mslCourses = courses.filter((c) => c.is_msl === 1);
+  const otherCourses = courses.filter((c) => c.is_msl !== 1);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -180,61 +183,51 @@ export default function AcademicsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header} accessibilityRole="header">
-          Academic Tracker
-        </Text>
+        {/* Hero: Dark Olive Status Plate */}
+        <LinearGradient
+          colors={['rgba(75, 83, 32, 0.9)', 'rgba(52, 60, 10, 0.95)']}
+          style={styles.heroPlate}
+        >
+          {/* Tactical HUD decoration */}
+          <View style={styles.hudDecor}>
+            <MaterialIcons name="gps-fixed" size={100} color="rgba(255,255,255,0.06)" />
+          </View>
 
-        {/* Hero GPA Card */}
-        <VCard tier="lowest" style={styles.heroCard}>
-          <MaterialIcons
-            name="school"
-            size={120}
-            color={colors.outline}
-            style={styles.heroBgIcon}
-          />
-          <View style={styles.heroContent}>
-            <Text style={styles.heroLabel}>ACADEMIC STANDING</Text>
-            <View style={styles.heroGpaRow}>
+          <View style={styles.heroTopRow}>
+            <View>
+              <Text style={styles.heroLabel}>ACADEMIC INTELLIGENCE</Text>
+              <Text style={styles.heroTitle}>SOVEREIGN{'\n'}TRACKER</Text>
+            </View>
+          </View>
+
+          <View style={styles.heroBottomRow}>
+            <View>
+              <Text style={styles.heroGpaLabel}>CUMULATIVE GPA</Text>
               <Text
                 style={styles.heroGpaValue}
                 accessibilityLabel={`Cumulative GPA: ${gpa.toFixed(2)} out of 4.0`}
               >
                 {gpa.toFixed(2)}
               </Text>
-              <Text style={styles.heroGpaSuffix}>/ 4.0</Text>
             </View>
-
-            {/* MSL GPA inline — show whenever MSL courses exist */}
-            {courses.some((c) => c.is_msl === 1) && (
-              <Text style={styles.mslGpaText}>MSL GPA: {mslGpa.toFixed(2)}</Text>
-            )}
-
-            {/* Progress to 4.0 */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressRow}>
-                <Text style={styles.progressLabel}>PROGRESS TO 4.0</Text>
-                <Text style={styles.progressValue}>{gpaPercent.toFixed(1)}%</Text>
-              </View>
-              <VProgressBar
-                progress={gpa / 4.0}
-                accessibilityLabel={`GPA progress: ${gpaPercent.toFixed(1)} percent of 4.0`}
-              />
+            <View style={styles.heroRankingBadge}>
+              <Text style={styles.heroRankingLabel}>OML ACADEMIC</Text>
+              <Text style={styles.heroRankingValue}>
+                {academicEstimate.toFixed(1)}/40 PTS
+              </Text>
             </View>
           </View>
-        </VCard>
 
-        {/* AI Insight */}
-        <VInsightCard
-          icon="psychology"
-          label="AI Insight"
-          text="Focus on your highest-credit courses for maximum GPA impact. An A in a 4-credit course moves the needle more than an A+ in a 1-credit elective."
-          style={styles.insightCard}
-        />
+          {/* MSL GPA if applicable */}
+          {courses.some((c) => c.is_msl === 1) && (
+            <Text style={styles.heroMslGpa}>MSL GPA: {mslGpa.toFixed(2)}</Text>
+          )}
+        </LinearGradient>
 
-        {/* Course Section Header */}
+        {/* Mission Courses Header */}
         <View style={styles.sectionHeader}>
           <View>
-            <Text style={styles.sectionTitle}>Current Courses</Text>
+            <Text style={styles.sectionTitle}>MISSION COURSES</Text>
             <Text style={styles.sectionSubtitle}>
               {courses.length} course{courses.length !== 1 ? 's' : ''} {'\u2022'} {totalCredits} credits
             </Text>
@@ -242,12 +235,12 @@ export default function AcademicsScreen() {
           {!showForm && (
             <Pressable
               onPress={() => setShowForm(true)}
-              style={styles.addCourseButton}
+              style={styles.refreshButton}
               accessibilityRole="button"
               accessibilityLabel="Add a new course"
             >
-              <MaterialIcons name="add-circle" size={16} color={colors.primary} />
-              <Text style={styles.addCourseText}>ADD COURSE</Text>
+              <MaterialIcons name="add-circle" size={14} color={colors.primary} />
+              <Text style={styles.refreshButtonText}>ADD COURSE</Text>
             </Pressable>
           )}
         </View>
@@ -267,7 +260,7 @@ export default function AcademicsScreen() {
               label="Course Name"
               value={name}
               onChangeText={setName}
-              placeholder="Military Leadership"
+              placeholder="Adaptive Team Leadership"
               accessibilityLabel="Course name input"
             />
             <View style={styles.formRow}>
@@ -297,10 +290,10 @@ export default function AcademicsScreen() {
               accessibilityLabel="Semester input"
             />
             <VButton
-              label={isMsl ? 'MSL Course (tap to toggle)' : 'Non-MSL Course (tap to toggle)'}
+              label={isMsl ? 'ROTC Core (tap to toggle)' : 'General Course (tap to toggle)'}
               onPress={() => setIsMsl(!isMsl)}
               variant="tertiary"
-              accessibilityLabel={`Toggle MSL designation. Currently ${isMsl ? 'MSL' : 'non-MSL'}`}
+              accessibilityLabel={`Toggle MSL designation. Currently ${isMsl ? 'ROTC Core' : 'General'}`}
             />
             <View style={styles.formActions}>
               <VButton
@@ -313,54 +306,61 @@ export default function AcademicsScreen() {
           </VCard>
         )}
 
-        {/* Course Cards */}
-        {courses.map((course) => {
-          const qp = getQualityPoints(course.grade, course.credits);
+        {/* MSL Courses — Highlighted Full-Width */}
+        {mslCourses.map((course) => (
+          <View key={course.id} style={styles.mslCard}>
+            <View style={styles.mslRow}>
+              <View style={styles.mslIconBox}>
+                <MaterialIcons name="shield" size={28} color={colors.on_primary} />
+              </View>
+              <View style={styles.mslInfo}>
+                <Text style={styles.mslCategoryLabel}>ROTC CORE REQUIREMENT</Text>
+                <Text style={styles.mslCourseName}>
+                  {course.code}: {course.name.toUpperCase()}
+                </Text>
+                <Text style={styles.mslMeta}>
+                  Credits: {course.credits}
+                  {course.semester ? ` \u2022 ${course.semester}` : ''}
+                </Text>
+              </View>
+              <View style={styles.mslGradeBox}>
+                <Text style={styles.mslGrade}>{course.grade}</Text>
+                <Text style={styles.mslGradeLabel}>GRADE</Text>
+              </View>
+            </View>
+            <View style={styles.courseFooter}>
+              <VButton
+                label="Remove"
+                onPress={() => course.id != null && handleDeleteCourse(course.id)}
+                variant="tertiary"
+                accessibilityLabel={`Remove ${course.code}`}
+              />
+            </View>
+          </View>
+        ))}
+
+        {/* Other Courses — Glass Cards */}
+        {otherCourses.map((course) => {
           const gradePoints = GRADE_POINTS[course.grade.toUpperCase()] ?? 0;
-          const isHighImpact = gradePoints >= 3.7;
 
           return (
-            <VCard
-              key={course.id}
-              tier="low"
-              style={styles.courseCard}
-              accessibilityLabel={`${course.code} ${course.name}, Grade: ${course.grade}, Credits: ${course.credits}${course.is_msl ? ', MSL course' : ''}, Quality Points: ${qp}`}
-            >
-              <View style={styles.courseHeader}>
-                <View style={styles.courseLeft}>
-                  {/* Course Code Badge */}
-                  <View style={styles.codeBadge}>
-                    <Text style={styles.codeBadgeText}>{course.code}</Text>
-                  </View>
-                  <Text style={styles.courseName}>{course.name}</Text>
-                  <Text style={styles.courseCredits}>
-                    {course.credits} Credits
-                    {course.is_msl === 1 ? ' \u2022 MSL' : ''}{course.semester ? ` \u2022 ${course.semester}` : ''}
+            <View key={course.id} style={styles.glassCard}>
+              <View style={styles.glassCardRow}>
+                <View style={styles.glassCardLeft}>
+                  <Text style={styles.glassCategory}>
+                    {course.semester ?? 'Course'}
                   </Text>
-                </View>
-                <View style={styles.courseRight}>
-                  {/* Grade */}
-                  <Text style={[
-                    styles.gradeText,
-                    isHighImpact ? styles.gradeHigh : styles.gradeMid,
-                  ]}>
-                    {course.grade}
+                  <Text style={styles.glassCourseName}>
+                    {course.code}: {course.name.toUpperCase()}
                   </Text>
-                  {/* OML Impact */}
-                  <View style={styles.impactRow}>
-                    <MaterialIcons
-                      name="stars"
-                      size={14}
-                      color={isHighImpact ? colors.tertiary : colors.outline}
-                    />
-                    <Text style={[
-                      styles.impactText,
-                      isHighImpact ? styles.impactHigh : styles.impactMid,
-                    ]}>
-                      {qp} QP
-                    </Text>
-                  </View>
+                  <Text style={styles.glassMeta}>{course.credits} Credits</Text>
                 </View>
+                <Text style={[
+                  styles.glassGrade,
+                  gradePoints >= 3.7 ? styles.gradeHigh : styles.gradeMid,
+                ]}>
+                  {course.grade}
+                </Text>
               </View>
               <View style={styles.courseFooter}>
                 <VButton
@@ -370,18 +370,65 @@ export default function AcademicsScreen() {
                   accessibilityLabel={`Remove ${course.code}`}
                 />
               </View>
-            </VCard>
+            </View>
           );
         })}
 
+        {/* OML Projections */}
+        <VCard tier="low" style={styles.omlCard}>
+          <Text style={styles.omlTitle}>OML PROJECTIONS</Text>
+
+          <View style={styles.omlPillar}>
+            <View style={styles.omlPillarRow}>
+              <Text style={styles.omlPillarLabel}>Academics (40%)</Text>
+              <Text style={styles.omlPillarValue}>{academicEstimate.toFixed(1)}/40</Text>
+            </View>
+            <VProgressBar
+              progress={Math.min(academicEstimate / 40, 1)}
+              accessibilityLabel={`Academic pillar: ${academicEstimate.toFixed(1)} of 40`}
+            />
+          </View>
+
+          <View style={styles.omlPillar}>
+            <View style={styles.omlPillarRow}>
+              <Text style={styles.omlPillarLabel}>Leadership (40%)</Text>
+              {/* TODO: wire to real data */}
+              <Text style={styles.omlPillarValue}>--/40</Text>
+            </View>
+            <VProgressBar progress={0} accessibilityLabel="Leadership pillar: not yet calculated" />
+          </View>
+
+          <View style={styles.omlPillar}>
+            <View style={styles.omlPillarRow}>
+              <Text style={styles.omlPillarLabel}>Physical (20%)</Text>
+              {/* TODO: wire to real data */}
+              <Text style={styles.omlPillarValue}>--/20</Text>
+            </View>
+            <VProgressBar progress={0} accessibilityLabel="Physical pillar: not yet calculated" />
+          </View>
+
+          <View style={styles.omlInsight}>
+            <Text style={styles.omlInsightText}>
+              Maintaining a{' '}
+              <Text style={{ color: colors.primary, fontWeight: '700' }}>
+                {gpa.toFixed(2)} GPA
+              </Text>
+              {' '}contributes{' '}
+              <Text style={{ color: colors.primary, fontWeight: '700' }}>
+                {academicEstimate.toFixed(1)} points
+              </Text>
+              {' '}to your OML score. A decrease of 0.1 GPA may drop OML standing by ~4 spots.
+            </Text>
+          </View>
+        </VCard>
+
         {/* Secondary Stats */}
-        <Text style={[styles.sectionTitle, { marginTop: spacing[4] }]}>Progress</Text>
         <View style={styles.statsGrid}>
           <VCard tier="low" style={styles.statCard}>
             <Text style={styles.statLabel}>TOTAL CREDITS</Text>
             <View style={styles.statValueRow}>
               <Text style={styles.statValue}>{totalCredits}</Text>
-              <Text style={styles.statSuffix}>/ 120 REQ</Text>
+              <Text style={styles.statSuffix}>/ 120</Text>
             </View>
           </VCard>
           <VCard tier="low" style={styles.statCard}>
@@ -389,26 +436,8 @@ export default function AcademicsScreen() {
             <View style={styles.statValueRow}>
               {/* TODO: compute from semester history */}
               <Text style={styles.statValue}>{'\u2014'}</Text>
-              <Text style={styles.statSuffix}>CONSECUTIVE</Text>
             </View>
           </VCard>
-          <VCard tier="low" style={styles.statCard}>
-            <Text style={styles.statLabel}>STEM BONUS</Text>
-            <View style={styles.statValueRow}>
-              {/* TODO: detect from course codes */}
-              <Text style={[styles.statValue, { color: colors.tertiary }]}>{'\u2014'}</Text>
-            </View>
-          </VCard>
-          {/* Upload Transcript placeholder */}
-          <Pressable
-            style={styles.uploadCard}
-            onPress={() => Alert.alert('Coming Soon', 'Transcript upload will be available in a future update.')}
-            accessibilityRole="button"
-            accessibilityLabel="Upload transcript"
-          >
-            <MaterialIcons name="upload-file" size={24} color={colors.primary} />
-            <Text style={styles.uploadText}>UPLOAD TRANSCRIPT</Text>
-          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -431,85 +460,84 @@ const styles = StyleSheet.create({
     padding: spacing[4],
     paddingTop: spacing[8],
   },
-  header: {
-    ...typography.headline_lg,
-    color: colors.on_surface,
-    marginTop: spacing[2],
-    marginBottom: spacing[4],
-  },
 
-  // Hero GPA Card
-  heroCard: {
-    marginBottom: spacing[4],
+  // Hero: Dark Olive Status Plate
+  heroPlate: {
+    padding: spacing[6],
+    borderRadius: roundness.sm,
+    marginBottom: spacing[6],
     overflow: 'hidden',
-  },
-  heroBgIcon: {
-    position: 'absolute',
-    top: -10,
-    right: -10,
-    opacity: 0.06,
-  },
-  heroContent: {
     position: 'relative',
+  },
+  hudDecor: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+  },
+  heroTopRow: {
+    marginBottom: spacing[6],
   },
   heroLabel: {
     fontFamily: typography.label_sm.fontFamily,
-    fontSize: typography.label_sm.fontSize,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 2,
-    color: colors.secondary,
+    letterSpacing: 3,
+    color: 'rgba(189, 199, 135, 0.8)', // on_primary_container muted
     marginBottom: spacing[2],
   },
-  heroGpaRow: {
+  heroTitle: {
+    fontFamily: typography.display_lg.fontFamily,
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#ffffff',
+    letterSpacing: -1,
+    lineHeight: 38,
+  },
+  heroBottomRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing[2],
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  heroGpaLabel: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: 'rgba(189, 199, 135, 0.8)',
+    marginBottom: spacing[1],
   },
   heroGpaValue: {
     fontFamily: typography.display_lg.fontFamily,
-    fontSize: 56,
+    fontSize: 48,
     fontWeight: '900',
-    color: colors.primary,
+    color: '#ffffff',
     letterSpacing: -2,
   },
-  heroGpaSuffix: {
-    fontFamily: typography.headline_md.fontFamily,
-    fontSize: typography.headline_md.fontSize,
-    fontWeight: '700',
-    color: colors.outline,
+  heroRankingBadge: {
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    padding: spacing[3],
+    borderRadius: roundness.sm,
   },
-  mslGpaText: {
-    ...typography.label_md,
-    color: colors.outline,
-    marginTop: spacing[1],
-  },
-  progressSection: {
-    marginTop: spacing[6],
-    gap: spacing[2],
-  },
-  progressRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  progressLabel: {
+  heroRankingLabel: {
     fontFamily: typography.label_sm.fontFamily,
     fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: 'rgba(189, 199, 135, 0.7)',
+    marginBottom: spacing[1],
+  },
+  heroRankingValue: {
+    fontFamily: typography.title_sm.fontFamily,
+    fontSize: typography.title_sm.fontSize,
+    fontWeight: '700',
+    color: colors.tertiary_container,
+  },
+  heroMslGpa: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: typography.label_sm.fontSize,
     fontWeight: '600',
-    letterSpacing: 1,
-    color: colors.outline,
-  },
-  progressValue: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-    color: colors.primary,
-  },
-
-  // Insight
-  insightCard: {
-    marginBottom: spacing[6],
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: spacing[3],
   },
 
   // Section Header
@@ -517,31 +545,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginBottom: spacing[3],
+    marginBottom: spacing[4],
   },
   sectionTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
+    fontFamily: typography.headline_md.fontFamily,
+    fontSize: typography.headline_md.fontSize,
+    fontWeight: '900',
+    color: colors.primary,
+    letterSpacing: -0.5,
   },
   sectionSubtitle: {
     ...typography.label_sm,
     color: colors.outline,
     marginTop: spacing[1],
   },
-  addCourseButton: {
+  refreshButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[1],
-    backgroundColor: colors.surface_container_high,
+    backgroundColor: colors.surface_container_highest,
     paddingHorizontal: spacing[3],
     paddingVertical: spacing[2],
-    borderRadius: roundness.lg,
+    borderRadius: roundness.sm,
   },
-  addCourseText: {
+  refreshButtonText: {
     fontFamily: typography.label_sm.fontFamily,
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     color: colors.primary,
   },
 
@@ -568,71 +599,111 @@ const styles = StyleSheet.create({
     marginTop: spacing[2],
   },
 
-  // Course Cards
-  courseCard: {
+  // MSL Highlight Card
+  mslCard: {
+    backgroundColor: 'rgba(245, 243, 243, 0.7)',
+    padding: spacing[5],
+    borderRadius: roundness.sm,
     marginBottom: spacing[3],
   },
-  courseHeader: {
+  mslRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    gap: spacing[4],
   },
-  courseLeft: {
-    flex: 1,
-    gap: spacing[1],
-  },
-  codeBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: colors.secondary_container,
-    paddingHorizontal: spacing[2],
-    paddingVertical: 2,
+  mslIconBox: {
+    width: 52,
+    height: 52,
+    backgroundColor: colors.primary,
     borderRadius: roundness.sm,
-    marginBottom: spacing[1],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  codeBadgeText: {
+  mslInfo: {
+    flex: 1,
+  },
+  mslCategoryLabel: {
     fontFamily: typography.label_sm.fontFamily,
     fontSize: 10,
     fontWeight: '700',
-    color: colors.secondary,
+    letterSpacing: 2,
+    color: colors.primary,
+    marginBottom: spacing[1],
   },
-  courseName: {
-    ...typography.title_sm,
-    color: colors.on_surface,
+  mslCourseName: {
+    fontFamily: typography.headline_md.fontFamily,
+    fontSize: 16,
+    fontWeight: '900',
+    color: colors.primary,
+    letterSpacing: -0.3,
   },
-  courseCredits: {
+  mslMeta: {
     ...typography.label_sm,
     color: colors.outline,
+    marginTop: spacing[1],
   },
-  courseRight: {
-    alignItems: 'flex-end',
-    gap: spacing[1],
+  mslGradeBox: {
+    alignItems: 'center',
   },
-  gradeText: {
+  mslGrade: {
+    fontFamily: typography.display_lg.fontFamily,
+    fontSize: 40,
+    fontWeight: '900',
+    color: colors.primary,
+  },
+  mslGradeLabel: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: colors.outline,
+  },
+
+  // Glass Course Cards
+  glassCard: {
+    backgroundColor: 'rgba(245, 243, 243, 0.7)',
+    padding: spacing[5],
+    borderRadius: roundness.sm,
+    marginBottom: spacing[3],
+  },
+  glassCardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  glassCardLeft: {
+    flex: 1,
+  },
+  glassCategory: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: colors.outline,
+    marginBottom: spacing[1],
+  },
+  glassCourseName: {
     fontFamily: typography.headline_md.fontFamily,
-    fontSize: 24,
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.primary,
+    letterSpacing: -0.3,
+  },
+  glassMeta: {
+    ...typography.label_sm,
+    color: colors.outline,
+    marginTop: spacing[1],
+  },
+  glassGrade: {
+    fontFamily: typography.headline_md.fontFamily,
+    fontSize: 28,
     fontWeight: '900',
   },
   gradeHigh: {
     color: colors.primary,
   },
   gradeMid: {
-    color: colors.secondary,
-  },
-  impactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  impactText: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: typography.label_sm.fontSize,
-    fontWeight: '700',
-  },
-  impactHigh: {
-    color: colors.tertiary,
-  },
-  impactMid: {
-    color: colors.outline,
+    color: colors.primary,
   },
   courseFooter: {
     flexDirection: 'row',
@@ -640,15 +711,61 @@ const styles = StyleSheet.create({
     marginTop: spacing[2],
   },
 
+  // OML Projections
+  omlCard: {
+    marginTop: spacing[4],
+    marginBottom: spacing[4],
+  },
+  omlTitle: {
+    fontFamily: typography.headline_md.fontFamily,
+    fontSize: typography.title_md.fontSize,
+    fontWeight: '900',
+    color: colors.primary,
+    letterSpacing: -0.3,
+    marginBottom: spacing[5],
+  },
+  omlPillar: {
+    marginBottom: spacing[4],
+  },
+  omlPillarRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: spacing[2],
+  },
+  omlPillarLabel: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+    color: colors.outline,
+  },
+  omlPillarValue: {
+    fontFamily: typography.title_sm.fontFamily,
+    fontSize: typography.title_sm.fontSize,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  omlInsight: {
+    marginTop: spacing[4],
+    paddingTop: spacing[4],
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(200, 199, 184, 0.2)',
+  },
+  omlInsightText: {
+    ...typography.body_sm,
+    color: colors.outline,
+    lineHeight: 20,
+  },
+
   // Stats Grid
   statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: spacing[3],
-    marginTop: spacing[3],
+    marginBottom: spacing[4],
   },
   statCard: {
-    width: '47%',
+    flex: 1,
   },
   statLabel: {
     fontFamily: typography.label_sm.fontFamily,
@@ -674,24 +791,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     color: colors.outline,
-  },
-  uploadCard: {
-    width: '47%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing[4],
-    borderRadius: roundness.lg,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: colors.outline_variant + '4D', // 30% opacity via hex alpha
-    gap: spacing[2],
-  },
-  uploadText: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: colors.primary,
-    textAlign: 'center',
   },
 });
