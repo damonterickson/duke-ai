@@ -186,7 +186,7 @@ export default function SettingsScreen() {
 
         {/* About */}
         <VCard tier="low" style={styles.aboutCard}>
-          <Text style={styles.aboutTitle}>Iron Vanguard</Text>
+          <Text style={styles.aboutTitle}>Duke Vanguard</Text>
           <Text style={styles.aboutVersion}>Version 1.0.0</Text>
           <Text style={styles.aboutDesc}>
             AI-powered OML optimizer for Army ROTC cadets. Built with care for

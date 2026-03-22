@@ -1,8 +1,8 @@
-# Iron Vanguard — Implementation Plan
+# Duke Vanguard — Implementation Plan
 
 ## Context
 
-Iron Vanguard is an AI-First OML optimizer for Army ROTC cadets. This plan merges:
+Duke Vanguard is an AI-First OML optimizer for Army ROTC cadets. This plan merges:
 - **Design doc** (approved from /office-hours): AI-First architecture, 3-wave build, offline-first
 - **Stitch "Duke Vanguard" project**: 15 production screens + complete design system ("Tactical Precision")
 

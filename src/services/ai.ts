@@ -1,5 +1,5 @@
 /**
- * AI Service — LLM integration for Iron Vanguard
+ * AI Service — LLM integration for Duke Vanguard
  *
  * Uses OpenRouter API (OpenAI-compatible) for flexibility.
  * Streaming via fetch + ReadableStream.
@@ -130,8 +130,8 @@ export async function streamChat(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://ironvanguard.app',
-        'X-Title': 'Iron Vanguard',
+        'HTTP-Referer': 'https://dukevanguard.app',
+        'X-Title': 'Duke Vanguard',
       },
       body: JSON.stringify({
         model: CHAT_MODEL,
@@ -237,8 +237,8 @@ export async function generateBriefingWithGoals(contextJson: string): Promise<Br
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://ironvanguard.app',
-        'X-Title': 'Iron Vanguard',
+        'HTTP-Referer': 'https://dukevanguard.app',
+        'X-Title': 'Duke Vanguard',
       },
       body: JSON.stringify({
         model: BRIEFING_MODEL,
@@ -301,8 +301,8 @@ export async function generateInsight(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`,
-        'HTTP-Referer': 'https://ironvanguard.app',
-        'X-Title': 'Iron Vanguard',
+        'HTTP-Referer': 'https://dukevanguard.app',
+        'X-Title': 'Duke Vanguard',
       },
       body: JSON.stringify({
         model: BRIEFING_MODEL,

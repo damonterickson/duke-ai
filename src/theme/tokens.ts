@@ -1,6 +1,6 @@
 /**
  * Modern Vanguard Design Tokens
- * "Tactical Precision" — Iron Vanguard Design System
+ * "Tactical Precision" — Duke Vanguard Design System
  */
 
 // ---------------------------------------------------------------------------

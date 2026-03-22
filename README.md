@@ -1,10 +1,10 @@
-# Iron Vanguard
+# Duke Vanguard
 
 An AI-First OML (Order of Merit List) optimizer for Army ROTC cadets. Built with Expo React Native.
 
 ## What it does
 
-Iron Vanguard helps ROTC cadets understand, track, and maximize their OML score — the ranking that determines their Army branch and duty station. Instead of wrestling with spreadsheets, cadets get a personal AI mentor that tells them exactly what to focus on.
+Duke Vanguard helps ROTC cadets understand, track, and maximize their OML score — the ranking that determines their Army branch and duty station. Instead of wrestling with spreadsheets, cadets get a personal AI mentor that tells them exactly what to focus on.
 
 - **AI Advisor** — Vanguard AI analyzes your profile and tells you where to focus ("Your 2-mile run is worth more OML points than a 0.1 GPA bump")
 - **OML Dashboard** — See your projected score, pillar breakdown (Academics 40%, Leadership 40%, Physical 20%), and trends
