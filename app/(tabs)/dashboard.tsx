@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,9 +8,11 @@ import {
   Modal,
   Pressable,
   TextInput,
-  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   VConicGauge,
   VProgressBar,
@@ -20,24 +22,21 @@ import {
   VSkeletonLoader,
   VGoalCard,
   VButton,
+  VInsightCard,
 } from '../../src/components';
-import { colors, typography, spacing, roundness } from '../../src/theme/tokens';
+import {
+  colors,
+  typography,
+  spacing,
+  roundness,
+  gradients,
+} from '../../src/theme/tokens';
 import { useScoresStore } from '../../src/stores/scores';
 import { useProfileStore } from '../../src/stores/profile';
+import { useGoalsStore } from '../../src/stores/goals';
+import { getCachedBriefing } from '../../src/services/storage';
 
 type GoalCategory = 'gpa' | 'acft' | 'leadership' | 'oml';
-
-interface Goal {
-  id: string;
-  title: string;
-  category: GoalCategory;
-  currentValue: number;
-  targetValue: number;
-  deadline: string;
-  omlImpact?: number;
-  createdBy: 'user' | 'ai';
-  status: 'active' | 'completed' | 'expired' | 'paused';
-}
 
 const CATEGORY_OPTIONS: { value: GoalCategory; label: string; icon: string }[] = [
   { value: 'acft', label: 'ACFT', icon: '\u{1F4AA}' },
@@ -46,17 +45,38 @@ const CATEGORY_OPTIONS: { value: GoalCategory; label: string; icon: string }[] =
   { value: 'oml', label: 'OML', icon: '\u{1F4CA}' },
 ];
 
+// Pillar maxes per OML formula
+const ACADEMIC_MAX = 400;
+const PHYSICAL_MAX = 200;
+const LEADERSHIP_MAX = 400;
+
+const PILLAR_WEIGHTS = {
+  academic: 40,
+  physical: 20,
+  leadership: 40,
+};
+
+const MAX_GOALS = 5;
+
 export default function DashboardScreen() {
   const router = useRouter();
+  const { width: screenWidth } = useWindowDimensions();
+  const isWide = screenWidth >= 768;
+
   const scores = useScoresStore();
   const profile = useProfileStore();
+  const goalsStore = useGoalsStore();
   const isLoaded = scores.isLoaded;
 
-  // Will be replaced with real store import after merge
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [showAddGoal, setShowAddGoal] = useState(false);
+  // AI briefing
+  const [briefingText, setBriefingText] = useState<string | null>(null);
+  useEffect(() => {
+    const cached = getCachedBriefing();
+    if (cached) setBriefingText(cached);
+  }, []);
 
-  // Add goal form state
+  // Add goal modal state
+  const [showAddGoal, setShowAddGoal] = useState(false);
   const [newCategory, setNewCategory] = useState<GoalCategory>('acft');
   const [newTarget, setNewTarget] = useState('');
   const [newDeadline, setNewDeadline] = useState('');
@@ -68,34 +88,28 @@ export default function DashboardScreen() {
   const acftTotal = latestScore?.acft_total ?? null;
   const leadershipEval = latestScore?.leadership_eval ?? null;
 
-  // Pillar maxes: Academic 400, Leadership 400, Physical 200 (per OML formula)
-  const academicMax = 400;
-  const leadershipMax = 400;
-  const physicalMax = 200;
-
-  const activeGoals = goals.filter((g) => g.status === 'active');
-  const MAX_GOALS = 5;
+  const activeGoals = goalsStore.getActiveGoals();
 
   function handleCreateGoal() {
     if (!newTitle.trim() || !newTarget.trim() || !newDeadline.trim()) return;
-
     const target = parseFloat(newTarget);
     if (isNaN(target) || target <= 0) return;
-
     if (activeGoals.length >= MAX_GOALS) return;
 
-    const newGoal: Goal = {
-      id: String(Date.now()),
+    goalsStore.addGoal({
       title: newTitle.trim(),
       category: newCategory,
-      currentValue: 0,
-      targetValue: target,
+      metric: newCategory,
+      target_value: target,
+      current_value: 0,
+      baseline_value: 0,
       deadline: newDeadline.trim(),
-      createdBy: 'user',
       status: 'active',
-    };
+      created_by: 'user',
+      oml_impact: null,
+      completed_at: null,
+    });
 
-    setGoals((prev) => [...prev, newGoal]);
     setShowAddGoal(false);
     setNewTitle('');
     setNewTarget('');
@@ -103,6 +117,7 @@ export default function DashboardScreen() {
     setNewCategory('acft');
   }
 
+  // Loading state
   if (!isLoaded) {
     return (
       <SafeAreaView style={styles.container}>
@@ -116,6 +131,7 @@ export default function DashboardScreen() {
     );
   }
 
+  // Empty state
   if (totalOml == null && gpa == null && acftTotal == null) {
     return (
       <SafeAreaView style={styles.container}>
@@ -131,15 +147,16 @@ export default function DashboardScreen() {
   }
 
   const gaugeProgress = totalOml != null ? totalOml / 1000 : 0;
-  const gaugeLabel = totalOml != null ? String(Math.round(totalOml)) : '--';
+  const scoreDisplay = totalOml != null ? totalOml.toFixed(1) : '--';
 
-  // Estimate pillar scores from available data
-  const academicEstimate = gpa != null ? (gpa / 4.0) * academicMax : 0;
-  const physicalEstimate = acftTotal != null ? (acftTotal / 600) * physicalMax : 0;
-  const leadershipEstimate =
-    leadershipEval != null ? (leadershipEval / 100) * leadershipMax : 0;
+  // Pillar estimates
+  const academicEstimate = gpa != null ? (gpa / 4.0) * ACADEMIC_MAX : 0;
+  const physicalEstimate = acftTotal != null ? (acftTotal / 600) * PHYSICAL_MAX : 0;
+  const leadershipEstimate = leadershipEval != null ? (leadershipEval / 100) * LEADERSHIP_MAX : 0;
 
   const recentHistory = scores.scoreHistory.slice(0, 5);
+
+  const insightText = briefingText ?? 'Increase your ACFT composite to 580 to jump 12 positions in the OML ranking.';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -148,72 +165,131 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.header} accessibilityRole="header">
-          Mission Profile
-        </Text>
+        {/* ── HERO SECTION ── */}
+        <View
+          style={[
+            styles.heroCard,
+            isWide && styles.heroCardWide,
+          ]}
+          accessibilityLabel="Mission Readiness Profile hero section"
+        >
+          {/* Gauge Side */}
+          <View style={[styles.gaugeSection, isWide && styles.gaugeSectionWide]}>
+            <Text style={styles.projectedLabel}>PROJECTED SCORE</Text>
+            <VConicGauge
+              progress={gaugeProgress}
+              size={160}
+              strokeWidth={14}
+              label={scoreDisplay}
+              accessibilityLabel={
+                totalOml != null
+                  ? `Projected OML Score: ${scoreDisplay} out of 1000`
+                  : 'OML Score not yet calculated'
+              }
+            />
+            <View style={styles.topBadge}>
+              <Text style={styles.topBadgeText}>TOP 15%</Text>
+            </View>
+          </View>
 
-        {/* Score Gauge */}
-        <View style={styles.gaugeContainer}>
-          <VConicGauge
-            progress={gaugeProgress}
-            size={160}
-            strokeWidth={14}
-            label={gaugeLabel}
-            accessibilityLabel={
-              totalOml != null
-                ? `Projected OML Score: ${Math.round(totalOml)} out of 1000`
-                : 'OML Score not yet calculated'
-            }
-          />
-          <Text style={styles.gaugeSubtitle}>Projected OML</Text>
+          {/* Text Side */}
+          <View style={[styles.heroTextSection, isWide && styles.heroTextSectionWide]}>
+            <Text
+              style={styles.heroHeadline}
+              accessibilityRole="header"
+            >
+              Mission Readiness Profile
+            </Text>
+            <Text style={styles.heroDescription}>
+              Tier 1 candidate for Distinguished Military Graduate. Your composite score places you among the top performers in your year group.
+            </Text>
+            <VInsightCard
+              icon="psychology"
+              label="Vanguard AI Insight"
+              text={insightText}
+              style={styles.insightCard}
+            />
+          </View>
         </View>
 
-        {/* Pillar Progress Bars */}
-        <Text style={styles.sectionTitle}>Pillar Breakdown</Text>
-        <VCard tier="low" style={styles.pillarCard}>
-          <View style={styles.pillarRow}>
-            <Text style={styles.pillarLabel}>Academic</Text>
-            <Text style={styles.pillarValue}>
-              {gpa != null ? `${Math.round(academicEstimate)}/${academicMax}` : '--/400'}
-            </Text>
+        {/* ── STAT CARDS ── */}
+        <View style={[styles.statCardsRow, isWide && styles.statCardsRowWide]}>
+          {/* Academic */}
+          <View style={[styles.statCard, isWide && styles.statCardWide]}>
+            <View style={styles.statCardTopRow}>
+              <View style={styles.statIconBadge}>
+                <MaterialIcons name="school" size={20} color={colors.on_surface} />
+              </View>
+              <Text style={styles.statWeightLabel}>
+                WEIGHT: {PILLAR_WEIGHTS.academic}%
+              </Text>
+            </View>
+            <Text style={styles.statCardTitle}>Academic Pts</Text>
+            <View style={styles.statScoreRow}>
+              <Text style={styles.statScoreValue}>
+                {gpa != null ? Math.round(academicEstimate) : '--'}
+              </Text>
+              <Text style={styles.statScoreMax}>/ {ACADEMIC_MAX}</Text>
+            </View>
+            <VProgressBar
+              progress={gpa != null ? academicEstimate / ACADEMIC_MAX : 0}
+              height={6}
+              accessibilityLabel={`Academic pillar: ${gpa != null ? Math.round(academicEstimate) : 0} of ${ACADEMIC_MAX}`}
+            />
           </View>
-          <VProgressBar
-            progress={gpa != null ? academicEstimate / academicMax : 0}
-            accessibilityLabel={`Academic pillar: ${gpa != null ? Math.round(academicEstimate) : 0} of ${academicMax}`}
-          />
-        </VCard>
-        <VCard tier="low" style={styles.pillarCard}>
-          <View style={styles.pillarRow}>
-            <Text style={styles.pillarLabel}>Leadership</Text>
-            <Text style={styles.pillarValue}>
-              {leadershipEval != null
-                ? `${Math.round(leadershipEstimate)}/${leadershipMax}`
-                : '--/400'}
-            </Text>
-          </View>
-          <VProgressBar
-            progress={leadershipEval != null ? leadershipEstimate / leadershipMax : 0}
-            accessibilityLabel={`Leadership pillar: ${leadershipEval != null ? Math.round(leadershipEstimate) : 0} of ${leadershipMax}`}
-          />
-        </VCard>
-        <VCard tier="low" style={styles.pillarCard}>
-          <View style={styles.pillarRow}>
-            <Text style={styles.pillarLabel}>Physical</Text>
-            <Text style={styles.pillarValue}>
-              {acftTotal != null
-                ? `${Math.round(physicalEstimate)}/${physicalMax}`
-                : '--/200'}
-            </Text>
-          </View>
-          <VProgressBar
-            progress={acftTotal != null ? physicalEstimate / physicalMax : 0}
-            accessibilityLabel={`Physical pillar: ${acftTotal != null ? Math.round(physicalEstimate) : 0} of ${physicalMax}`}
-          />
-        </VCard>
 
-        {/* Active Goals Section */}
+          {/* Physical */}
+          <View style={[styles.statCard, isWide && styles.statCardWide]}>
+            <View style={styles.statCardTopRow}>
+              <View style={styles.statIconBadge}>
+                <MaterialIcons name="fitness-center" size={20} color={colors.on_surface} />
+              </View>
+              <Text style={styles.statWeightLabel}>
+                WEIGHT: {PILLAR_WEIGHTS.physical}%
+              </Text>
+            </View>
+            <Text style={styles.statCardTitle}>Physical Pts</Text>
+            <View style={styles.statScoreRow}>
+              <Text style={styles.statScoreValue}>
+                {acftTotal != null ? Math.round(physicalEstimate) : '--'}
+              </Text>
+              <Text style={styles.statScoreMax}>/ {PHYSICAL_MAX}</Text>
+            </View>
+            <VProgressBar
+              progress={acftTotal != null ? physicalEstimate / PHYSICAL_MAX : 0}
+              height={6}
+              accessibilityLabel={`Physical pillar: ${acftTotal != null ? Math.round(physicalEstimate) : 0} of ${PHYSICAL_MAX}`}
+            />
+          </View>
+
+          {/* Leadership */}
+          <View style={[styles.statCard, isWide && styles.statCardWide]}>
+            <View style={styles.statCardTopRow}>
+              <View style={styles.statIconBadge}>
+                <MaterialIcons name="star" size={20} color={colors.on_surface} />
+              </View>
+              <Text style={styles.statWeightLabel}>
+                WEIGHT: {PILLAR_WEIGHTS.leadership}%
+              </Text>
+            </View>
+            <Text style={styles.statCardTitle}>Leadership Pts</Text>
+            <View style={styles.statScoreRow}>
+              <Text style={styles.statScoreValue}>
+                {leadershipEval != null ? Math.round(leadershipEstimate) : '--'}
+              </Text>
+              <Text style={styles.statScoreMax}>/ {LEADERSHIP_MAX}</Text>
+            </View>
+            <VProgressBar
+              progress={leadershipEval != null ? leadershipEstimate / LEADERSHIP_MAX : 0}
+              height={6}
+              accessibilityLabel={`Leadership pillar: ${leadershipEval != null ? Math.round(leadershipEstimate) : 0} of ${LEADERSHIP_MAX}`}
+            />
+          </View>
+        </View>
+
+        {/* ── ACTIVE GOALS ── */}
         <View style={styles.goalsSectionHeader}>
-          <Text style={styles.sectionTitle}>
+          <Text style={styles.sectionTitle} accessibilityRole="header">
             Active Goals ({activeGoals.length}/{MAX_GOALS})
           </Text>
           {activeGoals.length < MAX_GOALS && (
@@ -237,15 +313,14 @@ export default function DashboardScreen() {
               <VGoalCard
                 key={goal.id}
                 title={goal.title}
-                category={goal.category}
-                currentValue={goal.currentValue}
-                targetValue={goal.targetValue}
+                category={goal.category as GoalCategory}
+                currentValue={goal.current_value ?? 0}
+                targetValue={goal.target_value}
                 deadline={goal.deadline}
-                omlImpact={goal.omlImpact}
-                createdBy={goal.createdBy}
-                status={goal.status}
+                omlImpact={goal.oml_impact ?? undefined}
+                createdBy={goal.created_by as 'user' | 'ai'}
+                status={goal.status as 'active' | 'completed' | 'expired' | 'paused'}
                 onPress={() => router.push(`/goal/${goal.id}`)}
-                style={styles.goalCard}
               />
             ))}
           </View>
@@ -261,43 +336,78 @@ export default function DashboardScreen() {
           />
         )}
 
-        {/* Recent Activity */}
+        {/* ── ACTIVITY LOG ── */}
         {recentHistory.length > 0 && (
-          <>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
-            <VCard tier="low">
-              <View style={styles.activityList}>
-                {recentHistory.map((entry, i) => (
-                  <VActivityItem
-                    key={entry.id ?? i}
-                    title={`OML: ${entry.total_oml != null ? Math.round(entry.total_oml) : '--'}`}
-                    subtitle={`GPA: ${entry.gpa?.toFixed(2) ?? '--'} | ACFT: ${entry.acft_total != null ? Math.round(entry.acft_total) : '--'}`}
-                    timestamp={entry.recorded_at ?? ''}
-                  />
-                ))}
-              </View>
-            </VCard>
-          </>
+          <View style={styles.activityCard}>
+            <View style={styles.activityHeader}>
+              <Text style={styles.activityTitle} accessibilityRole="header">
+                Recent Activity Log
+              </Text>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="View all activity entries"
+                style={({ pressed }) => [pressed && { opacity: 0.7 }]}
+              >
+                <Text style={styles.activityViewAll}>VIEW ALL ENTRIES</Text>
+              </Pressable>
+            </View>
+            <View style={styles.activityList}>
+              {recentHistory.map((entry, i) => {
+                const delta = entry.total_oml != null
+                  ? (i < recentHistory.length - 1 && recentHistory[i + 1]?.total_oml != null
+                    ? Math.round((entry.total_oml - (recentHistory[i + 1]?.total_oml ?? 0)) * 10) / 10
+                    : undefined)
+                  : undefined;
+                return (
+                  <View key={entry.id ?? i} style={styles.activityItemRow}>
+                    <View style={styles.activityIconCircle}>
+                      <MaterialIcons
+                        name="description"
+                        size={20}
+                        color={colors.outline}
+                      />
+                    </View>
+                    <View style={styles.activityItemContent}>
+                      <VActivityItem
+                        title={`OML: ${entry.total_oml != null ? Math.round(entry.total_oml) : '--'}`}
+                        subtitle={`GPA: ${entry.gpa?.toFixed(2) ?? '--'} | ACFT: ${entry.acft_total != null ? Math.round(entry.acft_total) : '--'}`}
+                        pointDelta={delta}
+                        timestamp={entry.recorded_at ?? ''}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
         )}
 
-        {/* Goal Target */}
-        {profile.goalOml != null && (
-          <VCard tier="high" style={styles.goalTargetCard}>
-            <Text style={styles.goalTargetTitle}>
-              Target: {Math.round(profile.goalOml)} OML
-            </Text>
-            <Text style={styles.goalTargetDesc}>
-              {totalOml != null
-                ? totalOml >= profile.goalOml
-                  ? 'You are on track to meet your goal!'
-                  : `${Math.round(profile.goalOml - totalOml)} points to go.`
-                : 'Enter scores to see how close you are.'}
-            </Text>
-          </VCard>
-        )}
+        {/* Bottom spacer for FAB clearance */}
+        <View style={{ height: spacing[16] }} />
       </ScrollView>
 
-      {/* Add Goal Modal */}
+      {/* ── NEW SIMULATION FAB ── */}
+      <Pressable
+        onPress={() => router.push('/what-if')}
+        accessibilityLabel="New Simulation"
+        accessibilityRole="button"
+        style={({ pressed }) => [
+          styles.fabWrapper,
+          pressed && { opacity: 0.85 },
+        ]}
+      >
+        <LinearGradient
+          colors={gradients.primaryCta.colors as unknown as [string, string]}
+          start={gradients.primaryCta.start}
+          end={gradients.primaryCta.end}
+          style={styles.fab}
+        >
+          <MaterialIcons name="calculate" size={22} color={colors.on_primary} />
+          <Text style={styles.fabText}>NEW SIMULATION</Text>
+        </LinearGradient>
+      </Pressable>
+
+      {/* ── ADD GOAL MODAL ── */}
       <Modal
         visible={showAddGoal}
         animationType="slide"
@@ -322,7 +432,6 @@ export default function DashboardScreen() {
               />
             </View>
 
-            {/* Category picker */}
             <Text style={styles.fieldLabel}>Category</Text>
             <View style={styles.categoryPicker}>
               {CATEGORY_OPTIONS.map((opt) => (
@@ -350,7 +459,6 @@ export default function DashboardScreen() {
               ))}
             </View>
 
-            {/* Title */}
             <Text style={styles.fieldLabel}>Goal Title</Text>
             <TextInput
               style={styles.textInput}
@@ -361,7 +469,6 @@ export default function DashboardScreen() {
               accessibilityLabel="Goal title input"
             />
 
-            {/* Target value */}
             <Text style={styles.fieldLabel}>Target Value</Text>
             <TextInput
               style={styles.textInput}
@@ -373,7 +480,6 @@ export default function DashboardScreen() {
               accessibilityLabel="Target value input"
             />
 
-            {/* Deadline */}
             <Text style={styles.fieldLabel}>Deadline (YYYY-MM-DD)</Text>
             <TextInput
               style={styles.textInput}
@@ -384,7 +490,6 @@ export default function DashboardScreen() {
               accessibilityLabel="Deadline input"
             />
 
-            {/* Create button */}
             <VButton
               label="Create Goal"
               onPress={handleCreateGoal}
@@ -418,51 +523,152 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing[8],
   },
-  header: {
-    ...typography.headline_lg,
-    color: colors.on_surface,
-    marginTop: spacing[2],
+
+  // ── Hero Section ──
+  heroCard: {
+    backgroundColor: colors.surface_container_lowest,
+    borderRadius: roundness.xl,
+    padding: spacing[5],
     marginBottom: spacing[4],
+    // No border — Rule 1
   },
-  gaugeContainer: {
-    alignItems: 'center',
-    marginBottom: spacing[6],
-  },
-  gaugeSubtitle: {
-    ...typography.label_md,
-    color: colors.outline,
-    marginTop: spacing[2],
-  },
-  sectionTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
-    marginBottom: spacing[3],
-    marginTop: spacing[2],
-  },
-  pillarCard: {
-    marginBottom: spacing[3],
-  },
-  pillarRow: {
+  heroCardWide: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: spacing[6],
+  },
+  gaugeSection: {
     alignItems: 'center',
+    marginBottom: spacing[5],
+  },
+  gaugeSectionWide: {
+    marginBottom: 0,
+    flex: 0,
+  },
+  projectedLabel: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: typography.label_sm.fontSize,
+    fontWeight: '500',
+    letterSpacing: 2,
+    lineHeight: typography.label_sm.lineHeight,
+    color: colors.outline,
+    textTransform: 'uppercase',
+    marginBottom: spacing[3],
+  },
+  topBadge: {
+    backgroundColor: colors.secondary_container,
+    borderRadius: roundness.sm,
+    paddingVertical: spacing[1],
+    paddingHorizontal: spacing[3],
+    marginTop: spacing[3],
+  },
+  topBadgeText: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: 10,
+    fontWeight: '700',
+    color: colors.secondary,
+    letterSpacing: 0.5,
+  },
+  heroTextSection: {
+    flex: 1,
+  },
+  heroTextSectionWide: {
+    justifyContent: 'center',
+  },
+  heroHeadline: {
+    ...typography.headline_sm,
+    fontWeight: '700',
+    color: colors.on_surface,
     marginBottom: spacing[2],
   },
-  pillarLabel: {
-    ...typography.title_sm,
+  heroDescription: {
+    ...typography.body_md,
+    color: colors.outline,
+    marginBottom: spacing[4],
+    lineHeight: 22,
+  },
+  insightCard: {
+    // Inherits VInsightCard styling
+  },
+
+  // ── Stat Cards ──
+  statCardsRow: {
+    gap: spacing[3],
+    marginBottom: spacing[4],
+  },
+  statCardsRowWide: {
+    flexDirection: 'row',
+  },
+  statCard: {
+    backgroundColor: colors.surface_container_lowest,
+    borderRadius: roundness.xl,
+    padding: spacing[4],
+    // No border — Rule 1
+    shadowColor: colors.on_surface,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  statCardWide: {
+    flex: 1,
+  },
+  statCardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing[3],
+  },
+  statIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: roundness.lg,
+    backgroundColor: colors.surface_container_high,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statWeightLabel: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: typography.label_sm.fontSize,
+    fontWeight: '500',
+    letterSpacing: 1,
+    color: colors.outline,
+    textTransform: 'uppercase',
+  },
+  statCardTitle: {
+    ...typography.title_md,
+    fontWeight: '700',
+    color: colors.on_surface,
+    marginBottom: spacing[2],
+  },
+  statScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: spacing[3],
+  },
+  statScoreValue: {
+    fontFamily: typography.headline_sm.fontFamily,
+    fontSize: 28,
+    fontWeight: '900',
     color: colors.on_surface,
   },
-  pillarValue: {
-    ...typography.label_md,
+  statScoreMax: {
+    ...typography.body_md,
     color: colors.outline,
+    marginLeft: spacing[1],
   },
-  // Goals section
+
+  // ── Goals Section ──
   goalsSectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: spacing[4],
+    marginTop: spacing[2],
     marginBottom: spacing[3],
+  },
+  sectionTitle: {
+    ...typography.title_md,
+    fontWeight: '700',
+    color: colors.on_surface,
   },
   addButton: {
     paddingVertical: spacing[2],
@@ -476,30 +682,93 @@ const styles = StyleSheet.create({
   },
   goalsList: {
     gap: spacing[3],
-  },
-  goalCard: {
-    // Individual goal card spacing handled by gap
+    marginBottom: spacing[4],
   },
   goalsEmpty: {
     paddingVertical: spacing[8],
     minHeight: 200,
+    marginBottom: spacing[4],
+  },
+
+  // ── Activity Log ──
+  activityCard: {
+    backgroundColor: colors.surface_container_lowest,
+    borderRadius: roundness.xl,
+    padding: spacing[4],
+    marginTop: spacing[2],
+    // No border — Rule 1
+  },
+  activityHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing[4],
+  },
+  activityTitle: {
+    ...typography.headline_sm,
+    fontWeight: '700',
+    color: colors.on_surface,
+    fontSize: 22,
+  },
+  activityViewAll: {
+    fontFamily: typography.label_sm.fontFamily,
+    fontSize: typography.label_sm.fontSize,
+    fontWeight: '500',
+    letterSpacing: 1,
+    color: colors.primary,
+    textTransform: 'uppercase',
   },
   activityList: {
     gap: spacing[1],
   },
-  goalTargetCard: {
-    marginTop: spacing[4],
+  activityItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[3],
   },
-  goalTargetTitle: {
-    ...typography.title_sm,
-    color: colors.tertiary,
-    marginBottom: spacing[1],
+  activityIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: roundness.xl,
+    backgroundColor: colors.surface_container_low,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  goalTargetDesc: {
-    ...typography.body_sm,
-    color: colors.on_surface,
+  activityItemContent: {
+    flex: 1,
   },
-  // Modal styles
+
+  // ── FAB ──
+  fabWrapper: {
+    position: 'absolute',
+    bottom: spacing[8],
+    right: spacing[4],
+    minHeight: 44,
+  },
+  fab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing[2],
+    borderRadius: roundness.xl,
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[5],
+    minHeight: 44,
+    shadowColor: colors.on_surface,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabText: {
+    fontFamily: typography.label_lg.fontFamily,
+    fontSize: typography.label_lg.fontSize,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: colors.on_primary,
+    textTransform: 'uppercase',
+  },
+
+  // ── Modal ──
   modalContainer: {
     flex: 1,
     backgroundColor: colors.surface,
@@ -540,10 +809,9 @@ const styles = StyleSheet.create({
     borderRadius: roundness.lg,
     backgroundColor: colors.surface_container_low,
     minHeight: 44,
-    // No border — Rule 1
   },
   categoryOptionSelected: {
-    backgroundColor: `rgba(204, 167, 48, 0.12)`, // tertiary_container at low opacity
+    backgroundColor: `rgba(204, 167, 48, 0.12)`,
   },
   categoryOptionIcon: {
     fontSize: 20,
@@ -564,7 +832,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing[3],
     paddingHorizontal: spacing[4],
     minHeight: 48,
-    // No border — Rule 1
   },
   createButton: {
     marginTop: spacing[6],

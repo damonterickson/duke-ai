@@ -17,6 +17,13 @@ const CHAT_MODEL = process.env.EXPO_PUBLIC_AI_MODEL ?? 'nvidia/nemotron-3-super-
 const BRIEFING_MODEL = process.env.EXPO_PUBLIC_AI_BRIEFING_MODEL ?? CHAT_MODEL;
 const MAX_TOKENS_CHAT = 1024;
 const MAX_TOKENS_INSIGHT = 256;
+const REQUEST_TIMEOUT_MS = 30_000; // 30 second timeout for all AI requests
+
+function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeout));
+}
 
 function getApiKey(): string {
   return process.env.EXPO_PUBLIC_OPENROUTER_API_KEY ?? '';
@@ -125,7 +132,7 @@ export async function streamChat(
 
   try {
     console.log('[AI] Sending chat request to', API_URL, 'model:', CHAT_MODEL);
-    const response = await fetch(API_URL, {
+    const response = await fetchWithTimeout(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -232,7 +239,7 @@ export async function generateBriefingWithGoals(contextJson: string): Promise<Br
     : `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
 
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetchWithTimeout(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -296,7 +303,7 @@ export async function generateInsight(
   const systemPrompt = `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
 
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetchWithTimeout(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

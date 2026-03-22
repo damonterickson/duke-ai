@@ -5,7 +5,16 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import { createMMKV, type MMKV } from 'react-native-mmkv';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// MMKV — optional native module, falls back to null in Expo Go
+let MMKV: typeof import('react-native-mmkv') | null = null;
+type MMKV_Instance = { getString: (k: string) => string | undefined; getBoolean: (k: string) => boolean | undefined; set: (k: string, v: string | boolean | number) => void };
+try {
+  MMKV = require('react-native-mmkv');
+} catch {
+  // Not available in Expo Go
+}
 
 // ─── SQLite Database ─────────────────────────────────────────────────
 
@@ -94,6 +103,29 @@ export async function initDatabase(): Promise<void> {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       sent_at TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      metric TEXT NOT NULL,
+      target_value REAL NOT NULL,
+      current_value REAL,
+      baseline_value REAL NOT NULL DEFAULT 0,
+      deadline TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_by TEXT NOT NULL DEFAULT 'user',
+      oml_impact REAL,
+      completed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS goal_progress (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      goal_id INTEGER NOT NULL REFERENCES goals(id) ON DELETE CASCADE,
+      value REAL NOT NULL,
+      recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }
 
@@ -131,21 +163,27 @@ export async function getProfile(): Promise<CadetProfileRow | null> {
 
 export async function upsertProfile(profile: Omit<CadetProfileRow, 'id' | 'created_at' | 'updated_at'>): Promise<number> {
   const database = await getDatabase();
-  const existing = await getProfile();
 
-  if (existing?.id) {
-    await database.runAsync(
-      `UPDATE cadet_profile SET year_group = ?, gender = ?, age_bracket = ?, target_branch = ?, goal_oml = ?, updated_at = datetime('now') WHERE id = ?`,
-      profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null, existing.id
+  // Use a transaction to prevent concurrent read-then-write races
+  return await database.withTransactionAsync(async () => {
+    const existing = await database.getFirstAsync<CadetProfileRow>(
+      'SELECT * FROM cadet_profile ORDER BY id DESC LIMIT 1'
     );
-    return existing.id;
-  } else {
-    const result = await database.runAsync(
-      `INSERT INTO cadet_profile (year_group, gender, age_bracket, target_branch, goal_oml) VALUES (?, ?, ?, ?, ?)`,
-      profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null
-    );
-    return result.lastInsertRowId;
-  }
+
+    if (existing?.id) {
+      await database.runAsync(
+        `UPDATE cadet_profile SET year_group = ?, gender = ?, age_bracket = ?, target_branch = ?, goal_oml = ?, updated_at = datetime('now') WHERE id = ?`,
+        profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null, existing.id
+      );
+      return existing.id;
+    } else {
+      const result = await database.runAsync(
+        `INSERT INTO cadet_profile (year_group, gender, age_bracket, target_branch, goal_oml) VALUES (?, ?, ?, ?, ?)`,
+        profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null
+      );
+      return result.lastInsertRowId;
+    }
+  }) as number;
 }
 
 // ─── Score History CRUD ──────────────────────────────────────────────
@@ -317,8 +355,11 @@ export async function insertConversation(row: Omit<ConversationRow, 'id' | 'time
 
 export async function getConversations(limit = 50): Promise<ConversationRow[]> {
   const database = await getDatabase();
+  // Subquery gets the newest N messages, outer query re-sorts them chronologically
   return database.getAllAsync<ConversationRow>(
-    'SELECT * FROM conversations ORDER BY timestamp ASC LIMIT ?',
+    `SELECT * FROM (
+      SELECT * FROM conversations ORDER BY timestamp DESC LIMIT ?
+    ) sub ORDER BY timestamp ASC`,
     limit
   );
 }
@@ -363,12 +404,13 @@ export async function markQuerySent(id: number): Promise<void> {
 
 // ─── MMKV Cache ──────────────────────────────────────────────────────
 
-let mmkv: MMKV | null = null;
+let mmkv: MMKV_Instance | null = null;
 
-export function initMMKV(): MMKV | null {
-  if (!mmkv) {
+export function initMMKV(): MMKV_Instance | null {
+  if (!mmkv && MMKV) {
     try {
-      mmkv = createMMKV({ id: 'duke-ai-cache' });
+      const { createMMKV } = MMKV;
+      mmkv = createMMKV({ id: 'duke-ai-cache' }) as MMKV_Instance;
     } catch {
       // MMKV unavailable in Expo Go — fall through to null
       return null;
@@ -377,7 +419,10 @@ export function initMMKV(): MMKV | null {
   return mmkv;
 }
 
-function getMMKV(): MMKV | null {
+/** Alias for backward compat */
+export const initKVCache = initMMKV;
+
+function getMMKV(): MMKV_Instance | null {
   if (!mmkv) {
     return initMMKV();
   }
@@ -430,4 +475,91 @@ export function getOnboardingComplete(): boolean {
 
 export function setOnboardingComplete(complete: boolean): void {
   getMMKV()?.set('onboarding_complete', complete);
+}
+
+// AI Coach setting — aligned key between settings UI and AI service
+const AI_COACH_KEY = 'ai_coach_enabled';
+
+export function getAICoachEnabled(): boolean {
+  return getMMKV()?.getBoolean(AI_COACH_KEY) ?? false;
+}
+
+export function setAICoachEnabled(enabled: boolean): void {
+  getMMKV()?.set(AI_COACH_KEY, enabled);
+}
+
+// ─── Goals CRUD ─────────────────────────────────────────────────────
+
+export interface GoalRow {
+  id?: number;
+  title: string;
+  category: string;
+  metric: string;
+  target_value: number;
+  current_value: number | null;
+  baseline_value: number;
+  deadline: string;
+  status: string;
+  created_by: string;
+  oml_impact: number | null;
+  completed_at: string | null;
+  created_at?: string;
+}
+
+export async function getGoals(): Promise<GoalRow[]> {
+  const database = await getDatabase();
+  return database.getAllAsync<GoalRow>(
+    'SELECT * FROM goals ORDER BY created_at DESC'
+  );
+}
+
+export async function insertGoal(goal: Omit<GoalRow, 'id' | 'created_at'>): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.runAsync(
+    `INSERT INTO goals (title, category, metric, target_value, current_value, baseline_value, deadline, status, created_by, oml_impact, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    goal.title, goal.category, goal.metric, goal.target_value,
+    goal.current_value, goal.baseline_value, goal.deadline,
+    goal.status, goal.created_by, goal.oml_impact, goal.completed_at
+  );
+  return result.lastInsertRowId;
+}
+
+export async function updateGoal(id: number, fields: Partial<GoalRow>): Promise<void> {
+  const database = await getDatabase();
+  const keys: string[] = [];
+  const values: unknown[] = [];
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (key === 'id' || key === 'created_at') continue;
+    keys.push(`${key} = ?`);
+    values.push(value);
+  }
+
+  if (keys.length === 0) return;
+  values.push(id);
+
+  await database.runAsync(
+    `UPDATE goals SET ${keys.join(', ')} WHERE id = ?`,
+    ...(values as SQLite.SQLiteBindValue[])
+  );
+}
+
+export async function deleteGoal(id: number): Promise<void> {
+  const database = await getDatabase();
+  await database.runAsync('DELETE FROM goals WHERE id = ?', id);
+}
+
+export async function insertGoalProgress(goalId: number, value: number): Promise<void> {
+  const database = await getDatabase();
+  // Verify the goal exists before inserting progress (FK check)
+  const goal = await database.getFirstAsync<{ id: number }>(
+    'SELECT id FROM goals WHERE id = ?', goalId
+  );
+  if (!goal) {
+    throw new Error(`Cannot insert progress: goal ${goalId} does not exist`);
+  }
+  await database.runAsync(
+    'INSERT INTO goal_progress (goal_id, value) VALUES (?, ?)',
+    goalId, value
+  );
 }

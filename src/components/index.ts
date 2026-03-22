@@ -48,3 +48,6 @@ export type { VAIResponseProps } from './VAIResponse';
 
 export { VGoalCard } from './VGoalCard';
 export type { VGoalCardProps } from './VGoalCard';
+
+export { VInsightCard } from './VInsightCard';
+export type { VInsightCardProps } from './VInsightCard';
