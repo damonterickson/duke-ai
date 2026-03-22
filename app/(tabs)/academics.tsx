@@ -34,9 +34,10 @@ const GRADE_POINTS: Record<string, number> = {
   F: 0.0,
 };
 
-function getOmlImpact(grade: string, credits: number): number {
+/** Quality points this course contributes to GPA (grade_point * credits). */
+function getQualityPoints(grade: string, credits: number): number {
   const gp = GRADE_POINTS[grade.toUpperCase()] ?? 0;
-  return parseFloat((gp * credits * 0.1).toFixed(1));
+  return parseFloat((gp * credits).toFixed(1));
 }
 
 export default function AcademicsScreen() {
@@ -133,6 +134,7 @@ export default function AcademicsScreen() {
             await loadCourses();
           } catch (error) {
             console.error('Failed to delete course:', error);
+            Alert.alert('Error', 'Failed to remove course. Please try again.');
           }
         },
       },
@@ -202,8 +204,8 @@ export default function AcademicsScreen() {
               <Text style={styles.heroGpaSuffix}>/ 4.0</Text>
             </View>
 
-            {/* MSL GPA inline */}
-            {mslGpa > 0 && (
+            {/* MSL GPA inline — show whenever MSL courses exist */}
+            {courses.some((c) => c.is_msl === 1) && (
               <Text style={styles.mslGpaText}>MSL GPA: {mslGpa.toFixed(2)}</Text>
             )}
 
@@ -313,7 +315,7 @@ export default function AcademicsScreen() {
 
         {/* Course Cards */}
         {courses.map((course) => {
-          const impact = getOmlImpact(course.grade, course.credits);
+          const qp = getQualityPoints(course.grade, course.credits);
           const gradePoints = GRADE_POINTS[course.grade.toUpperCase()] ?? 0;
           const isHighImpact = gradePoints >= 3.7;
 
@@ -322,7 +324,7 @@ export default function AcademicsScreen() {
               key={course.id}
               tier="low"
               style={styles.courseCard}
-              accessibilityLabel={`${course.code} ${course.name}, Grade: ${course.grade}, Credits: ${course.credits}${course.is_msl ? ', MSL course' : ''}, OML Impact: +${impact} points`}
+              accessibilityLabel={`${course.code} ${course.name}, Grade: ${course.grade}, Credits: ${course.credits}${course.is_msl ? ', MSL course' : ''}, Quality Points: ${qp}`}
             >
               <View style={styles.courseHeader}>
                 <View style={styles.courseLeft}>
@@ -355,7 +357,7 @@ export default function AcademicsScreen() {
                       styles.impactText,
                       isHighImpact ? styles.impactHigh : styles.impactMid,
                     ]}>
-                      +{impact} pts
+                      {qp} QP
                     </Text>
                   </View>
                 </View>
@@ -502,7 +504,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 1,
-    color: colors.tertiary,
+    color: colors.primary,
   },
 
   // Insight
@@ -681,7 +683,7 @@ const styles = StyleSheet.create({
     borderRadius: roundness.lg,
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderColor: `rgba(200, 199, 184, 0.3)`, // outline_variant at 30%
+    borderColor: colors.outline_variant + '4D', // 30% opacity via hex alpha
     gap: spacing[2],
   },
   uploadText: {
