@@ -10,14 +10,15 @@ AI-First OML optimizer for Army ROTC cadets. Expo React Native app with OpenRout
 - `npx tsc --noEmit` — TypeScript check (ignore test file errors — need tsconfig jest types)
 
 ## Architecture
-- **AI-First:** AI Advisor is tab 1 (home), not a secondary feature
+- **Mission-First:** Mission tab is tab 1 (home) — command dashboard with OML ring, daily missions, achievements. AI Advisor lives in Intel tab (tab 2).
 - **Offline-first:** SQLite + AsyncStorage for local data, Zustand for runtime state
-- **Design system:** "Modern Vanguard" — see DESIGN.md for rules (No-Line Rule, glassmorphism, etc.)
+- **Design system:** Dual-theme — "Modern Vanguard" (light, army green) + "Kinetic Command" (dark, purple). See DESIGN.md. Use `useTheme()` hook for all colors.
+- **Navigation:** 4 tabs — Mission, Intel, Squad, Profile. Bottom nav uses military olive (#343c0a) in light, dark surface in dark mode.
 - **OML Engine:** Pure TypeScript in src/engine/oml.ts — deterministic, no AI dependency
 
 ## File structure
 - `app/` — Expo Router screens (tabs, onboarding, modals)
-- `src/components/` — 17 design system components (V-prefixed, includes VGoalCard, VAIResponse)
+- `src/components/` — Design system components (V-prefixed, theme-aware via useTheme())
 - `src/engine/` — OML calculator + Context Engine + tests
 - `src/services/` — AI (OpenRouter), storage (SQLite/AsyncStorage), offline queue, goal engine
 - `src/stores/` — Zustand state (profile, scores, conversations, goals)
