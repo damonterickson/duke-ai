@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,6 +46,16 @@ export const VChatSheet: React.FC<VChatSheetProps> = ({
   accessibilityLabel,
 }) => {
   const [draft, setDraft] = useState('');
+  const flatListRef = useRef<FlatList>(null);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        flatListRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
 
   if (!visible) return null;
 
@@ -74,6 +84,7 @@ export const VChatSheet: React.FC<VChatSheetProps> = ({
 
       {/* Messages */}
       <FlatList
+        ref={flatListRef}
         data={messages}
         keyExtractor={(m) => m.id}
         contentContainerStyle={styles.list}
@@ -95,7 +106,7 @@ export const VChatSheet: React.FC<VChatSheetProps> = ({
             </Text>
           </View>
         )}
-        inverted
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
       />
 
       {/* Input */}
