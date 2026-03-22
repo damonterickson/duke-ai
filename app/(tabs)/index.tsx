@@ -14,6 +14,7 @@ import {
   VChatSheet,
   VSkeletonLoader,
   VCard,
+  VInsightCard,
 } from '../../src/components';
 import type { ChatMessage } from '../../src/components';
 import { colors, typography, spacing } from '../../src/theme/tokens';
@@ -21,7 +22,7 @@ import { useProfileStore } from '../../src/stores/profile';
 import { useScoresStore } from '../../src/stores/scores';
 import { useConversationsStore } from '../../src/stores/conversations';
 import { useGoalsStore } from '../../src/stores/goals';
-import { generateBriefing, streamChat } from '../../src/services/ai';
+import { generateBriefing, streamChat, consumeBriefingGoalActions, isLastBriefingLocal, setLocalFallbackData } from '../../src/services/ai';
 import type { GoalAction } from '../../src/services/goalEngine';
 import type { AIMessage } from '../../src/services/ai';
 import { getCachedBriefing } from '../../src/services/storage';
@@ -41,6 +42,8 @@ export default function AdvisorScreen() {
   const [chatVisible, setChatVisible] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [insightCards, setInsightCards] = useState<Array<{ icon: string; label: string; text: string }>>([]);
+  const [briefingIsLocal, setBriefingIsLocal] = useState(false);
 
   // Build a CadetProfile from store state for context engine
   const buildCadetProfile = useCallback((): CadetProfile | null => {
@@ -75,6 +78,84 @@ export default function AdvisorScreen() {
     };
   }, [scores.scoreHistory]);
 
+  // Helper: parse insight cards from briefing text
+  const parseInsightCards = useCallback((text: string, isLocal: boolean) => {
+    const cards: Array<{ icon: string; label: string; text: string }> = [];
+
+    if (isLocal) {
+      // For local briefings, generate cards from data
+      const activeGoals = goalsStore.getActiveGoals();
+      const omlResult = buildOmlResult();
+
+      // Card 1: Weakest pillar opportunity from marginal gains
+      if (omlResult.marginalGains && Object.keys(omlResult.marginalGains).length > 0) {
+        const topGain = Object.entries(omlResult.marginalGains)
+          .sort(([, a], [, b]) => b - a)[0];
+        if (topGain) {
+          cards.push({
+            icon: 'psychology',
+            label: "Today's Priority",
+            text: `Focus on ${topGain[0].replace(/[+\-]/g, ' ').trim()} for up to +${topGain[1].toFixed(1)} OML points.`,
+          });
+        }
+      }
+
+      // Card 2: Goal closest to completion or "Set your first goal"
+      if (activeGoals.length > 0) {
+        const withPct = activeGoals.map((g) => {
+          const current = g.current_value ?? 0;
+          const pct = g.target_value > 0 ? Math.round((current / g.target_value) * 100) : 0;
+          return { ...g, pct };
+        }).sort((a, b) => b.pct - a.pct);
+        const top = withPct[0];
+        cards.push({
+          icon: 'military_tech',
+          label: 'Goal Progress',
+          text: top.pct > 0
+            ? `${top.title} is ${top.pct}% complete. Keep pushing toward your target!`
+            : `You have ${activeGoals.length} active goal${activeGoals.length > 1 ? 's' : ''} set. Track your progress!`,
+        });
+      } else {
+        cards.push({
+          icon: 'military_tech',
+          label: 'Goals',
+          text: 'Set your first goal to start tracking your progress toward a stronger OML.',
+        });
+      }
+    } else {
+      // For AI briefings, parse sections
+      const priorityMatch = text.match(/(?:TODAY'S PRIORITY|PRIORITY)[:\s]*(.+?)(?=\n\n|\n[0-9]|\nGOAL|$)/is);
+      const goalMatch = text.match(/(?:GOAL UPDATE|GOAL)[:\s]*(.+?)(?=\n\n|$)/is);
+
+      if (priorityMatch) {
+        cards.push({
+          icon: 'psychology',
+          label: "Today's Priority",
+          text: priorityMatch[1].trim().replace(/^\*+|\*+$/g, '').trim(),
+        });
+      }
+
+      if (goalMatch) {
+        cards.push({
+          icon: 'military_tech',
+          label: 'Goal Update',
+          text: goalMatch[1].trim().replace(/^\*+|\*+$/g, '').trim(),
+        });
+      }
+
+      // If parsing didn't find sections, create a generic card from the briefing
+      if (cards.length === 0 && text.length > 0) {
+        cards.push({
+          icon: 'psychology',
+          label: 'Vanguard AI Insight',
+          text: text.length > 200 ? text.substring(0, 197) + '...' : text,
+        });
+      }
+    }
+
+    return cards;
+  }, [goalsStore, buildOmlResult]);
+
   // Generate briefing on mount
   useEffect(() => {
     async function loadBriefing() {
@@ -86,24 +167,83 @@ export default function AdvisorScreen() {
       }
 
       const cadetProfile = buildCadetProfile();
+      const omlResult = buildOmlResult();
+      const activeGoals = goalsStore.getActiveGoals();
+
+      // Set local fallback data for the AI service
+      setLocalFallbackData(
+        cadetProfile,
+        omlResult,
+        activeGoals,
+        scores.scoreHistory
+      );
+
       if (!cadetProfile) {
         setBriefingLoading(false);
+        setBriefingIsLocal(true);
+        setInsightCards(parseInsightCards('', true));
         return;
       }
 
-      const omlResult = buildOmlResult();
-      const contextJson = buildContext(cadetProfile, omlResult, []);
+      const contextJson = buildContext(
+        cadetProfile,
+        omlResult,
+        [],
+        undefined,
+        activeGoals,
+        scores.scoreHistory
+      );
       try {
         const newBriefing = await generateBriefing(contextJson);
         setBriefing(newBriefing);
+
+        const isLocal = isLastBriefingLocal();
+        setBriefingIsLocal(isLocal);
+        setInsightCards(parseInsightCards(newBriefing, isLocal));
+
+        // Process goal actions from briefing
+        const goalActions = consumeBriefingGoalActions();
+        if (goalActions && goalActions.length > 0) {
+          for (const action of goalActions) {
+            try {
+              switch (action.type) {
+                case 'create':
+                  await goalsStore.addGoal({
+                    title: action.title,
+                    category: action.category,
+                    metric: action.metric,
+                    target_value: action.target_value,
+                    current_value: null,
+                    baseline_value: 0,
+                    deadline: action.deadline,
+                    status: 'active',
+                    created_by: 'ai',
+                    oml_impact: action.oml_impact ?? null,
+                    completed_at: null,
+                  });
+                  break;
+                case 'update':
+                  await goalsStore.updateGoalProgress(action.goal_id, action.current_value);
+                  break;
+                case 'complete':
+                  await goalsStore.completeGoal(action.goal_id);
+                  break;
+              }
+            } catch (err) {
+              console.warn('[BRIEFING] Failed to apply goal action:', action.type, err);
+            }
+          }
+        }
       } catch (err) {
         console.error('Failed to generate briefing:', err);
+        setBriefingIsLocal(true);
+        setInsightCards(parseInsightCards('', true));
       } finally {
         setBriefingLoading(false);
       }
     }
     loadBriefing();
-  }, [buildCadetProfile, buildOmlResult]);
+  }, [buildCadetProfile, buildOmlResult, goalsStore, scores.scoreHistory, parseInsightCards]);
 
   // Load existing chat messages from store
   useEffect(() => {
@@ -292,10 +432,26 @@ export default function AdvisorScreen() {
           />
         </View>
 
+        {/* AI Insight Cards */}
+        {insightCards.length > 0 && (
+          <>
+            <Text style={styles.sectionTitle}>AI Insights</Text>
+            {insightCards.map((card, i) => (
+              <VInsightCard
+                key={i}
+                icon={card.icon}
+                label={card.label}
+                text={card.text}
+                style={styles.insightCard}
+              />
+            ))}
+          </>
+        )}
+
         {/* Optimization Paths */}
         <Text style={styles.sectionTitle}>Optimization Paths</Text>
         <VCard tier="low" style={styles.pathCard}>
-          <Text style={styles.pathTitle}>Academic</Text>
+          <Text style={styles.pathTitle}>Academic {gpa != null ? '- ACTIVE' : '- AVAILABLE'}</Text>
           <Text style={styles.pathDesc}>
             {gpa != null
               ? `Current GPA: ${gpa.toFixed(2)}. Raise it to unlock more OML points.`
@@ -303,7 +459,7 @@ export default function AdvisorScreen() {
           </Text>
         </VCard>
         <VCard tier="low" style={styles.pathCard}>
-          <Text style={styles.pathTitle}>Physical</Text>
+          <Text style={styles.pathTitle}>Physical {acftTotal != null ? '- ACTIVE' : '- AVAILABLE'}</Text>
           <Text style={styles.pathDesc}>
             {acftTotal != null
               ? `Current ACFT: ${Math.round(acftTotal)}. Every 10 points adds to your OML.`
@@ -311,9 +467,11 @@ export default function AdvisorScreen() {
           </Text>
         </VCard>
         <VCard tier="low" style={styles.pathCard}>
-          <Text style={styles.pathTitle}>Leadership</Text>
+          <Text style={styles.pathTitle}>Leadership {latestScore?.leadership_eval != null ? '- ACTIVE' : '- AVAILABLE'}</Text>
           <Text style={styles.pathDesc}>
-            Log command roles and extracurriculars to maximize your leadership pillar.
+            {latestScore?.leadership_eval != null
+              ? `Leadership eval: ${latestScore.leadership_eval}. Add command roles and extracurriculars for more impact.`
+              : 'Log command roles and extracurriculars to maximize your leadership pillar.'}
           </Text>
         </VCard>
       </ScrollView>
@@ -384,6 +542,9 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.title_md,
     color: colors.on_surface,
+    marginBottom: spacing[3],
+  },
+  insightCard: {
     marginBottom: spacing[3],
   },
   pathCard: {

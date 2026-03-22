@@ -5,7 +5,7 @@
  */
 
 import type { CadetProfile, OMLResult } from './oml';
-import type { GoalRow } from '../services/storage';
+import type { GoalRow, ScoreHistoryRow } from '../services/storage';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -68,6 +68,23 @@ export interface ContextOutput {
     current: number | null;
     target: number;
     deadline: string;
+    pct_complete: number;
+  }>;
+  score_history?: Array<{
+    gpa: number | null;
+    acft_total: number | null;
+    total_oml: number | null;
+    recorded_at: string;
+  }>;
+  marginal_gains?: Array<{ action: string; impact: number }>;
+  recent_activity?: Array<{
+    total_oml: number | null;
+    recorded_at: string;
+  }>;
+  upcoming_deadlines?: Array<{
+    title: string;
+    deadline: string;
+    days_remaining: number;
   }>;
   topGains: Array<{ action: string; impact: number }>;
   recentConversation: Array<{ role: string; content: string }>;
@@ -116,7 +133,8 @@ export function buildContext(
   omlResult: OMLResult,
   history: ConversationTurn[],
   trendData?: TrendEntry[],
-  activeGoals?: GoalRow[]
+  activeGoals?: GoalRow[],
+  scoreHistory?: ScoreHistoryRow[]
 ): string {
   // Build the base context object
   const ctx: ContextOutput = {
@@ -180,15 +198,64 @@ export function buildContext(
     content: turn.content,
   }));
 
-  // Add active goals
+  // Add active goals with percent complete
   if (activeGoals && activeGoals.length > 0) {
-    ctx.active_goals = activeGoals.map((g) => ({
-      id: g.id!,
-      title: g.title,
-      current: g.current_value,
-      target: g.target_value,
-      deadline: g.deadline,
+    ctx.active_goals = activeGoals.map((g) => {
+      const current = g.current_value ?? 0;
+      const pct_complete = g.target_value > 0
+        ? Math.round((current / g.target_value) * 100)
+        : 0;
+      return {
+        id: g.id!,
+        title: g.title,
+        current: g.current_value,
+        target: g.target_value,
+        deadline: g.deadline,
+        pct_complete,
+      };
+    });
+  }
+
+  // Score history — last 5 entries with dates and values
+  if (scoreHistory && scoreHistory.length > 0) {
+    ctx.score_history = scoreHistory.slice(0, 5).map((s) => ({
+      gpa: s.gpa,
+      acft_total: s.acft_total,
+      total_oml: s.total_oml,
+      recorded_at: s.recorded_at ?? '',
     }));
+  }
+
+  // Marginal gains — top 3 improvements ranked by OML impact
+  if (omlResult.marginalGains && Object.keys(omlResult.marginalGains).length > 0) {
+    ctx.marginal_gains = sortMarginalGains(omlResult.marginalGains);
+  }
+
+  // Recent activity — last 3 score_history entries
+  if (scoreHistory && scoreHistory.length > 0) {
+    ctx.recent_activity = scoreHistory.slice(0, 3).map((s) => ({
+      total_oml: s.total_oml,
+      recorded_at: s.recorded_at ?? '',
+    }));
+  }
+
+  // Upcoming deadlines — goal deadlines within 14 days
+  if (activeGoals && activeGoals.length > 0) {
+    const now = Date.now();
+    const fourteenDays = 14 * 24 * 60 * 60 * 1000;
+    const upcoming = activeGoals
+      .filter((g) => g.status === 'active')
+      .map((g) => {
+        const deadlineMs = Date.parse(g.deadline);
+        const days_remaining = Math.ceil((deadlineMs - now) / (24 * 60 * 60 * 1000));
+        return { title: g.title, deadline: g.deadline, days_remaining };
+      })
+      .filter((g) => g.days_remaining >= 0 && g.days_remaining <= 14)
+      .sort((a, b) => a.days_remaining - b.days_remaining);
+
+    if (upcoming.length > 0) {
+      ctx.upcoming_deadlines = upcoming;
+    }
   }
 
   // Check token budget and trim if needed
@@ -199,6 +266,19 @@ export function buildContext(
     while (ctx.recentConversation.length > 0 && estimateTokens(JSON.stringify(ctx)) > TOKEN_BUDGET) {
       ctx.recentConversation.shift();
     }
+    output = JSON.stringify(ctx);
+  }
+
+  if (estimateTokens(output) > TOKEN_BUDGET) {
+    // Remove recent_activity and upcoming_deadlines first (lower priority)
+    delete ctx.recent_activity;
+    delete ctx.upcoming_deadlines;
+    output = JSON.stringify(ctx);
+  }
+
+  if (estimateTokens(output) > TOKEN_BUDGET) {
+    // Remove score_history
+    delete ctx.score_history;
     output = JSON.stringify(ctx);
   }
 

@@ -402,7 +402,7 @@ let kvInitialized = false;
 export async function initKVCache(): Promise<void> {
   if (kvInitialized) return;
   try {
-    const keys = ['cached_briefing', 'cached_recommendation', 'app_settings', 'onboarding_complete', 'ai_coach_enabled'];
+    const keys = ['cached_briefing', 'cached_recommendation', 'app_settings', 'onboarding_complete', 'ai_coach_enabled', 'briefing_timestamp'];
     const pairs = await AsyncStorage.multiGet(keys);
     for (const [key, value] of pairs) {
       if (value !== null) kvCache[key] = value;

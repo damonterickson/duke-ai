@@ -25,6 +25,7 @@ import {
   deleteCourse,
   type CourseRow,
 } from '../../src/services/storage';
+import { generateMicroInsight } from '../../src/services/ai';
 
 const GRADE_POINTS: Record<string, number> = {
   'A+': 4.0, A: 4.0, 'A-': 3.7,
@@ -99,6 +100,10 @@ export default function AcademicsScreen() {
     }
 
     try {
+      // Calculate GPA before adding the course
+      const gpaBefore = calculateGPA(courses);
+      const mslGpaBefore = calculateMslGPA(courses);
+
       await insertCourse({
         code: code.trim(),
         name: name.trim(),
@@ -107,6 +112,10 @@ export default function AcademicsScreen() {
         is_msl: isMsl ? 1 : 0,
         semester: semester.trim(),
       });
+
+      const courseCode = code.trim();
+      const courseGrade = gradeUpper;
+
       setCode('');
       setName('');
       setCredits('');
@@ -115,6 +124,34 @@ export default function AcademicsScreen() {
       setSemester('');
       setShowForm(false);
       await loadCourses();
+
+      // Calculate GPA after adding the course
+      const updatedCourses = await getCourses();
+      const gpaAfter = calculateGPA(updatedCourses);
+      const gpaDelta = Math.round((gpaAfter - gpaBefore) * 100) / 100;
+
+      // Show post-entry micro-insight
+      const mslLabel = isMsl ? ' (MSL)' : '';
+      const deltaText = gpaDelta !== 0
+        ? ` GPA: ${gpaBefore.toFixed(2)} -> ${gpaAfter.toFixed(2)}`
+        : '';
+      Alert.alert(
+        'Course Added',
+        `${courseCode} (${courseGrade})${mslLabel} saved.${deltaText}`
+      );
+
+      // Fire-and-forget AI enhancement
+      generateMicroInsight(
+        '{}',
+        `added course ${courseCode} with grade ${courseGrade}${mslLabel}`,
+        gpaDelta * 10 // rough OML impact estimate
+      )
+        .then((insight) => {
+          if (insight) {
+            Alert.alert('Vanguard AI', insight);
+          }
+        })
+        .catch(() => {});
     } catch (error) {
       console.error('Failed to add course:', error);
       Alert.alert('Error', 'Failed to save course. Please try again.');
