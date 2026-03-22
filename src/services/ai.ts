@@ -1,7 +1,7 @@
 /**
- * AI Service — Claude API integration for Iron Vanguard
+ * AI Service — LLM integration for Iron Vanguard
  *
- * Sonnet for chat, Haiku for micro-insights.
+ * Uses OpenRouter API (OpenAI-compatible) for flexibility.
  * Streaming via fetch + ReadableStream.
  * Offline fallback: cached briefing, queue queries.
  */
@@ -11,16 +11,14 @@ import { getCachedBriefing, setCachedBriefing } from './storage';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
-const SONNET_MODEL = 'claude-sonnet-4-20250514';
-const HAIKU_MODEL = 'claude-haiku-4-20250414';
-const API_VERSION = '2023-06-01';
+const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const CHAT_MODEL = process.env.EXPO_PUBLIC_AI_MODEL ?? 'meta-llama/llama-3.1-8b-instruct:free';
+const BRIEFING_MODEL = process.env.EXPO_PUBLIC_AI_BRIEFING_MODEL ?? CHAT_MODEL;
 const MAX_TOKENS_CHAT = 1024;
 const MAX_TOKENS_INSIGHT = 256;
 
 function getApiKey(): string {
-  const key = process.env.EXPO_PUBLIC_ANTHROPIC_API_KEY ?? '';
-  return key;
+  return process.env.EXPO_PUBLIC_OPENROUTER_API_KEY ?? '';
 }
 
 // ─── System Prompt ───────────────────────────────────────────────────
@@ -68,8 +66,7 @@ export interface StreamCallbacks {
 // ─── API Calls ───────────────────────────────────────────────────────
 
 /**
- * Send a chat message to Claude (Sonnet) with streaming.
- * Returns the full response text.
+ * Send a chat message with streaming via OpenRouter (OpenAI-compatible).
  */
 export async function streamChat(
   messages: AIMessage[],
@@ -78,13 +75,12 @@ export async function streamChat(
 ): Promise<void> {
   const apiKey = getApiKey();
   if (!apiKey) {
-    callbacks.onError(new Error('API key not configured. Set EXPO_PUBLIC_ANTHROPIC_API_KEY.'));
+    callbacks.onError(new Error('API key not configured. Set EXPO_PUBLIC_OPENROUTER_API_KEY in .env'));
     return;
   }
 
   const isOnline = await checkConnectivity();
   if (!isOnline) {
-    // Queue the last user message for later
     const lastUserMsg = messages.filter((m) => m.role === 'user').pop();
     if (lastUserMsg) {
       await queueQuery(lastUserMsg.content);
@@ -100,14 +96,17 @@ export async function streamChat(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': API_VERSION,
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://ironvanguard.app',
+        'X-Title': 'Iron Vanguard',
       },
       body: JSON.stringify({
-        model: SONNET_MODEL,
+        model: CHAT_MODEL,
         max_tokens: MAX_TOKENS_CHAT,
-        system: systemPrompt,
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages.map((m) => ({ role: m.role, content: m.content })),
+        ],
         stream: true,
       }),
     });
@@ -138,13 +137,14 @@ export async function streamChat(
 
       for (const line of lines) {
         if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6);
+        const data = line.slice(6).trim();
         if (data === '[DONE]') continue;
 
         try {
           const event = JSON.parse(data);
-          if (event.type === 'content_block_delta' && event.delta?.text) {
-            const token = event.delta.text;
+          // OpenAI-compatible format: choices[0].delta.content
+          const token = event.choices?.[0]?.delta?.content;
+          if (token) {
             fullText += token;
             callbacks.onToken(token);
           }
@@ -161,8 +161,7 @@ export async function streamChat(
 }
 
 /**
- * Generate a daily briefing using Haiku (fast, cheap).
- * Returns the briefing text, or cached version if offline/error.
+ * Generate a daily briefing (non-streaming).
  */
 export async function generateBriefing(contextJson: string): Promise<string> {
   const apiKey = getApiKey();
@@ -184,14 +183,15 @@ export async function generateBriefing(contextJson: string): Promise<string> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': API_VERSION,
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://ironvanguard.app',
+        'X-Title': 'Iron Vanguard',
       },
       body: JSON.stringify({
-        model: HAIKU_MODEL,
+        model: BRIEFING_MODEL,
         max_tokens: MAX_TOKENS_INSIGHT,
-        system: systemPrompt,
         messages: [
+          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content:
@@ -206,7 +206,7 @@ export async function generateBriefing(contextJson: string): Promise<string> {
     }
 
     const data = await response.json();
-    const text: string = data.content?.[0]?.text ?? '';
+    const text: string = data.choices?.[0]?.message?.content ?? '';
 
     if (text) {
       setCachedBriefing(text);
@@ -219,8 +219,7 @@ export async function generateBriefing(contextJson: string): Promise<string> {
 }
 
 /**
- * Generate a micro-insight for a specific topic using Haiku.
- * Non-streaming, returns the full text.
+ * Generate a micro-insight for a specific topic (non-streaming).
  */
 export async function generateInsight(
   contextJson: string,
@@ -239,14 +238,15 @@ export async function generateInsight(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': API_VERSION,
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://ironvanguard.app',
+        'X-Title': 'Iron Vanguard',
       },
       body: JSON.stringify({
-        model: HAIKU_MODEL,
+        model: BRIEFING_MODEL,
         max_tokens: MAX_TOKENS_INSIGHT,
-        system: systemPrompt,
         messages: [
+          { role: 'system', content: systemPrompt },
           {
             role: 'user',
             content: `In 1-2 sentences, give me a quick insight about: ${topic}. Be specific with numbers from my profile.`,
@@ -258,7 +258,7 @@ export async function generateInsight(
     if (!response.ok) return '';
 
     const data = await response.json();
-    return data.content?.[0]?.text ?? '';
+    return data.choices?.[0]?.message?.content ?? '';
   } catch {
     return '';
   }
