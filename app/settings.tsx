@@ -9,6 +9,7 @@ import {
   Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VCard, VButton, VInput } from '../src/components';
 import { colors, typography, spacing } from '../src/theme/tokens';
 import { useProfileStore } from '../src/stores/profile';
@@ -16,10 +17,10 @@ import {
   getSettings,
   setSettings,
   setOnboardingComplete,
-  getAICoachEnabled,
-  setAICoachEnabled,
   type AppSettings,
 } from '../src/services/storage';
+
+const AI_COACH_KEY = '@iron_vanguard_ai_coach_enabled';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -33,12 +34,19 @@ export default function SettingsScreen() {
 
   useEffect(() => {
     setLocalSettings(getSettings());
-    setAiCoachEnabled(getAICoachEnabled());
+    // Load AI Coach setting from AsyncStorage
+    AsyncStorage.getItem(AI_COACH_KEY).then((value) => {
+      if (value === 'true') setAiCoachEnabled(true);
+    }).catch(() => {});
   }, []);
 
-  function handleAiCoachToggle(value: boolean) {
+  async function handleAiCoachToggle(value: boolean) {
     setAiCoachEnabled(value);
-    setAICoachEnabled(value);
+    try {
+      await AsyncStorage.setItem(AI_COACH_KEY, value ? 'true' : 'false');
+    } catch {
+      // Silently fail — will retry on next toggle
+    }
   }
 
   async function handleSaveProfile() {

@@ -173,9 +173,6 @@ export default function AdvisorScreen() {
           await conversations.addMessage('assistant', complete);
 
           if (goalActions && goalActions.length > 0) {
-            const activeGoals = goalsStore.getActiveGoals();
-            const goalIds = new Set(goalsStore.goals.map((g) => g.id));
-
             for (const action of goalActions) {
               try {
                 switch (action.type) {
@@ -195,25 +192,10 @@ export default function AdvisorScreen() {
                     });
                     break;
                   case 'update':
-                    if (!goalIds.has(action.goal_id)) {
-                      console.warn('[CHAT] Ignoring update for nonexistent goal:', action.goal_id);
-                      break;
-                    }
                     await goalsStore.updateGoalProgress(action.goal_id, action.current_value);
                     break;
                   case 'complete':
-                    if (!goalIds.has(action.goal_id)) {
-                      console.warn('[CHAT] Ignoring complete for nonexistent goal:', action.goal_id);
-                      break;
-                    }
                     await goalsStore.completeGoal(action.goal_id);
-                    break;
-                  case 'retire':
-                    if (!goalIds.has(action.goal_id)) {
-                      console.warn('[CHAT] Ignoring retire for nonexistent goal:', action.goal_id);
-                      break;
-                    }
-                    await goalsStore.completeGoal(action.goal_id); // retire = mark paused
                     break;
                 }
               } catch (err) {
