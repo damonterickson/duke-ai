@@ -5,28 +5,24 @@
  */
 
 import * as SQLite from 'expo-sqlite';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createMMKV, type MMKV } from 'react-native-mmkv';
 
 // ─── SQLite Database ─────────────────────────────────────────────────
 
-let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
+let db: SQLite.SQLiteDatabase | null = null;
 
-export function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (!dbPromise) {
-    dbPromise = SQLite.openDatabaseAsync('duke_ai.db');
+export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (!db) {
+    db = await SQLite.openDatabaseAsync('duke_ai.db');
   }
-  return dbPromise;
+  return db;
 }
 
-let dbInitialized = false;
-
 export async function initDatabase(): Promise<void> {
-  if (dbInitialized) return;
   const database = await getDatabase();
 
-  // Execute each CREATE TABLE separately for compatibility
-  const tables = [
-    `CREATE TABLE IF NOT EXISTS cadet_profile (
+  await database.execAsync(`
+    CREATE TABLE IF NOT EXISTS cadet_profile (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       year_group TEXT NOT NULL,
       gender TEXT NOT NULL,
@@ -35,8 +31,9 @@ export async function initDatabase(): Promise<void> {
       goal_oml REAL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS score_history (
+    );
+
+    CREATE TABLE IF NOT EXISTS score_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       gpa REAL,
       msl_gpa REAL,
@@ -46,8 +43,9 @@ export async function initDatabase(): Promise<void> {
       clc_score REAL,
       total_oml REAL,
       recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS acft_assessments (
+    );
+
+    CREATE TABLE IF NOT EXISTS acft_assessments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       deadlift REAL,
       power_throw REAL,
@@ -59,8 +57,9 @@ export async function initDatabase(): Promise<void> {
       alt_event_score REAL,
       total REAL,
       recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS courses (
+    );
+
+    CREATE TABLE IF NOT EXISTS courses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT NOT NULL,
       name TEXT NOT NULL,
@@ -69,8 +68,9 @@ export async function initDatabase(): Promise<void> {
       is_msl INTEGER NOT NULL DEFAULT 0,
       semester TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS leadership_entries (
+    );
+
+    CREATE TABLE IF NOT EXISTS leadership_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
       title TEXT NOT NULL,
@@ -79,46 +79,22 @@ export async function initDatabase(): Promise<void> {
       start_date TEXT,
       end_date TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS conversations (
+    );
+
+    CREATE TABLE IF NOT EXISTS conversations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       role TEXT NOT NULL,
       content TEXT NOT NULL,
       timestamp TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS offline_queue (
+    );
+
+    CREATE TABLE IF NOT EXISTS offline_queue (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       query TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       sent_at TEXT
-    )`,
-    `CREATE TABLE IF NOT EXISTS goals (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      category TEXT NOT NULL,
-      metric TEXT NOT NULL,
-      target_value REAL NOT NULL,
-      current_value REAL,
-      baseline_value REAL NOT NULL,
-      deadline TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'active',
-      created_by TEXT NOT NULL DEFAULT 'user',
-      oml_impact REAL,
-      completed_at TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-    `CREATE TABLE IF NOT EXISTS goal_progress_log (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      goal_id INTEGER NOT NULL,
-      value REAL NOT NULL,
-      logged_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )`,
-  ];
-
-  for (const sql of tables) {
-    await database.execAsync(sql);
-  }
-  dbInitialized = true;
+    );
+  `);
 }
 
 export async function healthCheck(): Promise<boolean> {
@@ -265,18 +241,10 @@ export async function getCourses(): Promise<CourseRow[]> {
 
 export async function updateCourse(id: number, row: Partial<Omit<CourseRow, 'id' | 'created_at'>>): Promise<void> {
   const database = await getDatabase();
-
-  const ALLOWED_COURSE_COLUMNS = new Set([
-    'code', 'name', 'credits', 'grade', 'is_msl', 'semester',
-  ]);
-
   const fields: string[] = [];
   const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(row)) {
-    if (!ALLOWED_COURSE_COLUMNS.has(key)) {
-      throw new Error(`updateCourse: unknown column "${key}"`);
-    }
     fields.push(`${key} = ?`);
     values.push(value);
   }
@@ -393,50 +361,45 @@ export async function markQuerySent(id: number): Promise<void> {
   );
 }
 
-// ─── KV Cache (AsyncStorage — works in Expo Go) ─────────────────────
+// ─── MMKV Cache ──────────────────────────────────────────────────────
 
-// In-memory cache for synchronous reads (populated from AsyncStorage on init)
-const kvCache: Record<string, string> = {};
-let kvInitialized = false;
+let mmkv: MMKV | null = null;
 
-export async function initKVCache(): Promise<void> {
-  if (kvInitialized) return;
-  try {
-    const keys = ['cached_briefing', 'cached_recommendation', 'app_settings', 'onboarding_complete', 'ai_coach_enabled'];
-    const pairs = await AsyncStorage.multiGet(keys);
-    for (const [key, value] of pairs) {
-      if (value !== null) kvCache[key] = value;
+export function initMMKV(): MMKV | null {
+  if (!mmkv) {
+    try {
+      mmkv = createMMKV({ id: 'duke-ai-cache' });
+    } catch {
+      // MMKV unavailable in Expo Go — fall through to null
+      return null;
     }
-    kvInitialized = true;
-  } catch (error) {
-    console.warn('KV cache init failed:', error);
-    kvInitialized = true;
   }
+  return mmkv;
 }
 
-// Keep the old export name for compatibility
-export function initMMKV(): void {
-  // No-op synchronously — actual init is async via initKVCache()
+function getMMKV(): MMKV | null {
+  if (!mmkv) {
+    return initMMKV();
+  }
+  return mmkv;
 }
 
 // Briefing cache
 export function getCachedBriefing(): string | undefined {
-  return kvCache['cached_briefing'];
+  return getMMKV()?.getString('cached_briefing');
 }
 
 export function setCachedBriefing(briefing: string): void {
-  kvCache['cached_briefing'] = briefing;
-  AsyncStorage.setItem('cached_briefing', briefing).catch(() => {});
+  getMMKV()?.set('cached_briefing', briefing);
 }
 
 // Recommendation cache
 export function getCachedRecommendation(): string | undefined {
-  return kvCache['cached_recommendation'];
+  return getMMKV()?.getString('cached_recommendation');
 }
 
 export function setCachedRecommendation(recommendation: string): void {
-  kvCache['cached_recommendation'] = recommendation;
-  AsyncStorage.setItem('cached_recommendation', recommendation).catch(() => {});
+  getMMKV()?.set('cached_recommendation', recommendation);
 }
 
 // Settings
@@ -447,7 +410,7 @@ export interface AppSettings {
 }
 
 export function getSettings(): AppSettings {
-  const raw = kvCache['app_settings'];
+  const raw = getMMKV()?.getString('app_settings');
   if (!raw) return {};
   try {
     return JSON.parse(raw) as AppSettings;
@@ -457,135 +420,14 @@ export function getSettings(): AppSettings {
 }
 
 export function setSettings(settings: AppSettings): void {
-  const json = JSON.stringify(settings);
-  kvCache['app_settings'] = json;
-  AsyncStorage.setItem('app_settings', json).catch(() => {});
+  getMMKV()?.set('app_settings', JSON.stringify(settings));
 }
 
 // Onboarding
 export function getOnboardingComplete(): boolean {
-  return kvCache['onboarding_complete'] === 'true';
+  return getMMKV()?.getBoolean('onboarding_complete') ?? false;
 }
 
 export function setOnboardingComplete(complete: boolean): void {
-  kvCache['onboarding_complete'] = String(complete);
-  AsyncStorage.setItem('onboarding_complete', String(complete)).catch(() => {});
-}
-
-// AI Coach
-export function getAICoachEnabled(): boolean {
-  return kvCache['ai_coach_enabled'] === 'true';
-}
-
-export function setAICoachEnabled(enabled: boolean): void {
-  kvCache['ai_coach_enabled'] = String(enabled);
-  AsyncStorage.setItem('ai_coach_enabled', String(enabled)).catch(() => {});
-}
-
-// ─── Goals CRUD ─────────────────────────────────────────────────────
-
-export interface GoalRow {
-  id?: number;
-  title: string;
-  category: string;
-  metric: string;
-  target_value: number;
-  current_value: number | null;
-  baseline_value: number;
-  deadline: string;
-  status: string;
-  created_by: string;
-  oml_impact: number | null;
-  completed_at: string | null;
-  created_at?: string;
-}
-
-export async function getGoals(status?: string): Promise<GoalRow[]> {
-  const database = await getDatabase();
-  if (status) {
-    return database.getAllAsync<GoalRow>(
-      'SELECT * FROM goals WHERE status = ? ORDER BY created_at DESC',
-      status
-    );
-  }
-  return database.getAllAsync<GoalRow>(
-    'SELECT * FROM goals ORDER BY created_at DESC'
-  );
-}
-
-export async function getGoalById(id: number): Promise<GoalRow | null> {
-  const database = await getDatabase();
-  return database.getFirstAsync<GoalRow>(
-    'SELECT * FROM goals WHERE id = ?',
-    id
-  );
-}
-
-export async function insertGoal(goal: Omit<GoalRow, 'id' | 'created_at'>): Promise<number> {
-  const database = await getDatabase();
-  const result = await database.runAsync(
-    `INSERT INTO goals (title, category, metric, target_value, current_value, baseline_value, deadline, status, created_by, oml_impact, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    goal.title, goal.category, goal.metric, goal.target_value, goal.current_value, goal.baseline_value, goal.deadline, goal.status, goal.created_by, goal.oml_impact, goal.completed_at
-  );
-  return result.lastInsertRowId;
-}
-
-export async function updateGoal(id: number, updates: Partial<Omit<GoalRow, 'id' | 'created_at'>>): Promise<void> {
-  const database = await getDatabase();
-
-  const ALLOWED_GOAL_COLUMNS = new Set([
-    'title', 'category', 'metric', 'target_value', 'current_value',
-    'baseline_value', 'deadline', 'status', 'created_by', 'oml_impact',
-    'completed_at',
-  ]);
-
-  const fields: string[] = [];
-  const values: unknown[] = [];
-
-  for (const [key, value] of Object.entries(updates)) {
-    if (!ALLOWED_GOAL_COLUMNS.has(key)) {
-      throw new Error(`updateGoal: unknown column "${key}"`);
-    }
-    fields.push(`${key} = ?`);
-    values.push(value);
-  }
-
-  if (fields.length === 0) return;
-  values.push(id);
-
-  await database.runAsync(
-    `UPDATE goals SET ${fields.join(', ')} WHERE id = ?`,
-    ...(values as SQLite.SQLiteBindValue[])
-  );
-}
-
-export async function deleteGoal(id: number): Promise<void> {
-  const database = await getDatabase();
-  await database.runAsync('DELETE FROM goals WHERE id = ?', id);
-}
-
-// ─── Goal Progress Log CRUD ─────────────────────────────────────────
-
-export interface GoalProgressLogRow {
-  id?: number;
-  goal_id: number;
-  value: number;
-  logged_at?: string;
-}
-
-export async function getGoalProgressLog(goalId: number): Promise<GoalProgressLogRow[]> {
-  const database = await getDatabase();
-  return database.getAllAsync<GoalProgressLogRow>(
-    'SELECT * FROM goal_progress_log WHERE goal_id = ? ORDER BY logged_at ASC',
-    goalId
-  );
-}
-
-export async function insertGoalProgress(goalId: number, value: number): Promise<number> {
-  const database = await getDatabase();
-  const result = await database.runAsync(
-    `INSERT INTO goal_progress_log (goal_id, value) VALUES (?, ?)`,
-    goalId, value
-  );
-  return result.lastInsertRowId;
+  getMMKV()?.set('onboarding_complete', complete);
 }
