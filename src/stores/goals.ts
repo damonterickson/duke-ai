@@ -52,6 +52,11 @@ export const useGoalsStore = create<GoalsState>((set, get) => ({
 
   addGoal: async (goal) => {
     try {
+      const activeCount = get().goals.filter((g) => g.status === 'active').length;
+      if (activeCount >= 5) {
+        console.warn('Cannot add goal: active goal cap (5) reached');
+        return null;
+      }
       const id = await insertGoal(goal);
       const newRow: GoalRow = { ...goal, id };
       set((state) => ({

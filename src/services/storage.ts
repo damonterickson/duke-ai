@@ -9,13 +9,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // ─── SQLite Database ─────────────────────────────────────────────────
 
-let db: SQLite.SQLiteDatabase | null = null;
+let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (!db) {
-    db = await SQLite.openDatabaseAsync('duke_ai.db');
+export function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (!dbPromise) {
+    dbPromise = SQLite.openDatabaseAsync('duke_ai.db');
   }
-  return db;
+  return dbPromise;
 }
 
 let dbInitialized = false;
@@ -265,10 +265,18 @@ export async function getCourses(): Promise<CourseRow[]> {
 
 export async function updateCourse(id: number, row: Partial<Omit<CourseRow, 'id' | 'created_at'>>): Promise<void> {
   const database = await getDatabase();
+
+  const ALLOWED_COURSE_COLUMNS = new Set([
+    'code', 'name', 'credits', 'grade', 'is_msl', 'semester',
+  ]);
+
   const fields: string[] = [];
   const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(row)) {
+    if (!ALLOWED_COURSE_COLUMNS.has(key)) {
+      throw new Error(`updateCourse: unknown column "${key}"`);
+    }
     fields.push(`${key} = ?`);
     values.push(value);
   }
@@ -524,10 +532,20 @@ export async function insertGoal(goal: Omit<GoalRow, 'id' | 'created_at'>): Prom
 
 export async function updateGoal(id: number, updates: Partial<Omit<GoalRow, 'id' | 'created_at'>>): Promise<void> {
   const database = await getDatabase();
+
+  const ALLOWED_GOAL_COLUMNS = new Set([
+    'title', 'category', 'metric', 'target_value', 'current_value',
+    'baseline_value', 'deadline', 'status', 'created_by', 'oml_impact',
+    'completed_at',
+  ]);
+
   const fields: string[] = [];
   const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(updates)) {
+    if (!ALLOWED_GOAL_COLUMNS.has(key)) {
+      throw new Error(`updateGoal: unknown column "${key}"`);
+    }
     fields.push(`${key} = ?`);
     values.push(value);
   }

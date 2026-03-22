@@ -20,7 +20,9 @@ import { colors, typography, spacing } from '../../src/theme/tokens';
 import { useProfileStore } from '../../src/stores/profile';
 import { useScoresStore } from '../../src/stores/scores';
 import { useConversationsStore } from '../../src/stores/conversations';
+import { useGoalsStore } from '../../src/stores/goals';
 import { generateBriefing, streamChat } from '../../src/services/ai';
+import type { GoalAction } from '../../src/services/goalEngine';
 import type { AIMessage } from '../../src/services/ai';
 import { getCachedBriefing } from '../../src/services/storage';
 import { buildContext } from '../../src/engine/context';
@@ -32,6 +34,7 @@ export default function AdvisorScreen() {
   const profile = useProfileStore();
   const scores = useScoresStore();
   const conversations = useConversationsStore();
+  const goalsStore = useGoalsStore();
 
   const [briefing, setBriefing] = useState<string | null>(null);
   const [briefingLoading, setBriefingLoading] = useState(true);
@@ -90,9 +93,14 @@ export default function AdvisorScreen() {
 
       const omlResult = buildOmlResult();
       const contextJson = buildContext(cadetProfile, omlResult, []);
-      const newBriefing = await generateBriefing(contextJson);
-      setBriefing(newBriefing);
-      setBriefingLoading(false);
+      try {
+        const newBriefing = await generateBriefing(contextJson);
+        setBriefing(newBriefing);
+      } catch (err) {
+        console.error('Failed to generate briefing:', err);
+      } finally {
+        setBriefingLoading(false);
+      }
     }
     loadBriefing();
   }, [buildCadetProfile, buildOmlResult]);
@@ -158,11 +166,44 @@ export default function AdvisorScreen() {
             prev.map((m) => (m.id === aiMsgId ? { ...m, text: currentText } : m)),
           );
         },
-        onComplete: async (complete) => {
+        onComplete: async (complete: string, goalActions?: GoalAction[]) => {
           setChatMessages((prev) =>
             prev.map((m) => (m.id === aiMsgId ? { ...m, text: complete } : m)),
           );
           await conversations.addMessage('assistant', complete);
+
+          if (goalActions && goalActions.length > 0) {
+            for (const action of goalActions) {
+              try {
+                switch (action.type) {
+                  case 'create':
+                    await goalsStore.addGoal({
+                      title: action.title,
+                      category: action.category,
+                      metric: action.metric,
+                      target_value: action.target_value,
+                      current_value: null,
+                      baseline_value: 0,
+                      deadline: action.deadline,
+                      status: 'active',
+                      created_by: 'ai',
+                      oml_impact: action.oml_impact ?? null,
+                      completed_at: null,
+                    });
+                    break;
+                  case 'update':
+                    await goalsStore.updateGoalProgress(action.goal_id, action.current_value);
+                    break;
+                  case 'complete':
+                    await goalsStore.completeGoal(action.goal_id);
+                    break;
+                }
+              } catch (err) {
+                console.warn('[CHAT] Failed to apply goal action:', action.type, err);
+              }
+            }
+          }
+
           setIsStreaming(false);
         },
         onError: (error) => {
@@ -177,7 +218,7 @@ export default function AdvisorScreen() {
         },
       });
     },
-    [conversations, buildCadetProfile, buildOmlResult],
+    [conversations, buildCadetProfile, buildOmlResult, goalsStore],
   );
 
   const latestScore = scores.scoreHistory[0];

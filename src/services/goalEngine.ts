@@ -109,6 +109,8 @@ export function parseGoalActions(responseText: string): ParsedGoalResponse {
     const parsed = JSON.parse(jsonStr);
     const actions: GoalAction[] = Array.isArray(parsed.actions) ? parsed.actions : [];
 
+    const ALLOWED_CATEGORIES = ['gpa', 'acft', 'leadership', 'oml'];
+
     // Validate each action has the required type field
     const validActions = actions.filter((a) => {
       if (!a || typeof a.type !== 'string') return false;
@@ -116,7 +118,35 @@ export function parseGoalActions(responseText: string): ParsedGoalResponse {
       return true;
     });
 
-    return { displayText, actions: validActions };
+    // Per-type field validation
+    const fullyValidActions = validActions.filter((a) => {
+      switch (a.type) {
+        case 'create': {
+          const c = a as GoalActionCreate;
+          if (typeof c.title !== 'string' || c.title.length === 0 || c.title.length > 200) return false;
+          if (!ALLOWED_CATEGORIES.includes(c.category)) return false;
+          if (typeof c.target_value !== 'number' || !Number.isFinite(c.target_value) || c.target_value <= 0) return false;
+          if (isNaN(Date.parse(c.deadline))) return false;
+          return true;
+        }
+        case 'update': {
+          const u = a as GoalActionUpdate;
+          if (!Number.isInteger(u.goal_id)) return false;
+          if (typeof u.current_value !== 'number' || !Number.isFinite(u.current_value)) return false;
+          return true;
+        }
+        case 'complete':
+        case 'retire': {
+          const cr = a as GoalActionComplete | GoalActionRetire;
+          if (!Number.isInteger(cr.goal_id)) return false;
+          return true;
+        }
+        default:
+          return false;
+      }
+    });
+
+    return { displayText, actions: fullyValidActions };
   } catch (error) {
     console.warn('Failed to parse goal JSON from AI response:', error);
     return { displayText: responseText, actions: [] };
