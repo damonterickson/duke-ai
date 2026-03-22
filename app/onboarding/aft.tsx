@@ -30,7 +30,11 @@ export default function AftScreen() {
     }
 
     setError('');
-    await profile.updateProfile({ gender, ageBracket });
+    try {
+      await profile.updateProfile({ gender, ageBracket });
+    } catch (err) {
+      console.warn('Failed to save AFT info:', err);
+    }
     router.push('/onboarding/leadership');
   }
 

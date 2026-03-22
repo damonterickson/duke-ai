@@ -26,15 +26,19 @@ export default function GpaScreen() {
     }
 
     setError('');
-    await addScoreEntry({
-      gpa: gpaNum,
-      msl_gpa: mslNum,
-      acft_total: null,
-      leadership_eval: null,
-      cst_score: null,
-      clc_score: null,
-      total_oml: null,
-    });
+    try {
+      await addScoreEntry({
+        gpa: gpaNum,
+        msl_gpa: mslNum,
+        acft_total: null,
+        leadership_eval: null,
+        cst_score: null,
+        clc_score: null,
+        total_oml: null,
+      });
+    } catch (err) {
+      console.warn('Failed to save GPA:', err);
+    }
     router.push('/onboarding/aft');
   }
 

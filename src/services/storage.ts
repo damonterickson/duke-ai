@@ -18,11 +18,15 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   return db;
 }
 
+let dbInitialized = false;
+
 export async function initDatabase(): Promise<void> {
+  if (dbInitialized) return;
   const database = await getDatabase();
 
-  await database.execAsync(`
-    CREATE TABLE IF NOT EXISTS cadet_profile (
+  // Execute each CREATE TABLE separately for compatibility
+  const tables = [
+    `CREATE TABLE IF NOT EXISTS cadet_profile (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       year_group TEXT NOT NULL,
       gender TEXT NOT NULL,
@@ -31,9 +35,8 @@ export async function initDatabase(): Promise<void> {
       goal_oml REAL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS score_history (
+    )`,
+    `CREATE TABLE IF NOT EXISTS score_history (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       gpa REAL,
       msl_gpa REAL,
@@ -43,9 +46,8 @@ export async function initDatabase(): Promise<void> {
       clc_score REAL,
       total_oml REAL,
       recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS acft_assessments (
+    )`,
+    `CREATE TABLE IF NOT EXISTS acft_assessments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       deadlift REAL,
       power_throw REAL,
@@ -57,9 +59,8 @@ export async function initDatabase(): Promise<void> {
       alt_event_score REAL,
       total REAL,
       recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS courses (
+    )`,
+    `CREATE TABLE IF NOT EXISTS courses (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       code TEXT NOT NULL,
       name TEXT NOT NULL,
@@ -68,9 +69,8 @@ export async function initDatabase(): Promise<void> {
       is_msl INTEGER NOT NULL DEFAULT 0,
       semester TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS leadership_entries (
+    )`,
+    `CREATE TABLE IF NOT EXISTS leadership_entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       type TEXT NOT NULL,
       title TEXT NOT NULL,
@@ -79,22 +79,25 @@ export async function initDatabase(): Promise<void> {
       start_date TEXT,
       end_date TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS conversations (
+    )`,
+    `CREATE TABLE IF NOT EXISTS conversations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       role TEXT NOT NULL,
       content TEXT NOT NULL,
       timestamp TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS offline_queue (
+    )`,
+    `CREATE TABLE IF NOT EXISTS offline_queue (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       query TEXT NOT NULL,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       sent_at TEXT
-    );
-  `);
+    )`,
+  ];
+
+  for (const sql of tables) {
+    await database.execAsync(sql);
+  }
+  dbInitialized = true;
 }
 
 export async function healthCheck(): Promise<boolean> {

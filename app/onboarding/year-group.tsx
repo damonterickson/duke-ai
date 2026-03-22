@@ -14,7 +14,11 @@ export default function YearGroupScreen() {
 
   async function handleNext() {
     if (!selected) return;
-    await updateProfile({ yearGroup: selected });
+    try {
+      await updateProfile({ yearGroup: selected });
+    } catch (error) {
+      console.warn('Failed to save year group:', error);
+    }
     router.push('/onboarding/gpa');
   }
 

@@ -26,10 +26,14 @@ export default function BranchScreen() {
   const [goalOml, setGoalOml] = useState('');
 
   async function handleFinish() {
-    await updateProfile({
-      targetBranch: selected,
-      goalOml: goalOml ? parseFloat(goalOml) : null,
-    });
+    try {
+      await updateProfile({
+        targetBranch: selected,
+        goalOml: goalOml ? parseFloat(goalOml) : null,
+      });
+    } catch (err) {
+      console.warn('Failed to save branch info:', err);
+    }
     setOnboardingComplete(true);
     router.replace('/');
   }

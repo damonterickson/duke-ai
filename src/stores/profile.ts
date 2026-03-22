@@ -66,15 +66,15 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     // Optimistic: update Zustand immediately
     set(updates);
 
-    // Write through to SQLite
+    // Write through to SQLite — need at least yearGroup to write
     const state = get();
-    if (!state.yearGroup || !state.gender || !state.ageBracket) return;
+    if (!state.yearGroup) return;
 
     try {
       const newId = await upsertProfile({
         year_group: state.yearGroup,
-        gender: state.gender,
-        age_bracket: state.ageBracket,
+        gender: state.gender ?? 'M',
+        age_bracket: state.ageBracket ?? '17-21',
         target_branch: state.targetBranch,
         goal_oml: state.goalOml,
       });

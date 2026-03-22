@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Platform, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { Slot, useRouter, useSegments } from 'expo-router';
 import { initDatabase, initKVCache, getOnboardingComplete } from '../src/services/storage';
 import { useProfileStore } from '../src/stores/profile';
@@ -17,38 +17,46 @@ export default function RootLayout() {
   const loadScores = useScoresStore((s) => s.loadFromSQLite);
   const loadConversations = useConversationsStore((s) => s.loadFromSQLite);
 
-  // Initialize database and MMKV on mount (with timeout for web)
+  // Initialize storage on mount
   useEffect(() => {
     async function init() {
       try {
-        // Init KV cache first (AsyncStorage — always works)
         await initKVCache();
-        // Then init SQLite (with timeout for web)
-        await Promise.race([
-          initDatabase(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('DB init timeout')), 5000)),
-        ]);
+
+        if (Platform.OS === 'web') {
+          // SQLite doesn't work on web — skip with timeout
+          await Promise.race([
+            initDatabase(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('DB init timeout')), 3000)),
+          ]);
+        } else {
+          // On native, just await normally — no timeout needed
+          await initDatabase();
+        }
         setDbReady(true);
       } catch (error) {
         console.warn('Database init failed:', error);
-        setDbReady(true); // Continue with degraded functionality
+        setDbReady(true);
       }
     }
     init();
   }, []);
 
-  // Hydrate stores once DB is ready (with timeout for web)
+  // Hydrate stores once DB is ready
   useEffect(() => {
     if (!dbReady) return;
     async function hydrate() {
       try {
-        await Promise.race([
-          Promise.all([loadProfile(), loadScores(), loadConversations()]),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Hydration timeout')), 3000)),
-        ]);
+        if (Platform.OS === 'web') {
+          await Promise.race([
+            Promise.all([loadProfile(), loadScores(), loadConversations()]),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Hydration timeout')), 3000)),
+          ]);
+        } else {
+          await Promise.all([loadProfile(), loadScores(), loadConversations()]);
+        }
       } catch (error) {
-        console.warn('Store hydration failed (may be web):', error);
-        // Force loaded state so the app renders
+        console.warn('Store hydration failed:', error);
         useProfileStore.setState({ isLoaded: true });
       }
     }
