@@ -5,6 +5,7 @@
  */
 
 import type { CadetProfile, OMLResult } from './oml';
+import type { GoalRow } from '../services/storage';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -61,6 +62,13 @@ export interface ContextOutput {
     }>;
     direction: 'improving' | 'declining' | 'stable';
   };
+  active_goals?: Array<{
+    id: number;
+    title: string;
+    current: number | null;
+    target: number;
+    deadline: string;
+  }>;
   topGains: Array<{ action: string; impact: number }>;
   recentConversation: Array<{ role: string; content: string }>;
 }
@@ -107,7 +115,8 @@ export function buildContext(
   profile: CadetProfile,
   omlResult: OMLResult,
   history: ConversationTurn[],
-  trendData?: TrendEntry[]
+  trendData?: TrendEntry[],
+  activeGoals?: GoalRow[]
 ): string {
   // Build the base context object
   const ctx: ContextOutput = {
@@ -171,6 +180,17 @@ export function buildContext(
     content: turn.content,
   }));
 
+  // Add active goals
+  if (activeGoals && activeGoals.length > 0) {
+    ctx.active_goals = activeGoals.map((g) => ({
+      id: g.id!,
+      title: g.title,
+      current: g.current_value,
+      target: g.target_value,
+      deadline: g.deadline,
+    }));
+  }
+
   // Check token budget and trim if needed
   let output = JSON.stringify(ctx);
 
@@ -194,6 +214,12 @@ export function buildContext(
     // Third: remove trend entirely
     delete ctx.trend;
     delete ctx.pillarDeltas;
+    output = JSON.stringify(ctx);
+  }
+
+  if (estimateTokens(output) > TOKEN_BUDGET) {
+    // Fourth: remove active goals to fit budget
+    delete ctx.active_goals;
     output = JSON.stringify(ctx);
   }
 

@@ -7,7 +7,8 @@
  */
 
 import { checkConnectivity, queueQuery } from './offline';
-import { getCachedBriefing, setCachedBriefing } from './storage';
+import { getCachedBriefing, setCachedBriefing, getAICoachEnabled } from './storage';
+import { parseGoalActions, type GoalAction } from './goalEngine';
 
 // ─── Constants ───────────────────────────────────────────────────────
 
@@ -50,6 +51,34 @@ FORMATTING:
 - When suggesting improvements, be specific: "Raising your GPA from 3.2 to 3.4 could add ~X OML points."
 - Use bullet points for action items.`;
 
+const GOAL_MANAGEMENT_PROMPT = `
+GOAL MANAGEMENT:
+You are managing the cadet's goals. After your text response, output a JSON block
+wrapped in \`\`\`goals tags with goal actions:
+
+{
+  "actions": [
+    {"type": "create", "title": "...", "category": "acft", "metric": "acft_total",
+     "target_value": 550, "deadline": "2026-05-01", "oml_impact": 12},
+    {"type": "update", "goal_id": 3, "current_value": 530},
+    {"type": "complete", "goal_id": 2, "message": "Great work!"},
+    {"type": "retire", "goal_id": 4, "message": "Reprioritizing based on your progress."}
+  ]
+}
+
+Action types:
+- create: adds a new goal (status='active')
+- update: updates current_value on an existing goal
+- complete: marks goal as completed (status='completed')
+- retire: marks goal as paused/deprioritized (status='paused')
+
+Rules:
+- Never exceed 5 active goals. If at 5, complete or retire one before adding.
+- Prioritize goals by marginal OML gain (from the marginal gains data in context).
+- Set deadlines based on the cadet's year group and branch selection timeline.
+- When a goal is close to completion (>90%), encourage the final push.
+- When a goal's deadline passes without completion, mark it expired with encouragement.`;
+
 // ─── Types ───────────────────────────────────────────────────────────
 
 export interface AIMessage {
@@ -59,7 +88,7 @@ export interface AIMessage {
 
 export interface StreamCallbacks {
   onToken: (token: string) => void;
-  onComplete: (fullText: string) => void;
+  onComplete: (fullText: string, goalActions?: GoalAction[]) => void;
   onError: (error: Error) => void;
 }
 
@@ -89,7 +118,10 @@ export async function streamChat(
     return;
   }
 
-  const systemPrompt = `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
+  const aiCoachEnabled = getAICoachEnabled();
+  const systemPrompt = aiCoachEnabled
+    ? `${VANGUARD_SYSTEM_PROMPT}\n${GOAL_MANAGEMENT_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`
+    : `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
 
   try {
     console.log('[AI] Sending chat request to', API_URL, 'model:', CHAT_MODEL);
@@ -127,12 +159,17 @@ export async function streamChat(
     console.log('[AI] Extracted text length:', fullText.length, 'preview:', fullText.substring(0, 50));
 
     if (fullText) {
-      const words = fullText.split(' ');
+      // Parse goal actions from response if AI Coach is enabled
+      const { displayText, actions } = aiCoachEnabled
+        ? parseGoalActions(fullText)
+        : { displayText: fullText, actions: [] as GoalAction[] };
+
+      const words = displayText.split(' ');
       for (let i = 0; i < words.length; i++) {
         const token = (i === 0 ? '' : ' ') + words[i];
         callbacks.onToken(token);
       }
-      callbacks.onComplete(fullText);
+      callbacks.onComplete(displayText, actions.length > 0 ? actions : undefined);
     } else {
       console.error('[AI] Empty content. Full response:', JSON.stringify(data).substring(0, 200));
       callbacks.onError(new Error('Empty response from AI'));
@@ -145,20 +182,54 @@ export async function streamChat(
 /**
  * Generate a daily briefing (non-streaming).
  */
+export interface BriefingResult {
+  text: string;
+  goalActions?: GoalAction[];
+}
+
+// Holds the most recent goal actions from generateBriefing/generateBriefingWithGoals
+let _lastBriefingGoalActions: GoalAction[] | undefined;
+
+/**
+ * Retrieve goal actions from the most recent briefing call, then clear them.
+ */
+export function consumeBriefingGoalActions(): GoalAction[] | undefined {
+  const actions = _lastBriefingGoalActions;
+  _lastBriefingGoalActions = undefined;
+  return actions;
+}
+
+/**
+ * Generate a daily briefing (non-streaming).
+ * Returns the display text as a string (backward compatible).
+ * Goal actions are stored internally — retrieve via consumeBriefingGoalActions().
+ */
 export async function generateBriefing(contextJson: string): Promise<string> {
+  const result = await generateBriefingWithGoals(contextJson);
+  _lastBriefingGoalActions = result.goalActions;
+  return result.text;
+}
+
+/**
+ * Generate a daily briefing with explicit goal actions in the return value.
+ */
+export async function generateBriefingWithGoals(contextJson: string): Promise<BriefingResult> {
   const apiKey = getApiKey();
   const cached = getCachedBriefing();
 
   if (!apiKey) {
-    return cached ?? 'Configure your API key to get personalized briefings.';
+    return { text: cached ?? 'Configure your API key to get personalized briefings.' };
   }
 
   const isOnline = await checkConnectivity();
   if (!isOnline) {
-    return cached ?? 'You\'re offline. Your briefing will update when you reconnect.';
+    return { text: cached ?? 'You\'re offline. Your briefing will update when you reconnect.' };
   }
 
-  const systemPrompt = `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
+  const aiCoachEnabled = getAICoachEnabled();
+  const systemPrompt = aiCoachEnabled
+    ? `${VANGUARD_SYSTEM_PROMPT}\n${GOAL_MANAGEMENT_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`
+    : `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
 
   try {
     const response = await fetch(API_URL, {
@@ -184,19 +255,28 @@ export async function generateBriefing(contextJson: string): Promise<string> {
     });
 
     if (!response.ok) {
-      return cached ?? 'Unable to generate briefing right now. Check back later.';
+      return { text: cached ?? 'Unable to generate briefing right now. Check back later.' };
     }
 
     const data = await response.json();
-    const text: string = data.choices?.[0]?.message?.content ?? '';
+    const rawText: string = data.choices?.[0]?.message?.content ?? '';
 
-    if (text) {
-      setCachedBriefing(text);
+    if (rawText) {
+      // Parse goal actions from response if AI Coach is enabled
+      const { displayText, actions } = aiCoachEnabled
+        ? parseGoalActions(rawText)
+        : { displayText: rawText, actions: [] as GoalAction[] };
+
+      setCachedBriefing(displayText);
+      return {
+        text: displayText,
+        goalActions: actions.length > 0 ? actions : undefined,
+      };
     }
 
-    return text || cached || 'No briefing available.';
+    return { text: cached || 'No briefing available.' };
   } catch {
-    return cached ?? 'Unable to generate briefing right now. Check back later.';
+    return { text: cached ?? 'Unable to generate briefing right now. Check back later.' };
   }
 }
 

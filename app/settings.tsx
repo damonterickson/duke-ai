@@ -6,8 +6,10 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
+  Switch,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VCard, VButton, VInput } from '../src/components';
 import { colors, typography, spacing } from '../src/theme/tokens';
 import { useProfileStore } from '../src/stores/profile';
@@ -18,6 +20,8 @@ import {
   type AppSettings,
 } from '../src/services/storage';
 
+const AI_COACH_KEY = '@iron_vanguard_ai_coach_enabled';
+
 export default function SettingsScreen() {
   const router = useRouter();
   const profile = useProfileStore();
@@ -26,10 +30,24 @@ export default function SettingsScreen() {
   const [goalOml, setGoalOml] = useState(
     profile.goalOml != null ? String(profile.goalOml) : '',
   );
+  const [aiCoachEnabled, setAiCoachEnabled] = useState(false);
 
   useEffect(() => {
     setLocalSettings(getSettings());
+    // Load AI Coach setting from AsyncStorage
+    AsyncStorage.getItem(AI_COACH_KEY).then((value) => {
+      if (value === 'true') setAiCoachEnabled(true);
+    }).catch(() => {});
   }, []);
+
+  async function handleAiCoachToggle(value: boolean) {
+    setAiCoachEnabled(value);
+    try {
+      await AsyncStorage.setItem(AI_COACH_KEY, value ? 'true' : 'false');
+    } catch {
+      // Silently fail — will retry on next toggle
+    }
+  }
 
   async function handleSaveProfile() {
     const oml = goalOml ? parseFloat(goalOml) : null;
@@ -124,6 +142,37 @@ export default function SettingsScreen() {
           />
         </VCard>
 
+        {/* AI Coach Section */}
+        <Text style={styles.sectionTitle}>AI Coach</Text>
+        <VCard tier="low" style={styles.section}>
+          <View style={styles.aiCoachRow}>
+            <View style={styles.aiCoachTextBlock}>
+              <Text style={styles.aiCoachLabel}>AI Coach</Text>
+              <Text style={styles.aiCoachDesc}>
+                Vanguard AI will create and manage goals based on your profile
+              </Text>
+            </View>
+            <Switch
+              value={aiCoachEnabled}
+              onValueChange={handleAiCoachToggle}
+              trackColor={{
+                false: colors.surface_container_high,
+                true: colors.tertiary_container,
+              }}
+              thumbColor={aiCoachEnabled ? colors.tertiary : colors.outline}
+              accessibilityLabel="Toggle AI Coach"
+              accessibilityRole="switch"
+              accessibilityState={{ checked: aiCoachEnabled }}
+              style={styles.aiCoachSwitch}
+            />
+          </View>
+          {aiCoachEnabled && (
+            <Text style={styles.aiCoachActiveNote}>
+              AI Coach will create goals on your next briefing. Max 5 active goals.
+            </Text>
+          )}
+        </VCard>
+
         {/* App Section */}
         <Text style={styles.sectionTitle}>App</Text>
         <VCard tier="low" style={styles.section}>
@@ -199,6 +248,33 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: spacing[2],
+  },
+  // AI Coach styles
+  aiCoachRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  aiCoachTextBlock: {
+    flex: 1,
+    marginRight: spacing[3],
+  },
+  aiCoachLabel: {
+    ...typography.title_sm,
+    color: colors.on_surface,
+  },
+  aiCoachDesc: {
+    ...typography.body_sm,
+    color: colors.outline,
+    marginTop: spacing[1],
+  },
+  aiCoachSwitch: {
+    minHeight: 44,
+    minWidth: 44,
+  },
+  aiCoachActiveNote: {
+    ...typography.label_sm,
+    color: colors.tertiary,
   },
   aboutCard: {
     marginTop: spacing[8],

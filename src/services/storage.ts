@@ -92,6 +92,27 @@ export async function initDatabase(): Promise<void> {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       sent_at TEXT
     )`,
+    `CREATE TABLE IF NOT EXISTS goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL,
+      metric TEXT NOT NULL,
+      target_value REAL NOT NULL,
+      current_value REAL,
+      baseline_value REAL NOT NULL,
+      deadline TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_by TEXT NOT NULL DEFAULT 'user',
+      oml_impact REAL,
+      completed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
+    `CREATE TABLE IF NOT EXISTS goal_progress_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      goal_id INTEGER NOT NULL,
+      value REAL NOT NULL,
+      logged_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )`,
   ];
 
   for (const sql of tables) {
@@ -373,7 +394,7 @@ let kvInitialized = false;
 export async function initKVCache(): Promise<void> {
   if (kvInitialized) return;
   try {
-    const keys = ['cached_briefing', 'cached_recommendation', 'app_settings', 'onboarding_complete'];
+    const keys = ['cached_briefing', 'cached_recommendation', 'app_settings', 'onboarding_complete', 'ai_coach_enabled'];
     const pairs = await AsyncStorage.multiGet(keys);
     for (const [key, value] of pairs) {
       if (value !== null) kvCache[key] = value;
@@ -441,4 +462,112 @@ export function getOnboardingComplete(): boolean {
 export function setOnboardingComplete(complete: boolean): void {
   kvCache['onboarding_complete'] = String(complete);
   AsyncStorage.setItem('onboarding_complete', String(complete)).catch(() => {});
+}
+
+// AI Coach
+export function getAICoachEnabled(): boolean {
+  return kvCache['ai_coach_enabled'] === 'true';
+}
+
+export function setAICoachEnabled(enabled: boolean): void {
+  kvCache['ai_coach_enabled'] = String(enabled);
+  AsyncStorage.setItem('ai_coach_enabled', String(enabled)).catch(() => {});
+}
+
+// ─── Goals CRUD ─────────────────────────────────────────────────────
+
+export interface GoalRow {
+  id?: number;
+  title: string;
+  category: string;
+  metric: string;
+  target_value: number;
+  current_value: number | null;
+  baseline_value: number;
+  deadline: string;
+  status: string;
+  created_by: string;
+  oml_impact: number | null;
+  completed_at: string | null;
+  created_at?: string;
+}
+
+export async function getGoals(status?: string): Promise<GoalRow[]> {
+  const database = await getDatabase();
+  if (status) {
+    return database.getAllAsync<GoalRow>(
+      'SELECT * FROM goals WHERE status = ? ORDER BY created_at DESC',
+      status
+    );
+  }
+  return database.getAllAsync<GoalRow>(
+    'SELECT * FROM goals ORDER BY created_at DESC'
+  );
+}
+
+export async function getGoalById(id: number): Promise<GoalRow | null> {
+  const database = await getDatabase();
+  return database.getFirstAsync<GoalRow>(
+    'SELECT * FROM goals WHERE id = ?',
+    id
+  );
+}
+
+export async function insertGoal(goal: Omit<GoalRow, 'id' | 'created_at'>): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.runAsync(
+    `INSERT INTO goals (title, category, metric, target_value, current_value, baseline_value, deadline, status, created_by, oml_impact, completed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    goal.title, goal.category, goal.metric, goal.target_value, goal.current_value, goal.baseline_value, goal.deadline, goal.status, goal.created_by, goal.oml_impact, goal.completed_at
+  );
+  return result.lastInsertRowId;
+}
+
+export async function updateGoal(id: number, updates: Partial<Omit<GoalRow, 'id' | 'created_at'>>): Promise<void> {
+  const database = await getDatabase();
+  const fields: string[] = [];
+  const values: unknown[] = [];
+
+  for (const [key, value] of Object.entries(updates)) {
+    fields.push(`${key} = ?`);
+    values.push(value);
+  }
+
+  if (fields.length === 0) return;
+  values.push(id);
+
+  await database.runAsync(
+    `UPDATE goals SET ${fields.join(', ')} WHERE id = ?`,
+    ...(values as SQLite.SQLiteBindValue[])
+  );
+}
+
+export async function deleteGoal(id: number): Promise<void> {
+  const database = await getDatabase();
+  await database.runAsync('DELETE FROM goals WHERE id = ?', id);
+}
+
+// ─── Goal Progress Log CRUD ─────────────────────────────────────────
+
+export interface GoalProgressLogRow {
+  id?: number;
+  goal_id: number;
+  value: number;
+  logged_at?: string;
+}
+
+export async function getGoalProgressLog(goalId: number): Promise<GoalProgressLogRow[]> {
+  const database = await getDatabase();
+  return database.getAllAsync<GoalProgressLogRow>(
+    'SELECT * FROM goal_progress_log WHERE goal_id = ? ORDER BY logged_at ASC',
+    goalId
+  );
+}
+
+export async function insertGoalProgress(goalId: number, value: number): Promise<number> {
+  const database = await getDatabase();
+  const result = await database.runAsync(
+    `INSERT INTO goal_progress_log (goal_id, value) VALUES (?, ?)`,
+    goalId, value
+  );
+  return result.lastInsertRowId;
 }

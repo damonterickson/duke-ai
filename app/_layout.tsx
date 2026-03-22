@@ -5,6 +5,7 @@ import { initDatabase, initKVCache, getOnboardingComplete } from '../src/service
 import { useProfileStore } from '../src/stores/profile';
 import { useScoresStore } from '../src/stores/scores';
 import { useConversationsStore } from '../src/stores/conversations';
+import { useGoalsStore } from '../src/stores/goals';
 import { colors } from '../src/theme/tokens';
 
 export default function RootLayout() {
@@ -16,6 +17,7 @@ export default function RootLayout() {
   const loadProfile = useProfileStore((s) => s.loadFromSQLite);
   const loadScores = useScoresStore((s) => s.loadFromSQLite);
   const loadConversations = useConversationsStore((s) => s.loadFromSQLite);
+  const loadGoals = useGoalsStore((s) => s.loadFromSQLite);
 
   // Initialize storage on mount
   useEffect(() => {
@@ -49,11 +51,11 @@ export default function RootLayout() {
       try {
         if (Platform.OS === 'web') {
           await Promise.race([
-            Promise.all([loadProfile(), loadScores(), loadConversations()]),
+            Promise.all([loadProfile(), loadScores(), loadConversations(), loadGoals()]),
             new Promise((_, reject) => setTimeout(() => reject(new Error('Hydration timeout')), 3000)),
           ]);
         } else {
-          await Promise.all([loadProfile(), loadScores(), loadConversations()]);
+          await Promise.all([loadProfile(), loadScores(), loadConversations(), loadGoals()]);
         }
       } catch (error) {
         console.warn('Store hydration failed:', error);
@@ -61,7 +63,7 @@ export default function RootLayout() {
       }
     }
     hydrate();
-  }, [dbReady, loadProfile, loadScores, loadConversations]);
+  }, [dbReady, loadProfile, loadScores, loadConversations, loadGoals]);
 
   // Onboarding gate
   useEffect(() => {

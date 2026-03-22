@@ -45,3 +45,6 @@ export type { VSkeletonLoaderProps } from './VSkeletonLoader';
 
 export { VAIResponse } from './VAIResponse';
 export type { VAIResponseProps } from './VAIResponse';
+
+export { VGoalCard } from './VGoalCard';
+export type { VGoalCardProps } from './VGoalCard';
