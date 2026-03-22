@@ -12,6 +12,8 @@ Iron Vanguard helps ROTC cadets understand, track, and maximize their OML score 
 - **ACFT Log** — Track all 6 fitness events with scoring tables
 - **Academic Tracker** — GPA and course tracking with OML impact per course
 - **Leadership Log** — Command roles, CST scores, extracurriculars
+- **Goals Tracker** — Set targets or enable AI Coach mode where Vanguard AI creates and manages goals for you. Goals auto-update when you log new data.
+- **Smart AI Responses** — Markdown rendering, keyword-linked navigation to app sections, action item extraction
 
 ## Getting started
 
@@ -21,7 +23,7 @@ npm install
 
 # Create your environment file
 cp .env.example .env
-# Add your Claude API key to .env
+# Add your OpenRouter API key to .env
 
 # Start the app
 npx expo start
@@ -39,7 +41,7 @@ Then open the app with:
 Vanguard AI (Briefing + FAB Chat)  ← AI-First home screen
 Context Engine                      ← Assembles cadet profile for LLM
 OML Engine | Fitness Log | Leadership Log  ← Data layers
-MMKV (cache) + SQLite (structured data)    ← Offline-first storage
+AsyncStorage (cache) + SQLite (structured data)  ← Offline-first storage
 ```
 
 The app is **AI-First** — the AI Advisor is the home tab, not a secondary feature. The AI generates the daily briefing, optimization recommendations, and micro-insights after every data entry.
@@ -50,8 +52,8 @@ The app is **AI-First** — the AI Advisor is the home tab, not a secondary feat
 
 - **Framework:** Expo React Native (iOS, Android, Web)
 - **Navigation:** Expo Router (file-based, 5-tab layout)
-- **AI:** Claude API (Sonnet for chat, Haiku for micro-insights)
-- **Storage:** SQLite (expo-sqlite) + MMKV (react-native-mmkv)
+- **AI:** OpenRouter API (nvidia/nemotron-3-super-120b free model, configurable)
+- **Storage:** SQLite (expo-sqlite) + AsyncStorage
 - **State:** Zustand
 - **Design System:** "Modern Vanguard" — military olive/gold aesthetic, glassmorphism, no borders
 
@@ -62,10 +64,10 @@ app/                    # Expo Router screens
   (tabs)/               # 5-tab navigation (Advisor, Dashboard, GPA, ACFT, Leadership)
   onboarding/           # 6-screen first-launch flow
 src/
-  components/           # 15 design system components (VCard, VButton, etc.)
+  components/           # 17 design system components (VCard, VButton, VGoalCard, VAIResponse, etc.)
   engine/               # OML calculator + Context Engine
-  services/             # AI, storage, offline queue
-  stores/               # Zustand state (profile, scores, conversations)
+  services/             # AI (OpenRouter), storage, offline queue, goal engine
+  stores/               # Zustand state (profile, scores, conversations, goals)
   theme/                # Design tokens
   data/                 # ACFT scoring tables, OML config
 docs/                   # Design doc, implementation plan, test plan
@@ -85,6 +87,7 @@ See [DESIGN.md](DESIGN.md) for the full "Modern Vanguard" design system includin
 - [docs/PLAN.md](docs/PLAN.md) — Implementation plan
 - [docs/design-doc.md](docs/design-doc.md) — Architecture design doc
 - [docs/test-plan.md](docs/test-plan.md) — Test plan and edge cases
+- [docs/goals-design-doc.md](docs/goals-design-doc.md) — Goals tracker design (AI Coach)
 - [TODOS.md](TODOS.md) — Known work items
 
 ## License
