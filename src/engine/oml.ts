@@ -335,19 +335,17 @@ function calculateLeadershipPillar(profile: CadetProfile, config: OMLConfig): nu
   weightedSum += cmdScore * sub.commanderAssessment.weight;
   availableWeight += sub.commanderAssessment.weight;
 
-  // CST (optional)
-  if (profile.cstScore !== undefined) {
-    const cst = profile.cstScore / sub.cstScore.inputRange.max;
-    weightedSum += cst * sub.cstScore.weight;
-    availableWeight += sub.cstScore.weight;
-  }
+  // CST — always counts in denominator; missing = 0 (not excluded)
+  const cstVal = profile.cstScore ?? 0;
+  const cst = cstVal / sub.cstScore.inputRange.max;
+  weightedSum += cst * sub.cstScore.weight;
+  availableWeight += sub.cstScore.weight;
 
-  // CLC (optional)
-  if (profile.clcScore !== undefined) {
-    const clc = profile.clcScore / sub.clcScore.inputRange.max;
-    weightedSum += clc * sub.clcScore.weight;
-    availableWeight += sub.clcScore.weight;
-  }
+  // CLC — always counts in denominator; missing = 0 (not excluded)
+  const clcVal = profile.clcScore ?? 0;
+  const clc = clcVal / sub.clcScore.inputRange.max;
+  weightedSum += clc * sub.clcScore.weight;
+  availableWeight += sub.clcScore.weight;
 
   // Command positions
   const cmdPos = sub.commandPositions;

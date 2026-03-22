@@ -1,0 +1,43 @@
+{
+  "date": "2026-03-22",
+  "window": "7d",
+  "metrics": {
+    "commits": 28,
+    "contributors": 2,
+    "prs_merged": 2,
+    "insertions": 37100,
+    "deletions": 10560,
+    "net_loc": 26540,
+    "test_loc": 531,
+    "test_ratio": 0.02,
+    "active_days": 2,
+    "sessions": 3,
+    "deep_sessions": 3,
+    "avg_session_minutes": 210,
+    "loc_per_session_hour": 2500,
+    "feat_pct": 0.25,
+    "fix_pct": 0.43,
+    "peak_hour": 23,
+    "ai_assisted_commits": 25
+  },
+  "authors": {
+    "derickson": { "commits": 26, "insertions": 37000, "deletions": 10500, "test_ratio": 0.02, "top_area": "src/" },
+    "damon": { "commits": 2, "insertions": 0, "deletions": 0, "test_ratio": 0, "top_area": "merge commits" }
+  },
+  "version_range": ["0.0.0", "1.0.0"],
+  "streak_days": 2,
+  "tweetable": "Week of Mar 15: Built a full React Native app from scratch — 28 commits, 26K LOC, 2 PRs, 5 agent teams, 65 files | Streak: 2d",
+  "backlog": {
+    "total_open": 1,
+    "p0_p1": 1,
+    "p2": 0,
+    "completed_this_period": 0,
+    "added_this_period": 1
+  },
+  "test_health": {
+    "total_test_files": 4,
+    "tests_added_this_period": 4,
+    "regression_test_commits": 0,
+    "test_files_changed": 4
+  }
+}
