@@ -26,16 +26,18 @@ export const VRankBadge: React.FC<VRankBadgeProps> = ({
 
 const styles = StyleSheet.create({
   badge: {
-    backgroundColor: colors.secondary_container,
+    backgroundColor: 'transparent',
     borderRadius: roundness.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(200, 199, 184, 0.20)', // outline at 20%
     paddingVertical: spacing[1],
     paddingHorizontal: spacing[2],
     alignSelf: 'flex-start',
-    // No border — Rule 1
   },
   text: {
     ...typography.label_md,
     color: colors.secondary,
     textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

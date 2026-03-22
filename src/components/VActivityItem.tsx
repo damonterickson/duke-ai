@@ -20,7 +20,11 @@ export const VActivityItem: React.FC<VActivityItemProps> = ({
   accessibilityLabel,
 }) => {
   const deltaSign = pointDelta != null && pointDelta >= 0 ? '+' : '';
-  const deltaColor = pointDelta != null && pointDelta >= 0 ? colors.primary : colors.error;
+  const deltaColor = pointDelta != null && pointDelta > 0
+    ? colors.secondary
+    : pointDelta === 0
+      ? colors.outline
+      : colors.error;
 
   return (
     <View

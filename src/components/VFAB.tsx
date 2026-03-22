@@ -52,11 +52,11 @@ const styles = StyleSheet.create({
     borderRadius: roundness.xl, // 12px — no rounded-full (Rule 6)
     alignItems: 'center',
     justifyContent: 'center',
-    // Elevation shadow
-    shadowColor: colors.on_surface,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    // Neon glow shadow (gold/secondary)
+    shadowColor: '#dbc585',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
     elevation: 6,
   },
   icon: {

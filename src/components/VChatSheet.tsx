@@ -17,7 +17,6 @@ import {
   typography,
   spacing,
   roundness,
-  glass,
   ghostBorder,
 } from '../theme/tokens';
 import { VAIResponse } from './VAIResponse';
@@ -74,8 +73,8 @@ export const VChatSheet: React.FC<VChatSheetProps> = ({
       accessibilityLabel={accessibilityLabel ?? 'Chat panel'}
       accessibilityRole="none"
     >
-      {/* Glassmorphism background */}
-      <BlurView intensity={glass.blurIntensity} tint="light" style={StyleSheet.absoluteFill} />
+      {/* Glassmorphism background — heavier blur */}
+      <BlurView intensity={24} tint="dark" style={StyleSheet.absoluteFill} />
       <View style={[StyleSheet.absoluteFill, styles.overlay]} />
 
       {/* Drag handle */}
@@ -148,7 +147,7 @@ const styles = StyleSheet.create({
     // No border — Rule 1
   },
   overlay: {
-    backgroundColor: glass.overlayColor,
+    backgroundColor: 'rgba(55, 52, 56, 0.55)', // surface_variant at ~55% opacity
   },
   handleWrapper: {
     alignItems: 'center',

@@ -46,12 +46,18 @@ export const VProgressBar: React.FC<VProgressBarProps> = ({
 
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: `rgba(200, 199, 184, 0.10)`, // outline_variant at 10%
+    backgroundColor: colors.surface_container_highest,
     borderRadius: roundness.sm,
     overflow: 'hidden',
     width: '100%',
   },
   fill: {
     borderRadius: roundness.sm,
+    // Subtle glow on the filled portion
+    shadowColor: '#450084',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 2,
   },
 });

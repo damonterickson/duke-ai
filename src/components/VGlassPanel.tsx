@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { glass, roundness, spacing } from '../theme/tokens';
+import { roundness, spacing } from '../theme/tokens';
 
 export interface VGlassPanelProps {
   children: React.ReactNode;
@@ -17,8 +17,8 @@ export const VGlassPanel: React.FC<VGlassPanelProps> = ({
   return (
     <View style={[styles.container, style]} accessibilityLabel={accessibilityLabel}>
       <BlurView
-        intensity={glass.blurIntensity}
-        tint="light"
+        intensity={24}
+        tint="dark"
         style={StyleSheet.absoluteFill}
       />
       <View style={[StyleSheet.absoluteFill, styles.overlay]} />
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   overlay: {
-    backgroundColor: glass.overlayColor,
+    backgroundColor: 'rgba(55, 52, 56, 0.55)', // surface_variant at ~55% opacity
   },
   content: {
     padding: spacing[4],

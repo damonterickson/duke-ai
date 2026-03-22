@@ -68,10 +68,10 @@ export const VSkeletonLoader: React.FC<VSkeletonLoaderProps> = ({
   }, [reduceMotion, shimmer]);
 
   const backgroundColor = reduceMotion
-    ? colors.surface_container_high
+    ? colors.surface_container_low
     : shimmer.interpolate({
         inputRange: [0, 1],
-        outputRange: [colors.surface_container_high, colors.surface_container_highest],
+        outputRange: [colors.surface_container_low, colors.surface_container_high],
       });
 
   return (
