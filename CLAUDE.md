@@ -28,6 +28,72 @@ AI-First OML optimizer for Army ROTC cadets. Expo React Native app with Claude A
 ## Design tokens
 All colors, typography, and spacing are in `src/theme/tokens.ts`. Use snake_case property names (e.g., `colors.on_surface`, `typography.label_sm`, `spacing[4]`).
 
+## Android Emulator Debugging (WSL2)
+
+The Android emulator runs on Windows. ADB is accessible from WSL via a wrapper script at `~/.local/bin/adb` that calls the Windows ADB binary.
+
+### Setup
+The ADB wrapper at `~/.local/bin/adb` must pass args correctly:
+```bash
+#!/bin/bash
+/mnt/c/Users/e88be/AppData/Local/Android/Sdk/platform-tools/adb.exe "$@"
+```
+
+### Port Forwarding Chain
+```
+Emulator:8081 → (adb reverse) → Windows:8081 → (portproxy) → WSL:172.x.x.x:8081
+```
+Metro runs in WSL on port 8081. The emulator connects through this chain.
+
+### Common Debug Commands
+```bash
+# Check emulator is connected
+adb devices
+
+# Set up port forwarding (usually already done)
+adb reverse tcp:8081 tcp:8081
+
+# Take screenshot from emulator
+adb exec-out screencap -p > /tmp/screenshot.png
+
+# Read JS error logs
+adb logcat -d 2>&1 | grep "ReactNativeJS.*E" | tail -20
+
+# Clear logs then capture fresh ones
+adb logcat -c && sleep 10 && adb logcat -d | grep "ReactNativeJS"
+
+# Clear app data (reset onboarding, DB, etc.)
+adb shell pm clear host.exp.exponent
+
+# Force stop and relaunch
+adb shell am force-stop host.exp.exponent
+adb shell am start -a android.intent.action.VIEW -d "exp://127.0.0.1:8081" host.exp.exponent
+
+# Find exact UI element positions (for ADB tap testing)
+adb shell uiautomator dump /sdcard/ui.xml
+adb pull /sdcard/ui.xml /tmp/ui.xml
+grep 'content-desc="Button Label"' /tmp/ui.xml  # find bounds
+
+# Tap at specific coordinates
+adb shell input tap <x> <y>
+
+# Type text (use %s for spaces)
+adb shell input text "hello%sworld"
+```
+
+### Workflow
+1. Start Metro in WSL: `npx expo start --port 8081`
+2. Launch on emulator: `adb shell am start -a android.intent.action.VIEW -d "exp://127.0.0.1:8081" host.exp.exponent`
+3. Check for errors: `adb logcat -d | grep "ReactNativeJS.*E"`
+4. Take screenshots: `adb exec-out screencap -p > /tmp/screen.png`
+5. Use `Read` tool on the PNG to view it inline
+
+### Known Limitations
+- `adb shell input tap` coordinates are fragile — use `uiautomator dump` to find exact bounds
+- Metro must be restarted with `--clear` after changing `.env` or native deps
+- Expo Go doesn't support native modules (MMKV, expo-blur) — use AsyncStorage instead
+- Streaming (ReadableStream) doesn't work in Expo Go/Hermes — use non-streaming API calls
+
 ## Important notes
 - API key is client-side for pilot (see TODOS.md for P1 proxy task)
 - ACFT scoring tables use placeholder data — replace with real FM 7-22 data

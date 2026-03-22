@@ -92,6 +92,7 @@ export async function streamChat(
   const systemPrompt = `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
 
   try {
+    console.log('[AI] Sending chat request to', API_URL, 'model:', CHAT_MODEL);
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -107,22 +108,25 @@ export async function streamChat(
           { role: 'system', content: systemPrompt },
           ...messages.map((m) => ({ role: m.role, content: m.content })),
         ],
-        // Don't use streaming — Expo Go/Hermes doesn't support ReadableStream
         stream: false,
       }),
     });
 
+    console.log('[AI] Response status:', response.status);
+
     if (!response.ok) {
       const errorBody = await response.text();
+      console.error('[AI] API error:', response.status, errorBody);
       callbacks.onError(new Error(`API error ${response.status}: ${errorBody}`));
       return;
     }
 
     const data = await response.json();
+    console.log('[AI] Response data keys:', Object.keys(data));
     const fullText = data.choices?.[0]?.message?.content ?? '';
+    console.log('[AI] Extracted text length:', fullText.length, 'preview:', fullText.substring(0, 50));
 
     if (fullText) {
-      // Simulate token-by-token delivery for smooth UX
       const words = fullText.split(' ');
       for (let i = 0; i < words.length; i++) {
         const token = (i === 0 ? '' : ' ') + words[i];
@@ -130,6 +134,7 @@ export async function streamChat(
       }
       callbacks.onComplete(fullText);
     } else {
+      console.error('[AI] Empty content. Full response:', JSON.stringify(data).substring(0, 200));
       callbacks.onError(new Error('Empty response from AI'));
     }
   } catch (error) {

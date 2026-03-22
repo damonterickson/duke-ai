@@ -109,13 +109,18 @@ export default function AdvisorScreen() {
 
   const handleSendMessage = useCallback(
     async (text: string) => {
+      console.log('[CHAT] handleSendMessage called with:', text);
       const userMsg: ChatMessage = {
         id: `user_${Date.now()}`,
         text,
         sender: 'user',
       };
       setChatMessages((prev) => [...prev, userMsg]);
-      await conversations.addMessage('user', text);
+      try {
+        await conversations.addMessage('user', text);
+      } catch (err) {
+        console.warn('[CHAT] Failed to persist user message:', err);
+      }
 
       // Create AI placeholder
       const aiMsgId = `ai_${Date.now()}`;
@@ -123,25 +128,27 @@ export default function AdvisorScreen() {
       setChatMessages((prev) => [...prev, aiMsg]);
       setIsStreaming(true);
 
-      const cadetProfile = buildCadetProfile();
-      const omlResult = buildOmlResult();
-      const history: ConversationTurn[] = conversations.messages.map((m) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-        timestamp: Date.now(),
-      }));
-      const contextJson = cadetProfile
-        ? buildContext(cadetProfile, omlResult, history)
-        : '{}';
-
-      const aiMessages: AIMessage[] = [
-        ...conversations.messages.map((m) => ({
+      let contextJson = '{}';
+      try {
+        const cadetProfile = buildCadetProfile();
+        const omlResult = buildOmlResult();
+        const history: ConversationTurn[] = conversations.messages.map((m) => ({
           role: m.role as 'user' | 'assistant',
           content: m.content,
-        })),
+          timestamp: Date.now(),
+        }));
+        contextJson = cadetProfile
+          ? buildContext(cadetProfile, omlResult, history)
+          : '{}';
+      } catch (err) {
+        console.warn('[CHAT] Failed to build context:', err);
+      }
+
+      const aiMessages: AIMessage[] = [
         { role: 'user' as const, content: text },
       ];
 
+      console.log('[CHAT] Calling streamChat...');
       let fullText = '';
       await streamChat(aiMessages, contextJson, {
         onToken: (token) => {
