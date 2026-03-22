@@ -31,12 +31,8 @@ function AppContent() {
       try {
         await initKVCache();
 
-        if (Platform.OS === 'web') {
-          await Promise.race([
-            initDatabase(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('DB init timeout')), 3000)),
-          ]);
-        } else {
+        if (Platform.OS !== 'web') {
+          // SQLite only works on native — skip entirely on web
           await initDatabase();
         }
         setDbReady(true);
@@ -53,20 +49,10 @@ function AppContent() {
     if (!dbReady) return;
     async function hydrate() {
       try {
-        if (Platform.OS === 'web') {
-          await Promise.race([
-            Promise.all([
-              loadProfile(), loadScores(), loadConversations(), loadGoals(),
-              hydrateEngagement(), hydrateSquad(),
-            ]),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Hydration timeout')), 3000)),
-          ]);
-        } else {
-          await Promise.all([
-            loadProfile(), loadScores(), loadConversations(), loadGoals(),
-            hydrateEngagement(), hydrateSquad(),
-          ]);
-        }
+        await Promise.all([
+          loadProfile(), loadScores(), loadConversations(), loadGoals(),
+          hydrateEngagement(), hydrateSquad(),
+        ]);
       } catch (error) {
         console.warn('Store hydration failed:', error);
         useProfileStore.setState({ isLoaded: true });
