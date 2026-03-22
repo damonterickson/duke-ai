@@ -42,3 +42,6 @@ export type { VEmptyStateProps } from './VEmptyState';
 
 export { VSkeletonLoader } from './VSkeletonLoader';
 export type { VSkeletonLoaderProps } from './VSkeletonLoader';
+
+export { VAIResponse } from './VAIResponse';
+export type { VAIResponseProps } from './VAIResponse';

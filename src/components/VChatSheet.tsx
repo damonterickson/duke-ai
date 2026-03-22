@@ -20,6 +20,7 @@ import {
   glass,
   ghostBorder,
 } from '../theme/tokens';
+import { VAIResponse } from './VAIResponse';
 
 export interface ChatMessage {
   id: string;
@@ -96,14 +97,13 @@ export const VChatSheet: React.FC<VChatSheetProps> = ({
             ]}
             accessibilityLabel={`${item.sender === 'user' ? 'You' : 'AI'}: ${item.text}`}
           >
-            <Text
-              style={[
-                styles.bubbleText,
-                item.sender === 'user' ? styles.userText : styles.aiText,
-              ]}
-            >
-              {item.text}
-            </Text>
+            {item.sender === 'ai' ? (
+              <VAIResponse text={item.text} />
+            ) : (
+              <Text style={[styles.bubbleText, styles.userText]}>
+                {item.text}
+              </Text>
+            )}
           </View>
         )}
         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
