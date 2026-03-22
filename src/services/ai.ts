@@ -107,7 +107,8 @@ export async function streamChat(
           { role: 'system', content: systemPrompt },
           ...messages.map((m) => ({ role: m.role, content: m.content })),
         ],
-        stream: true,
+        // Don't use streaming — Expo Go/Hermes doesn't support ReadableStream
+        stream: false,
       }),
     });
 
@@ -117,44 +118,20 @@ export async function streamChat(
       return;
     }
 
-    const reader = response.body?.getReader();
-    if (!reader) {
-      callbacks.onError(new Error('No response stream available'));
-      return;
-    }
+    const data = await response.json();
+    const fullText = data.choices?.[0]?.message?.content ?? '';
 
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() ?? '';
-
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if (data === '[DONE]') continue;
-
-        try {
-          const event = JSON.parse(data);
-          // OpenAI-compatible format: choices[0].delta.content
-          const token = event.choices?.[0]?.delta?.content;
-          if (token) {
-            fullText += token;
-            callbacks.onToken(token);
-          }
-        } catch {
-          // Skip malformed JSON lines
-        }
+    if (fullText) {
+      // Simulate token-by-token delivery for smooth UX
+      const words = fullText.split(' ');
+      for (let i = 0; i < words.length; i++) {
+        const token = (i === 0 ? '' : ' ') + words[i];
+        callbacks.onToken(token);
       }
+      callbacks.onComplete(fullText);
+    } else {
+      callbacks.onError(new Error('Empty response from AI'));
     }
-
-    callbacks.onComplete(fullText);
   } catch (error) {
     callbacks.onError(error instanceof Error ? error : new Error(String(error)));
   }
