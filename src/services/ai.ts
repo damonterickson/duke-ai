@@ -472,3 +472,144 @@ export async function generateMicroInsight(
     return localFallback;
   }
 }
+
+// ─── Mission Generation ─────────────────────────────────────────────
+
+export interface MissionResult {
+  id: string;
+  title: string;
+  location: string;
+  description: string;
+  targetMetric: string;
+  omlImpact: number;
+  acceptedAt: string | null;
+  completedAt: string | null;
+  xpReward: number;
+}
+
+const MISSION_CACHE_KEY = '@duke_daily_mission';
+const MISSION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+const FALLBACK_MISSION: MissionResult = {
+  id: 'fallback',
+  title: 'Review Your OML Standing',
+  location: 'Duke Vanguard App',
+  description: 'Check your current OML score and identify your biggest opportunity for improvement.',
+  targetMetric: 'oml_review',
+  omlImpact: 0,
+  acceptedAt: null,
+  completedAt: null,
+  xpReward: 5,
+};
+
+/**
+ * Generate a personalized daily mission from OML gap analysis.
+ * Uses 24h cache in AsyncStorage. Falls back to a generic mission on failure.
+ */
+export async function generateMission(contextJson: string): Promise<MissionResult> {
+  // Check cache first
+  try {
+    const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+    const cached = await AsyncStorage.getItem(MISSION_CACHE_KEY);
+    if (cached) {
+      const { mission, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp < MISSION_TTL_MS) {
+        return mission as MissionResult;
+      }
+    }
+  } catch {
+    // Cache read failed — proceed to generate
+  }
+
+  const apiKey = getApiKey();
+  if (!apiKey) return FALLBACK_MISSION;
+
+  const isOnline = await checkConnectivity();
+  if (!isOnline) return FALLBACK_MISSION;
+
+  const systemPrompt = `${VANGUARD_SYSTEM_PROMPT}\n\nCADET CONTEXT:\n${contextJson}`;
+
+  // Try up to 2 times with backoff
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      if (attempt > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+      }
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://dukevanguard.app',
+          'X-Title': 'Duke Vanguard',
+        },
+        body: JSON.stringify({
+          model: BRIEFING_MODEL,
+          max_tokens: MAX_TOKENS_INSIGHT,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            {
+              role: 'user',
+              content: `Based on this cadet's data, generate ONE specific daily mission that targets their weakest OML component. Respond ONLY with valid JSON in this exact format:
+{
+  "title": "short mission title (e.g., 'AFT Prep — 2-Mile Run')",
+  "location": "specific location (e.g., 'Bridgeforth Stadium')",
+  "description": "2-3 sentence description of what to do and why it matters for OML",
+  "targetMetric": "the metric this improves (acft_total, gpa, leadership, 2mr, mdl, hrp, sdc, plk)",
+  "omlImpact": estimated OML points gained (number),
+  "xpReward": points for completion (number, 10-50)
+}`,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) continue;
+
+      const data = await response.json();
+      const rawText: string = data.choices?.[0]?.message?.content ?? '';
+
+      if (!rawText) continue;
+
+      // Parse JSON — handle markdown code blocks
+      const jsonStr = rawText.replace(/```json?\n?/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(jsonStr);
+
+      // Validate required fields
+      if (!parsed.title || !parsed.description || !parsed.targetMetric) {
+        console.warn('[AI] Mission missing required fields:', Object.keys(parsed));
+        continue;
+      }
+
+      const mission: MissionResult = {
+        id: `mission-${Date.now()}`,
+        title: String(parsed.title),
+        location: String(parsed.location ?? 'JMU Campus'),
+        description: String(parsed.description),
+        targetMetric: String(parsed.targetMetric),
+        omlImpact: Number(parsed.omlImpact) || 0,
+        acceptedAt: null,
+        completedAt: null,
+        xpReward: Number(parsed.xpReward) || 10,
+      };
+
+      // Cache the mission
+      try {
+        const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;
+        await AsyncStorage.setItem(
+          MISSION_CACHE_KEY,
+          JSON.stringify({ mission, timestamp: Date.now() }),
+        );
+      } catch {
+        // Cache write failed — mission still valid
+      }
+
+      return mission;
+    } catch (error) {
+      console.warn(`[AI] Mission generation attempt ${attempt + 1} failed:`, error);
+    }
+  }
+
+  return FALLBACK_MISSION;
+}
