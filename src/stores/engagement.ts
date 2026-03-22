@@ -46,7 +46,7 @@ export const BADGES: Badge[] = [
     id: 'iron_vanguard',
     name: 'Iron Vanguard',
     description: '300+ ACFT Score',
-    icon: 'fitness_center',
+    icon: 'fitness-center',
     unlockedAt: null,
     criteria: { metric: 'acft_total', threshold: 300, comparator: '>=' },
   },
