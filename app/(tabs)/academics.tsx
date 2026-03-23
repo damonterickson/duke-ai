@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,8 @@ import {
   VEmptyState,
   VSkeletonLoader,
 } from '../../src/components';
-import { colors, typography, spacing, roundness, gradients } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing, roundness } from '../../src/theme/tokens';
 import {
   getCourses,
   insertCourse,
@@ -41,6 +42,7 @@ function getQualityPoints(grade: string, credits: number): number {
 }
 
 export default function AcademicsScreen() {
+  const { colors, isDark, glass } = useTheme();
   const [courses, setCourses] = useState<CourseRow[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -52,6 +54,8 @@ export default function AcademicsScreen() {
   const [grade, setGrade] = useState('');
   const [isMsl, setIsMsl] = useState(false);
   const [semester, setSemester] = useState('');
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     loadCourses();
@@ -222,7 +226,10 @@ export default function AcademicsScreen() {
       >
         {/* Hero: Dark Olive Status Plate */}
         <LinearGradient
-          colors={['rgba(75, 83, 32, 0.9)', 'rgba(52, 60, 10, 0.95)']}
+          colors={isDark
+            ? [colors.surface_container_high, colors.surface_container_highest]
+            : ['rgba(75, 83, 32, 0.9)', 'rgba(52, 60, 10, 0.95)']
+          }
           style={styles.heroPlate}
         >
           {/* Tactical HUD decoration */}
@@ -300,14 +307,14 @@ export default function AcademicsScreen() {
               placeholder="Adaptive Team Leadership"
               accessibilityLabel="Course name input"
             />
-            <View style={styles.formRow}>
+            <View style={staticStyles.formRow}>
               <VInput
                 label="Credits"
                 value={credits}
                 onChangeText={setCredits}
                 placeholder="3"
                 keyboardType="numeric"
-                style={styles.halfInput}
+                style={staticStyles.halfInput}
                 accessibilityLabel="Credit hours input"
               />
               <VInput
@@ -315,7 +322,7 @@ export default function AcademicsScreen() {
                 value={grade}
                 onChangeText={setGrade}
                 placeholder="A"
-                style={styles.halfInput}
+                style={staticStyles.halfInput}
                 accessibilityLabel="Grade input"
               />
             </View>
@@ -332,7 +339,7 @@ export default function AcademicsScreen() {
               variant="tertiary"
               accessibilityLabel={`Toggle MSL designation. Currently ${isMsl ? 'ROTC Core' : 'General'}`}
             />
-            <View style={styles.formActions}>
+            <View style={staticStyles.formActions}>
               <VButton
                 label="Cancel"
                 onPress={() => setShowForm(false)}
@@ -346,11 +353,11 @@ export default function AcademicsScreen() {
         {/* MSL Courses — Highlighted Full-Width */}
         {mslCourses.map((course) => (
           <View key={course.id} style={styles.mslCard}>
-            <View style={styles.mslRow}>
+            <View style={staticStyles.mslRow}>
               <View style={styles.mslIconBox}>
                 <MaterialIcons name="shield" size={28} color={colors.on_primary} />
               </View>
-              <View style={styles.mslInfo}>
+              <View style={staticStyles.mslInfo}>
                 <Text style={styles.mslCategoryLabel}>ROTC CORE REQUIREMENT</Text>
                 <Text style={styles.mslCourseName}>
                   {course.code}: {course.name.toUpperCase()}
@@ -360,12 +367,12 @@ export default function AcademicsScreen() {
                   {course.semester ? ` \u2022 ${course.semester}` : ''}
                 </Text>
               </View>
-              <View style={styles.mslGradeBox}>
+              <View style={staticStyles.mslGradeBox}>
                 <Text style={styles.mslGrade}>{course.grade}</Text>
                 <Text style={styles.mslGradeLabel}>GRADE</Text>
               </View>
             </View>
-            <View style={styles.courseFooter}>
+            <View style={staticStyles.courseFooter}>
               <VButton
                 label="Remove"
                 onPress={() => course.id != null && handleDeleteCourse(course.id)}
@@ -382,8 +389,8 @@ export default function AcademicsScreen() {
 
           return (
             <View key={course.id} style={styles.glassCard}>
-              <View style={styles.glassCardRow}>
-                <View style={styles.glassCardLeft}>
+              <View style={staticStyles.glassCardRow}>
+                <View style={staticStyles.glassCardLeft}>
                   <Text style={styles.glassCategory}>
                     {course.semester ?? 'Course'}
                   </Text>
@@ -393,13 +400,13 @@ export default function AcademicsScreen() {
                   <Text style={styles.glassMeta}>{course.credits} Credits</Text>
                 </View>
                 <Text style={[
-                  styles.glassGrade,
-                  gradePoints >= 3.7 ? styles.gradeHigh : styles.gradeMid,
+                  staticStyles.glassGrade,
+                  { color: colors.primary },
                 ]}>
                   {course.grade}
                 </Text>
               </View>
-              <View style={styles.courseFooter}>
+              <View style={staticStyles.courseFooter}>
                 <VButton
                   label="Remove"
                   onPress={() => course.id != null && handleDeleteCourse(course.id)}
@@ -412,11 +419,11 @@ export default function AcademicsScreen() {
         })}
 
         {/* OML Projections */}
-        <VCard tier="low" style={styles.omlCard}>
+        <VCard tier="low" style={staticStyles.omlCard}>
           <Text style={styles.omlTitle}>OML PROJECTIONS</Text>
 
-          <View style={styles.omlPillar}>
-            <View style={styles.omlPillarRow}>
+          <View style={staticStyles.omlPillar}>
+            <View style={staticStyles.omlPillarRow}>
               <Text style={styles.omlPillarLabel}>Academics (40%)</Text>
               <Text style={styles.omlPillarValue}>{academicEstimate.toFixed(1)}/40</Text>
             </View>
@@ -426,8 +433,8 @@ export default function AcademicsScreen() {
             />
           </View>
 
-          <View style={styles.omlPillar}>
-            <View style={styles.omlPillarRow}>
+          <View style={staticStyles.omlPillar}>
+            <View style={staticStyles.omlPillarRow}>
               <Text style={styles.omlPillarLabel}>Leadership (40%)</Text>
               {/* TODO: wire to real data */}
               <Text style={styles.omlPillarValue}>--/40</Text>
@@ -435,8 +442,8 @@ export default function AcademicsScreen() {
             <VProgressBar progress={0} accessibilityLabel="Leadership pillar: not yet calculated" />
           </View>
 
-          <View style={styles.omlPillar}>
-            <View style={styles.omlPillarRow}>
+          <View style={staticStyles.omlPillar}>
+            <View style={staticStyles.omlPillarRow}>
               <Text style={styles.omlPillarLabel}>Physical (20%)</Text>
               {/* TODO: wire to real data */}
               <Text style={styles.omlPillarValue}>--/20</Text>
@@ -444,7 +451,7 @@ export default function AcademicsScreen() {
             <VProgressBar progress={0} accessibilityLabel="Physical pillar: not yet calculated" />
           </View>
 
-          <View style={styles.omlInsight}>
+          <View style={staticStyles.omlInsight}>
             <Text style={styles.omlInsightText}>
               Maintaining a{' '}
               <Text style={{ color: colors.primary, fontWeight: '700' }}>
@@ -460,17 +467,17 @@ export default function AcademicsScreen() {
         </VCard>
 
         {/* Secondary Stats */}
-        <View style={styles.statsGrid}>
-          <VCard tier="low" style={styles.statCard}>
+        <View style={staticStyles.statsGrid}>
+          <VCard tier="low" style={staticStyles.statCard}>
             <Text style={styles.statLabel}>TOTAL CREDITS</Text>
-            <View style={styles.statValueRow}>
+            <View style={staticStyles.statValueRow}>
               <Text style={styles.statValue}>{totalCredits}</Text>
               <Text style={styles.statSuffix}>/ 120</Text>
             </View>
           </VCard>
-          <VCard tier="low" style={styles.statCard}>
+          <VCard tier="low" style={staticStyles.statCard}>
             <Text style={styles.statLabel}>DEAN'S LIST</Text>
-            <View style={styles.statValueRow}>
+            <View style={staticStyles.statValueRow}>
               {/* TODO: compute from semester history */}
               <Text style={styles.statValue}>{'\u2014'}</Text>
             </View>
@@ -481,147 +488,8 @@ export default function AcademicsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  loadingContent: {
-    padding: spacing[4],
-    paddingTop: spacing[8],
-  },
-
-  // Hero: Dark Olive Status Plate
-  heroPlate: {
-    padding: spacing[6],
-    borderRadius: roundness.sm,
-    marginBottom: spacing[6],
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  hudDecor: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-  },
-  heroTopRow: {
-    marginBottom: spacing[6],
-  },
-  heroLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 3,
-    color: 'rgba(189, 199, 135, 0.8)', // on_primary_container muted
-    marginBottom: spacing[2],
-  },
-  heroTitle: {
-    fontFamily: typography.display_lg.fontFamily,
-    fontSize: 36,
-    fontWeight: '900',
-    color: '#ffffff',
-    letterSpacing: -1,
-    lineHeight: 38,
-  },
-  heroBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  heroGpaLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: 'rgba(189, 199, 135, 0.8)',
-    marginBottom: spacing[1],
-  },
-  heroGpaValue: {
-    fontFamily: typography.display_lg.fontFamily,
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#ffffff',
-    letterSpacing: -2,
-  },
-  heroRankingBadge: {
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    padding: spacing[3],
-    borderRadius: roundness.sm,
-  },
-  heroRankingLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: 'rgba(189, 199, 135, 0.7)',
-    marginBottom: spacing[1],
-  },
-  heroRankingValue: {
-    fontFamily: typography.title_sm.fontFamily,
-    fontSize: typography.title_sm.fontSize,
-    fontWeight: '700',
-    color: colors.tertiary_container,
-  },
-  heroMslGpa: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: typography.label_sm.fontSize,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.5)',
-    marginTop: spacing[3],
-  },
-
-  // Section Header
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: spacing[4],
-  },
-  sectionTitle: {
-    fontFamily: typography.headline_md.fontFamily,
-    fontSize: typography.headline_md.fontSize,
-    fontWeight: '900',
-    color: colors.primary,
-    letterSpacing: -0.5,
-  },
-  sectionSubtitle: {
-    ...typography.label_sm,
-    color: colors.outline,
-    marginTop: spacing[1],
-  },
-  refreshButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing[1],
-    backgroundColor: colors.surface_container_highest,
-    paddingHorizontal: spacing[3],
-    paddingVertical: spacing[2],
-    borderRadius: roundness.sm,
-  },
-  refreshButtonText: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: colors.primary,
-  },
-
-  // Form
-  formCard: {
-    marginBottom: spacing[4],
-    gap: spacing[3],
-  },
-  formTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
-  },
+// Styles that don't depend on theme colors
+const staticStyles = StyleSheet.create({
   formRow: {
     flexDirection: 'row',
     gap: spacing[3],
@@ -635,73 +503,21 @@ const styles = StyleSheet.create({
     gap: spacing[3],
     marginTop: spacing[2],
   },
-
-  // MSL Highlight Card
-  mslCard: {
-    backgroundColor: 'rgba(245, 243, 243, 0.7)',
-    padding: spacing[5],
-    borderRadius: roundness.sm,
-    marginBottom: spacing[3],
-  },
   mslRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[4],
   },
-  mslIconBox: {
-    width: 52,
-    height: 52,
-    backgroundColor: colors.primary,
-    borderRadius: roundness.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   mslInfo: {
     flex: 1,
-  },
-  mslCategoryLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: colors.primary,
-    marginBottom: spacing[1],
-  },
-  mslCourseName: {
-    fontFamily: typography.headline_md.fontFamily,
-    fontSize: 16,
-    fontWeight: '900',
-    color: colors.primary,
-    letterSpacing: -0.3,
-  },
-  mslMeta: {
-    ...typography.label_sm,
-    color: colors.outline,
-    marginTop: spacing[1],
   },
   mslGradeBox: {
     alignItems: 'center',
   },
-  mslGrade: {
-    fontFamily: typography.display_lg.fontFamily,
-    fontSize: 40,
-    fontWeight: '900',
-    color: colors.primary,
-  },
-  mslGradeLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: colors.outline,
-  },
-
-  // Glass Course Cards
-  glassCard: {
-    backgroundColor: 'rgba(245, 243, 243, 0.7)',
-    padding: spacing[5],
-    borderRadius: roundness.sm,
-    marginBottom: spacing[3],
+  courseFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: spacing[2],
   },
   glassCardRow: {
     flexDirection: 'row',
@@ -711,55 +527,14 @@ const styles = StyleSheet.create({
   glassCardLeft: {
     flex: 1,
   },
-  glassCategory: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 2,
-    color: colors.outline,
-    marginBottom: spacing[1],
-  },
-  glassCourseName: {
-    fontFamily: typography.headline_md.fontFamily,
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.primary,
-    letterSpacing: -0.3,
-  },
-  glassMeta: {
-    ...typography.label_sm,
-    color: colors.outline,
-    marginTop: spacing[1],
-  },
   glassGrade: {
     fontFamily: typography.headline_md.fontFamily,
     fontSize: 28,
     fontWeight: '900',
   },
-  gradeHigh: {
-    color: colors.primary,
-  },
-  gradeMid: {
-    color: colors.primary,
-  },
-  courseFooter: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: spacing[2],
-  },
-
-  // OML Projections
   omlCard: {
     marginTop: spacing[4],
     marginBottom: spacing[4],
-  },
-  omlTitle: {
-    fontFamily: typography.headline_md.fontFamily,
-    fontSize: typography.title_md.fontSize,
-    fontWeight: '900',
-    color: colors.primary,
-    letterSpacing: -0.3,
-    marginBottom: spacing[5],
   },
   omlPillar: {
     marginBottom: spacing[4],
@@ -770,32 +545,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: spacing[2],
   },
-  omlPillarLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: colors.outline,
-  },
-  omlPillarValue: {
-    fontFamily: typography.title_sm.fontFamily,
-    fontSize: typography.title_sm.fontSize,
-    fontWeight: '700',
-    color: colors.primary,
-  },
   omlInsight: {
     marginTop: spacing[4],
     paddingTop: spacing[4],
     borderTopWidth: 1,
     borderTopColor: 'rgba(200, 199, 184, 0.2)',
   },
-  omlInsightText: {
-    ...typography.body_sm,
-    color: colors.outline,
-    lineHeight: 20,
-  },
-
-  // Stats Grid
   statsGrid: {
     flexDirection: 'row',
     gap: spacing[3],
@@ -804,29 +559,284 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
   },
-  statLabel: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.5,
-    color: colors.outline,
-    marginBottom: spacing[3],
-  },
   statValueRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: spacing[2],
   },
-  statValue: {
-    fontFamily: typography.headline_md.fontFamily,
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  statSuffix: {
-    fontFamily: typography.label_sm.fontFamily,
-    fontSize: 10,
-    fontWeight: '600',
-    color: colors.outline,
-  },
 });
+
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    loadingContent: {
+      padding: spacing[4],
+      paddingTop: spacing[8],
+    },
+
+    // Hero: Dark Olive Status Plate
+    heroPlate: {
+      padding: spacing[6],
+      borderRadius: roundness.sm,
+      marginBottom: spacing[6],
+      overflow: 'hidden',
+      position: 'relative',
+    },
+    hudDecor: {
+      position: 'absolute',
+      top: -20,
+      right: -20,
+    },
+    heroTopRow: {
+      marginBottom: spacing[6],
+    },
+    heroLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 3,
+      color: colors.on_primary_container,
+      opacity: 0.8,
+      marginBottom: spacing[2],
+    },
+    heroTitle: {
+      fontFamily: typography.display_lg.fontFamily,
+      fontSize: 36,
+      fontWeight: '900',
+      color: colors.on_surface,
+      letterSpacing: -1,
+      lineHeight: 38,
+    },
+    heroBottomRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+    },
+    heroGpaLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2,
+      color: colors.on_primary_container,
+      opacity: 0.8,
+      marginBottom: spacing[1],
+    },
+    heroGpaValue: {
+      fontFamily: typography.display_lg.fontFamily,
+      fontSize: 48,
+      fontWeight: '900',
+      color: colors.on_surface,
+      letterSpacing: -2,
+    },
+    heroRankingBadge: {
+      backgroundColor: 'rgba(0,0,0,0.25)',
+      padding: spacing[3],
+      borderRadius: roundness.sm,
+    },
+    heroRankingLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2,
+      color: colors.on_primary_container,
+      opacity: 0.7,
+      marginBottom: spacing[1],
+    },
+    heroRankingValue: {
+      fontFamily: typography.title_sm.fontFamily,
+      fontSize: typography.title_sm.fontSize,
+      fontWeight: '700',
+      color: colors.tertiary_container,
+    },
+    heroMslGpa: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: typography.label_sm.fontSize,
+      fontWeight: '600',
+      color: colors.on_surface_variant,
+      marginTop: spacing[3],
+    },
+
+    // Section Header
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-end',
+      marginBottom: spacing[4],
+    },
+    sectionTitle: {
+      fontFamily: typography.headline_md.fontFamily,
+      fontSize: typography.headline_md.fontSize,
+      fontWeight: '900',
+      color: colors.primary,
+      letterSpacing: -0.5,
+    },
+    sectionSubtitle: {
+      ...typography.label_sm,
+      color: colors.outline,
+      marginTop: spacing[1],
+    },
+    refreshButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing[1],
+      backgroundColor: colors.surface_container_highest,
+      paddingHorizontal: spacing[3],
+      paddingVertical: spacing[2],
+      borderRadius: roundness.sm,
+    },
+    refreshButtonText: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      color: colors.primary,
+    },
+
+    // Form
+    formCard: {
+      marginBottom: spacing[4],
+      gap: spacing[3],
+    },
+    formTitle: {
+      ...typography.title_md,
+      color: colors.on_surface,
+    },
+
+    // MSL Highlight Card
+    mslCard: {
+      backgroundColor: colors.surface_container_low,
+      padding: spacing[5],
+      borderRadius: roundness.sm,
+      marginBottom: spacing[3],
+    },
+    mslIconBox: {
+      width: 52,
+      height: 52,
+      backgroundColor: colors.primary,
+      borderRadius: roundness.sm,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    mslCategoryLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2,
+      color: colors.primary,
+      marginBottom: spacing[1],
+    },
+    mslCourseName: {
+      fontFamily: typography.headline_md.fontFamily,
+      fontSize: 16,
+      fontWeight: '900',
+      color: colors.primary,
+      letterSpacing: -0.3,
+    },
+    mslMeta: {
+      ...typography.label_sm,
+      color: colors.outline,
+      marginTop: spacing[1],
+    },
+    mslGrade: {
+      fontFamily: typography.display_lg.fontFamily,
+      fontSize: 40,
+      fontWeight: '900',
+      color: colors.primary,
+    },
+    mslGradeLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      color: colors.outline,
+    },
+
+    // Glass Course Cards
+    glassCard: {
+      backgroundColor: colors.surface_container_low,
+      padding: spacing[5],
+      borderRadius: roundness.sm,
+      marginBottom: spacing[3],
+    },
+    glassCategory: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 2,
+      color: colors.outline,
+      marginBottom: spacing[1],
+    },
+    glassCourseName: {
+      fontFamily: typography.headline_md.fontFamily,
+      fontSize: 14,
+      fontWeight: '900',
+      color: colors.primary,
+      letterSpacing: -0.3,
+    },
+    glassMeta: {
+      ...typography.label_sm,
+      color: colors.outline,
+      marginTop: spacing[1],
+    },
+
+    // OML Projections
+    omlTitle: {
+      fontFamily: typography.headline_md.fontFamily,
+      fontSize: typography.title_md.fontSize,
+      fontWeight: '900',
+      color: colors.primary,
+      letterSpacing: -0.3,
+      marginBottom: spacing[5],
+    },
+    omlPillarLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      color: colors.outline,
+    },
+    omlPillarValue: {
+      fontFamily: typography.title_sm.fontFamily,
+      fontSize: typography.title_sm.fontSize,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    omlInsightText: {
+      ...typography.body_sm,
+      color: colors.outline,
+      lineHeight: 20,
+    },
+
+    // Stats Grid
+    statLabel: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1.5,
+      color: colors.outline,
+      marginBottom: spacing[3],
+    },
+    statValue: {
+      fontFamily: typography.headline_md.fontFamily,
+      fontSize: 28,
+      fontWeight: '700',
+      color: colors.primary,
+    },
+    statSuffix: {
+      fontFamily: typography.label_sm.fontFamily,
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.outline,
+    },
+  });
+}

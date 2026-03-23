@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,8 @@ import {
   VEmptyState,
   VSkeletonLoader,
 } from '../../src/components';
-import { colors, typography, spacing } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing } from '../../src/theme/tokens';
 import {
   getLeadershipEntries,
   insertLeadershipEntry,
@@ -35,6 +36,7 @@ const ASYNC_KEY_SCORES = '@duke_scores';
 const ENTRY_TYPES = ['Command Role', 'Staff Position', 'Extracurricular', 'Achievement'];
 
 export default function LeadershipScreen() {
+  const { colors, isDark, glass } = useTheme();
   const [entries, setEntries] = useState<LeadershipEntryRow[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -52,6 +54,8 @@ export default function LeadershipScreen() {
   const [cstScore, setCstScore] = useState('');
   const [clcScore, setClcScore] = useState('');
   const [extracurricularHours, setExtracurricularHours] = useState('');
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // Pre-populate from latest scores
   useEffect(() => {
@@ -267,7 +271,7 @@ export default function LeadershipScreen() {
         </Text>
 
         {/* Commander's Assessment */}
-        <VCard tier="low" style={styles.scoreSection}>
+        <VCard tier="low" style={staticStyles.scoreSection}>
           <Text style={styles.scoreSectionTitle}>Commander's Assessment</Text>
           <VInput
             label="PMS Evaluation Score"
@@ -281,16 +285,16 @@ export default function LeadershipScreen() {
             label="Save Evaluation"
             onPress={handleSaveLeadershipEval}
             variant="secondary"
-            style={styles.scoreSaveButton}
+            style={staticStyles.scoreSaveButton}
             accessibilityLabel="Save PMS Evaluation Score"
           />
         </VCard>
 
         {/* CST / CLC Scores */}
-        <VCard tier="low" style={styles.scoreSection}>
+        <VCard tier="low" style={staticStyles.scoreSection}>
           <Text style={styles.scoreSectionTitle}>CST / CLC Scores</Text>
-          <View style={styles.scoreRow}>
-            <View style={styles.scoreInputHalf}>
+          <View style={staticStyles.scoreRow}>
+            <View style={staticStyles.scoreInputHalf}>
               <VInput
                 label="CST Score"
                 value={cstScore}
@@ -300,7 +304,7 @@ export default function LeadershipScreen() {
                 accessibilityLabel="CST Score input"
               />
             </View>
-            <View style={styles.scoreInputHalf}>
+            <View style={staticStyles.scoreInputHalf}>
               <VInput
                 label="CLC Score"
                 value={clcScore}
@@ -315,13 +319,13 @@ export default function LeadershipScreen() {
             label="Save CST / CLC"
             onPress={handleSaveCSTCLC}
             variant="secondary"
-            style={styles.scoreSaveButton}
+            style={staticStyles.scoreSaveButton}
             accessibilityLabel="Save CST and CLC scores"
           />
         </VCard>
 
         {/* Extracurricular Hours */}
-        <VCard tier="low" style={styles.scoreSection}>
+        <VCard tier="low" style={staticStyles.scoreSection}>
           <Text style={styles.scoreSectionTitle}>Extracurricular Hours</Text>
           <VInput
             label="Total Hours"
@@ -335,17 +339,17 @@ export default function LeadershipScreen() {
         </VCard>
 
         {/* Summary */}
-        <View style={styles.metricsRow}>
+        <View style={staticStyles.metricsRow}>
           <VMetricCard
             value={String(entries.length)}
             label="Total Entries"
-            style={styles.metricCard}
+            style={staticStyles.metricCard}
             accessibilityLabel={`${entries.length} leadership entries`}
           />
           <VMetricCard
             value={String(commandRoles.length)}
             label="Command Roles"
-            style={styles.metricCard}
+            style={staticStyles.metricCard}
             accessibilityLabel={`${commandRoles.length} command roles`}
           />
         </View>
@@ -356,23 +360,23 @@ export default function LeadershipScreen() {
             label="Add Entry"
             onPress={() => setShowForm(true)}
             variant="secondary"
-            style={styles.addButton}
+            style={staticStyles.addButton}
             accessibilityLabel="Add a new leadership entry"
           />
         ) : (
-          <VCard tier="low" style={styles.formCard}>
+          <VCard tier="low" style={staticStyles.formCard}>
             <Text style={styles.formTitle}>New Leadership Entry</Text>
 
             {/* Type Selector */}
             <Text style={styles.typeLabel}>Type</Text>
-            <View style={styles.typeRow}>
+            <View style={staticStyles.typeRow}>
               {ENTRY_TYPES.map((type) => (
                 <VButton
                   key={type}
                   label={type}
                   onPress={() => setEntryType(type)}
                   variant={entryType === type ? 'primary' : 'secondary'}
-                  style={styles.typeButton}
+                  style={staticStyles.typeButton}
                   accessibilityLabel={`Select ${type} type${entryType === type ? ', currently selected' : ''}`}
                 />
               ))}
@@ -402,7 +406,7 @@ export default function LeadershipScreen() {
               accessibilityLabel="Points value input"
             />
 
-            <View style={styles.formActions}>
+            <View style={staticStyles.formActions}>
               <VButton
                 label="Cancel"
                 onPress={() => setShowForm(false)}
@@ -418,9 +422,9 @@ export default function LeadershipScreen() {
           <>
             <Text style={styles.sectionTitle}>Command Roles</Text>
             {commandRoles.map((entry) => (
-              <VCard key={entry.id} tier="low" style={styles.entryCard}>
-                <View style={styles.entryHeader}>
-                  <View style={styles.entryInfo}>
+              <VCard key={entry.id} tier="low" style={staticStyles.entryCard}>
+                <View style={staticStyles.entryHeader}>
+                  <View style={staticStyles.entryInfo}>
                     <VRankBadge rank={entry.type} />
                     <Text style={styles.entryTitle}>{entry.title}</Text>
                   </View>
@@ -447,7 +451,7 @@ export default function LeadershipScreen() {
           <>
             <Text style={styles.sectionTitle}>Staff Positions</Text>
             {staffPositions.map((entry) => (
-              <VCard key={entry.id} tier="low" style={styles.entryCard}>
+              <VCard key={entry.id} tier="low" style={staticStyles.entryCard}>
                 <Text style={styles.entryTitle}>{entry.title}</Text>
                 {entry.description && (
                   <Text style={styles.entryDesc}>{entry.description}</Text>
@@ -467,7 +471,7 @@ export default function LeadershipScreen() {
           <>
             <Text style={styles.sectionTitle}>Extracurriculars</Text>
             {extracurriculars.map((entry) => (
-              <VCard key={entry.id} tier="low" style={styles.entryCard}>
+              <VCard key={entry.id} tier="low" style={staticStyles.entryCard}>
                 <Text style={styles.entryTitle}>{entry.title}</Text>
                 {entry.description && (
                   <Text style={styles.entryDesc}>{entry.description}</Text>
@@ -487,7 +491,7 @@ export default function LeadershipScreen() {
           <>
             <Text style={styles.sectionTitle}>Achievements</Text>
             {achievements.map((entry) => (
-              <VCard key={entry.id} tier="low" style={styles.entryCard}>
+              <VCard key={entry.id} tier="low" style={staticStyles.entryCard}>
                 <Text style={styles.entryTitle}>{entry.title}</Text>
                 {entry.description && (
                   <Text style={styles.entryDesc}>{entry.description}</Text>
@@ -506,28 +510,8 @@ export default function LeadershipScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  loadingContent: {
-    padding: spacing[4],
-    paddingTop: spacing[8],
-  },
-  header: {
-    ...typography.headline_lg,
-    color: colors.on_surface,
-    marginTop: spacing[2],
-    marginBottom: spacing[4],
-  },
+// Static styles (no color dependencies)
+const staticStyles = StyleSheet.create({
   metricsRow: {
     flexDirection: 'row',
     gap: spacing[3],
@@ -543,14 +527,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing[4],
     gap: spacing[3],
   },
-  formTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
-  },
-  typeLabel: {
-    ...typography.label_md,
-    color: colors.on_surface,
-  },
   typeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -563,12 +539,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: spacing[3],
-    marginTop: spacing[2],
-  },
-  sectionTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
-    marginBottom: spacing[3],
     marginTop: spacing[2],
   },
   entryCard: {
@@ -584,26 +554,9 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: spacing[2],
   },
-  entryTitle: {
-    ...typography.title_sm,
-    color: colors.on_surface,
-  },
-  entryPoints: {
-    ...typography.title_md,
-    color: colors.tertiary,
-  },
-  entryDesc: {
-    ...typography.body_sm,
-    color: colors.outline,
-    marginBottom: spacing[2],
-  },
   scoreSection: {
     marginBottom: spacing[4],
     gap: spacing[3],
-  },
-  scoreSectionTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
   },
   scoreRow: {
     flexDirection: 'row',
@@ -615,9 +568,67 @@ const styles = StyleSheet.create({
   scoreSaveButton: {
     marginTop: spacing[1],
   },
-  scoreHint: {
-    ...typography.body_sm,
-    color: colors.outline,
-    fontStyle: 'italic',
-  },
 });
+
+// Theme-dependent styles
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    loadingContent: {
+      padding: spacing[4],
+      paddingTop: spacing[8],
+    },
+    header: {
+      ...typography.headline_lg,
+      color: colors.on_surface,
+      marginTop: spacing[2],
+      marginBottom: spacing[4],
+    },
+    formTitle: {
+      ...typography.title_md,
+      color: colors.on_surface,
+    },
+    typeLabel: {
+      ...typography.label_md,
+      color: colors.on_surface,
+    },
+    sectionTitle: {
+      ...typography.title_md,
+      color: colors.on_surface,
+      marginBottom: spacing[3],
+      marginTop: spacing[2],
+    },
+    entryTitle: {
+      ...typography.title_sm,
+      color: colors.on_surface,
+    },
+    entryPoints: {
+      ...typography.title_md,
+      color: colors.tertiary,
+    },
+    entryDesc: {
+      ...typography.body_sm,
+      color: colors.outline,
+      marginBottom: spacing[2],
+    },
+    scoreSectionTitle: {
+      ...typography.title_md,
+      color: colors.on_surface,
+    },
+    scoreHint: {
+      ...typography.body_sm,
+      color: colors.outline,
+      fontStyle: 'italic',
+    },
+  });
+}

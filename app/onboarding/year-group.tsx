@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { VButton } from '../../src/components';
-import { colors, typography, spacing } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing } from '../../src/theme/tokens';
 import { useProfileStore } from '../../src/stores/profile';
 
 const YEAR_GROUPS = ['MSI', 'MSII', 'MSIII', 'MSIV'] as const;
 
 export default function YearGroupScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const updateProfile = useProfileStore((s) => s.updateProfile);
   const [selected, setSelected] = useState<typeof YEAR_GROUPS[number] | null>(null);
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   async function handleNext() {
     if (!selected) return;
@@ -26,7 +29,7 @@ export default function YearGroupScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Step Indicator */}
-        <View style={styles.steps}>
+        <View style={staticStyles.steps}>
           {[1, 2, 3, 4, 5].map((step) => (
             <View
               key={step}
@@ -40,14 +43,14 @@ export default function YearGroupScreen() {
           What year are you?
         </Text>
 
-        <View style={styles.options}>
+        <View style={staticStyles.options}>
           {YEAR_GROUPS.map((yg) => (
             <VButton
               key={yg}
               label={yg}
               onPress={() => setSelected(yg)}
               variant={selected === yg ? 'primary' : 'secondary'}
-              style={styles.option}
+              style={staticStyles.option}
               accessibilityLabel={`${yg}${selected === yg ? ', selected' : ''}`}
             />
           ))}
@@ -57,7 +60,7 @@ export default function YearGroupScreen() {
           label="Next"
           onPress={handleNext}
           disabled={!selected}
-          style={styles.nextButton}
+          style={staticStyles.nextButton}
           accessibilityLabel="Continue to next step"
         />
       </View>
@@ -65,36 +68,12 @@ export default function YearGroupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing[8],
-    paddingTop: spacing[12],
-  },
+const staticStyles = StyleSheet.create({
   steps: {
     flexDirection: 'row',
     gap: spacing[2],
     marginBottom: spacing[8],
     justifyContent: 'center',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.outline_variant,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-    width: 24,
-  },
-  prompt: {
-    ...typography.display_sm,
-    color: colors.on_surface,
-    marginBottom: spacing[8],
   },
   options: {
     gap: spacing[3],
@@ -108,3 +87,32 @@ const styles = StyleSheet.create({
     marginBottom: spacing[8],
   },
 });
+
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing[8],
+      paddingTop: spacing[12],
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.outline_variant,
+    },
+    dotActive: {
+      backgroundColor: colors.primary,
+      width: 24,
+    },
+    prompt: {
+      ...typography.display_sm,
+      color: colors.on_surface,
+      marginBottom: spacing[8],
+    },
+  });
+}

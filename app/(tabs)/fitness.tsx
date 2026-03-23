@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import {
   VActivityItem,
   VSkeletonLoader,
 } from '../../src/components';
-import { colors, typography, spacing, roundness } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing, roundness } from '../../src/theme/tokens';
 import {
   getACFTAssessments,
   insertACFTAssessment,
@@ -83,11 +84,14 @@ function formatSeconds(sec: number): string {
 // ---------------------------------------------------------------------------
 
 export default function FitnessScreen() {
+  const { colors, isDark, glass } = useTheme();
   const [assessments, setAssessments] = useState<ACFTAssessmentRow[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [eventValues, setEventValues] = useState<Record<string, string>>({});
   const { width: screenWidth } = useWindowDimensions();
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     loadAssessments();
@@ -226,12 +230,12 @@ export default function FitnessScreen() {
           accessibilityLabel={`Duke Readiness score: ${hasData ? Math.round(latestTotal) : 'unranked'} out of ${MAX_ACFT_TOTAL}`}
           accessibilityRole="summary"
         >
-          <View style={styles.hudTopRow}>
+          <View style={staticStyles.hudTopRow}>
             <View style={styles.hudLeft}>
               <Text style={styles.hudLabel}>MISSION READINESS ASSESSMENT</Text>
               <Text style={styles.hudHeadline}>DUKE READINESS</Text>
             </View>
-            <View style={styles.hudRight}>
+            <View style={staticStyles.hudRight}>
               <Text style={styles.hudScore}>
                 {hasData ? `${Math.round(latestTotal)}` : '--'}
                 <Text style={styles.hudScoreMax}> / {MAX_ACFT_TOTAL}</Text>
@@ -251,8 +255,8 @@ export default function FitnessScreen() {
           </View>
 
           {/* Progress bar */}
-          <View style={styles.hudProgressWrap}>
-            <View style={styles.hudProgressTrack}>
+          <View style={staticStyles.hudProgressWrap}>
+            <View style={staticStyles.hudProgressTrack}>
               <View
                 style={[
                   styles.hudProgressFill,
@@ -267,9 +271,9 @@ export default function FitnessScreen() {
         {/* 2. EMPTY STATE (no assessments + form not open)                */}
         {/* ──────────────────────────────────────────────────────────────── */}
         {!hasData && !showForm && (
-          <View style={styles.emptyWrap}>
-            <VCard tier="low" style={styles.emptyCard}>
-              <View style={styles.emptyInner}>
+          <View style={staticStyles.emptyWrap}>
+            <VCard tier="low" style={staticStyles.emptyCard}>
+              <View style={staticStyles.emptyInner}>
                 <MaterialCommunityIcons
                   name="dumbbell"
                   size={64}
@@ -284,7 +288,7 @@ export default function FitnessScreen() {
                   label="Log Your First AFT"
                   onPress={() => setShowForm(true)}
                   variant="primary"
-                  style={styles.emptyCta}
+                  style={staticStyles.emptyCta}
                   accessibilityLabel="Log your first Army Fitness Test assessment"
                 />
               </View>
@@ -296,20 +300,20 @@ export default function FitnessScreen() {
         {/* 3. BENTO GRID (6 event cards)                                  */}
         {/* ──────────────────────────────────────────────────────────────── */}
         {(hasData || showForm) && (
-          <View style={styles.bentoSection}>
+          <View style={staticStyles.bentoSection}>
             {/* Row 1: Deadlift (2/3) + Push-ups (1/3) */}
-            <View style={[styles.bentoRow, { gap: bentoGap }]}>
+            <View style={[staticStyles.bentoRow, { gap: bentoGap }]}>
               <Pressable
                 style={({ pressed }) => [
                   styles.bentoCardDeadlift,
                   { width: (availableWidth - bentoGap) * 0.63 },
-                  pressed && styles.bentoPressed,
+                  pressed && staticStyles.bentoPressed,
                 ]}
                 onPress={() => openFormForEvent('deadlift')}
                 accessibilityLabel={`Deadlift: ${latest?.deadlift != null ? `${latest.deadlift} lbs` : 'no data'}`}
                 accessibilityRole="button"
               >
-                <View style={styles.bentoCardHeader}>
+                <View style={staticStyles.bentoCardHeader}>
                   <MaterialCommunityIcons name="weight-lifter" size={24} color={colors.primary} />
                   <View style={styles.abbrevBadge}>
                     <Text style={styles.abbrevText}>MDL</Text>
@@ -326,13 +330,13 @@ export default function FitnessScreen() {
                 style={({ pressed }) => [
                   styles.bentoCardPushups,
                   { width: (availableWidth - bentoGap) * 0.37 },
-                  pressed && styles.bentoPressed,
+                  pressed && staticStyles.bentoPressed,
                 ]}
                 onPress={() => openFormForEvent('push_ups')}
                 accessibilityLabel={`Push-ups: ${latest?.push_ups != null ? `${latest.push_ups} reps` : 'no data'}`}
                 accessibilityRole="button"
               >
-                <View style={styles.bentoCardHeader}>
+                <View style={staticStyles.bentoCardHeader}>
                   <MaterialCommunityIcons name="arm-flex" size={24} color={colors.on_surface} />
                   <View style={styles.abbrevBadgeSecondary}>
                     <Text style={styles.abbrevTextSecondary}>HRP</Text>
@@ -347,18 +351,18 @@ export default function FitnessScreen() {
             </View>
 
             {/* Row 1b: Power Throw (standalone, half width since it's the 6th event) */}
-            <View style={[styles.bentoRow, { gap: bentoGap }]}>
+            <View style={[staticStyles.bentoRow, { gap: bentoGap }]}>
               <Pressable
                 style={({ pressed }) => [
                   styles.bentoCardPowerThrow,
                   { width: (availableWidth - bentoGap) * 0.5 },
-                  pressed && styles.bentoPressed,
+                  pressed && staticStyles.bentoPressed,
                 ]}
                 onPress={() => openFormForEvent('power_throw')}
                 accessibilityLabel={`Standing Power Throw: ${latest?.power_throw != null ? `${latest.power_throw} m` : 'no data'}`}
                 accessibilityRole="button"
               >
-                <View style={styles.bentoCardHeader}>
+                <View style={staticStyles.bentoCardHeader}>
                   <MaterialCommunityIcons name="basketball" size={24} color={colors.primary} />
                   <View style={styles.abbrevBadge}>
                     <Text style={styles.abbrevText}>SPT</Text>
@@ -376,13 +380,13 @@ export default function FitnessScreen() {
                 style={({ pressed }) => [
                   styles.bentoCardPlank,
                   { width: (availableWidth - bentoGap) * 0.5 },
-                  pressed && styles.bentoPressed,
+                  pressed && staticStyles.bentoPressed,
                 ]}
                 onPress={() => openFormForEvent('plank')}
                 accessibilityLabel={`Plank: ${latest?.plank != null ? `${formatSeconds(latest.plank)} ` : 'no data'}`}
                 accessibilityRole="button"
               >
-                <View style={styles.bentoCardHeader}>
+                <View style={staticStyles.bentoCardHeader}>
                   <MaterialCommunityIcons name="human" size={24} color={colors.secondary_container} />
                   <View style={styles.abbrevBadgePlank}>
                     <Text style={styles.abbrevTextPlank}>PLK</Text>
@@ -397,32 +401,32 @@ export default function FitnessScreen() {
             </View>
 
             {/* Row 2: Sprint-Drag-Carry (half) + placeholder (half) */}
-            <View style={[styles.bentoRow, { gap: bentoGap }]}>
+            <View style={[staticStyles.bentoRow, { gap: bentoGap }]}>
               <Pressable
                 style={({ pressed }) => [
                   styles.bentoCardSDC,
                   { width: availableWidth },
-                  pressed && styles.bentoPressed,
+                  pressed && staticStyles.bentoPressed,
                 ]}
                 onPress={() => openFormForEvent('sprint_drag_carry')}
                 accessibilityLabel={`Sprint-Drag-Carry: ${latest?.sprint_drag_carry != null ? `${latest.sprint_drag_carry} sec` : 'no data'}`}
                 accessibilityRole="button"
               >
-                <View style={styles.bentoCardHeader}>
+                <View style={staticStyles.bentoCardHeader}>
                   <MaterialCommunityIcons name="run-fast" size={24} color={colors.primary} />
                   <View style={styles.abbrevBadge}>
                     <Text style={styles.abbrevText}>SDC</Text>
                   </View>
                 </View>
                 <Text style={styles.bentoEventName}>SPRINT-DRAG-CARRY</Text>
-                <View style={styles.sdcRow}>
+                <View style={staticStyles.sdcRow}>
                   <Text style={styles.bentoValueDefault}>
                     {latest?.sprint_drag_carry != null ? formatSeconds(latest.sprint_drag_carry) : '--'}
                   </Text>
-                  <View style={styles.sdcBars}>
-                    <View style={[styles.sdcBar, { backgroundColor: colors.primary }]} />
-                    <View style={[styles.sdcBar, { backgroundColor: colors.secondary }]} />
-                    <View style={[styles.sdcBar, { backgroundColor: colors.tertiary }]} />
+                  <View style={staticStyles.sdcBars}>
+                    <View style={[staticStyles.sdcBar, { backgroundColor: colors.primary }]} />
+                    <View style={[staticStyles.sdcBar, { backgroundColor: colors.secondary }]} />
+                    <View style={[staticStyles.sdcBar, { backgroundColor: colors.tertiary }]} />
                   </View>
                 </View>
                 <Text style={styles.bentoUnit}>time</Text>
@@ -430,25 +434,25 @@ export default function FitnessScreen() {
             </View>
 
             {/* Row 3: 2-Mile Run (full width) */}
-            <View style={[styles.bentoRow, { gap: bentoGap }]}>
+            <View style={[staticStyles.bentoRow, { gap: bentoGap }]}>
               <Pressable
                 style={({ pressed }) => [
                   styles.bentoCard2MR,
                   { width: availableWidth },
-                  pressed && styles.bentoPressed,
+                  pressed && staticStyles.bentoPressed,
                 ]}
                 onPress={() => openFormForEvent('two_mile_run')}
                 accessibilityLabel={`2-Mile Run: ${latest?.two_mile_run != null ? `${formatSeconds(latest.two_mile_run)}` : 'no data'}`}
                 accessibilityRole="button"
               >
-                <View style={styles.bentoCardHeader}>
+                <View style={staticStyles.bentoCardHeader}>
                   <MaterialCommunityIcons name="shoe-print" size={24} color={colors.primary} />
                   <View style={styles.abbrevBadge}>
                     <Text style={styles.abbrevText}>2MR</Text>
                   </View>
                 </View>
                 <Text style={styles.bentoEventName}>2-MILE RUN</Text>
-                <View style={styles.runRow}>
+                <View style={staticStyles.runRow}>
                   <View>
                     <Text style={styles.bentoValueDefault}>
                       {latest?.two_mile_run != null ? formatSeconds(latest.two_mile_run) : '--'}
@@ -456,7 +460,7 @@ export default function FitnessScreen() {
                     <Text style={styles.bentoUnit}>final time</Text>
                   </View>
                   {latest?.two_mile_run != null && (
-                    <View style={styles.paceWrap}>
+                    <View style={staticStyles.paceWrap}>
                       <Text style={styles.paceLabel}>PACE</Text>
                       <Text style={styles.paceValue}>
                         {formatSeconds(latest.two_mile_run / 2)}/mi
@@ -473,7 +477,7 @@ export default function FitnessScreen() {
         {/* 4. ASSESSMENT FORM (modal-style inline)                        */}
         {/* ──────────────────────────────────────────────────────────────── */}
         {showForm && (
-          <VCard tier="low" style={styles.formCard}>
+          <VCard tier="low" style={staticStyles.formCard}>
             <Text style={styles.formTitle}>NEW ACFT ASSESSMENT</Text>
             {ACFT_EVENTS.map((event) => (
               <VInput
@@ -486,7 +490,7 @@ export default function FitnessScreen() {
                 accessibilityLabel={`${event.label} input in ${event.unit}`}
               />
             ))}
-            <View style={styles.formActions}>
+            <View style={staticStyles.formActions}>
               <VButton
                 label="Cancel"
                 onPress={() => {
@@ -513,13 +517,13 @@ export default function FitnessScreen() {
             label="Log New Assessment"
             onPress={() => setShowForm(true)}
             variant="secondary"
-            style={styles.logButton}
+            style={staticStyles.logButton}
             accessibilityLabel="Log a new ACFT assessment"
           />
         )}
 
         {assessments.length > 0 && (
-          <View style={styles.historySection}>
+          <View style={staticStyles.historySection}>
             <Text style={styles.historyTitle}>
               ASSESSMENT HISTORY ({assessments.length})
             </Text>
@@ -544,7 +548,7 @@ export default function FitnessScreen() {
                     ? Math.round((a.total ?? 0) - (assessments[i + 1]?.total ?? 0))
                     : undefined
                 }
-                style={styles.historyItem}
+                style={staticStyles.historyItem}
                 accessibilityLabel={`Assessment: total ${a.total != null ? Math.round(a.total) : 'unknown'}, recorded ${a.recorded_at ?? ''}`}
               />
             ))}
@@ -556,86 +560,17 @@ export default function FitnessScreen() {
 }
 
 // ---------------------------------------------------------------------------
-// Styles
+// Static styles (no color dependencies)
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing[4],
-    paddingBottom: spacing[12],
-  },
-  loadingContent: {
-    padding: spacing[4],
-    paddingTop: spacing[8],
-  },
-
-  // ── HUD ──
-  hudCard: {
-    backgroundColor: colors.primary_container,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    marginBottom: spacing[4],
-  },
+const staticStyles = StyleSheet.create({
   hudTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  hudLeft: {
-    flex: 1,
-    marginRight: spacing[3],
-  },
-  hudLabel: {
-    ...typography.label_sm,
-    color: colors.on_primary,
-    textTransform: 'uppercase',
-    letterSpacing: 3,
-    opacity: 0.7,
-  },
-  hudHeadline: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 28,
-    fontWeight: '900',
-    fontStyle: 'italic',
-    color: colors.on_primary,
-    textTransform: 'uppercase',
-    lineHeight: 34,
-    marginTop: spacing[1],
-  },
   hudRight: {
     alignItems: 'flex-end',
-  },
-  hudScore: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 40,
-    fontWeight: '900',
-    color: colors.on_primary,
-    lineHeight: 44,
-  },
-  hudScoreMax: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 20,
-    fontWeight: '900',
-    color: colors.on_primary,
-    opacity: 0.5,
-  },
-  hudBadge: {
-    borderRadius: roundness.sm,
-    paddingVertical: spacing[1],
-    paddingHorizontal: spacing[2],
-    marginTop: spacing[1],
-  },
-  hudBadgeText: {
-    ...typography.label_sm,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   hudProgressWrap: {
     marginTop: spacing[4],
@@ -645,17 +580,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: roundness.sm,
     overflow: 'hidden',
-  },
-  hudProgressFill: {
-    height: 6,
-    backgroundColor: colors.secondary,
-    borderRadius: roundness.sm,
-    // Glow shadow on the fill
-    shadowColor: colors.secondary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 2,
   },
 
   // ── Empty State ──
@@ -670,19 +594,6 @@ const styles = StyleSheet.create({
   emptyInner: {
     alignItems: 'center',
     gap: spacing[3],
-  },
-  emptyHeadline: {
-    ...typography.headline_sm,
-    color: colors.on_surface,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    fontWeight: '900',
-  },
-  emptyBody: {
-    ...typography.body_md,
-    color: colors.outline,
-    textAlign: 'center',
-    maxWidth: 300,
   },
   emptyCta: {
     marginTop: spacing[3],
@@ -708,147 +619,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing[2],
   },
-  abbrevBadge: {
-    backgroundColor: colors.surface_container,
-    borderRadius: roundness.sm,
-    paddingVertical: 2,
-    paddingHorizontal: spacing[2],
-  },
-  abbrevText: {
-    ...typography.label_sm,
-    color: colors.on_surface,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-  },
 
-  // Deadlift card — surface_container_highest bg
-  bentoCardDeadlift: {
-    backgroundColor: colors.surface_container_highest,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    minHeight: 44,
-  },
-  bentoEventName: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.on_surface,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  bentoValueDefault: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 32,
-    fontWeight: '900',
-    color: colors.on_surface,
-    lineHeight: 38,
-    marginTop: spacing[1],
-  },
-  bentoUnit: {
-    ...typography.label_sm,
-    color: colors.outline,
-    textTransform: 'uppercase',
-  },
-
-  // Push-ups card — secondary_container bg
-  bentoCardPushups: {
-    backgroundColor: colors.secondary_container,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    minHeight: 44,
-  },
-  abbrevBadgeSecondary: {
-    backgroundColor: 'rgba(0,0,0,0.08)',
-    borderRadius: roundness.sm,
-    paddingVertical: 2,
-    paddingHorizontal: spacing[2],
-  },
-  abbrevTextSecondary: {
-    ...typography.label_sm,
-    color: colors.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-  },
-  bentoEventNameSecondary: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.secondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  bentoValueSecondary: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 32,
-    fontWeight: '900',
-    color: colors.secondary,
-    lineHeight: 38,
-    marginTop: spacing[1],
-  },
-  bentoUnitSecondary: {
-    ...typography.label_sm,
-    color: colors.secondary,
-    opacity: 0.6,
-    textTransform: 'uppercase',
-  },
-
-  // Power Throw card — surface_container_high bg
-  bentoCardPowerThrow: {
-    backgroundColor: colors.surface_container_high,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    minHeight: 44,
-  },
-
-  // Plank card — primary bg (POP card)
-  bentoCardPlank: {
-    backgroundColor: colors.primary,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    minHeight: 44,
-  },
-  abbrevBadgePlank: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: roundness.sm,
-    paddingVertical: 2,
-    paddingHorizontal: spacing[2],
-  },
-  abbrevTextPlank: {
-    ...typography.label_sm,
-    color: colors.on_primary,
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-  },
-  bentoEventNamePlank: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 14,
-    fontWeight: '900',
-    color: colors.on_primary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  bentoValuePlank: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 32,
-    fontWeight: '900',
-    color: colors.on_primary,
-    lineHeight: 38,
-    marginTop: spacing[1],
-  },
-  bentoUnitPlank: {
-    ...typography.label_sm,
-    color: colors.on_primary,
-    opacity: 0.7,
-    textTransform: 'uppercase',
-  },
-
-  // Sprint-Drag-Carry — surface_container bg, full width
-  bentoCardSDC: {
-    backgroundColor: colors.surface_container,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    minHeight: 44,
-  },
   sdcRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -866,13 +637,6 @@ const styles = StyleSheet.create({
     borderRadius: roundness.sm,
   },
 
-  // 2-Mile Run — surface_container_low bg, full width
-  bentoCard2MR: {
-    backgroundColor: colors.surface_container_low,
-    borderRadius: roundness.sm,
-    padding: spacing[4],
-    minHeight: 44,
-  },
   runRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -881,30 +645,11 @@ const styles = StyleSheet.create({
   paceWrap: {
     alignItems: 'flex-end',
   },
-  paceLabel: {
-    ...typography.label_sm,
-    color: colors.outline,
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-  },
-  paceValue: {
-    ...typography.title_lg,
-    color: colors.on_surface,
-    fontWeight: '700',
-  },
 
   // ── Form ──
   formCard: {
     marginBottom: spacing[4],
     gap: spacing[3],
-  },
-  formTitle: {
-    fontFamily: 'PublicSans-Black',
-    fontSize: 16,
-    fontWeight: '900',
-    color: colors.on_surface,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
   },
   formActions: {
     flexDirection: 'row',
@@ -922,14 +667,291 @@ const styles = StyleSheet.create({
   historySection: {
     marginTop: spacing[2],
   },
-  historyTitle: {
-    ...typography.label_md,
-    color: colors.outline,
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-    marginBottom: spacing[3],
-  },
   historyItem: {
     // Spacing between items handled by VActivityItem padding
   },
 });
+
+// ---------------------------------------------------------------------------
+// Theme-dependent styles
+// ---------------------------------------------------------------------------
+
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    loadingContent: {
+      padding: spacing[4],
+      paddingTop: spacing[8],
+    },
+
+    // ── HUD ──
+    hudCard: {
+      backgroundColor: colors.primary_container,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      marginBottom: spacing[4],
+    },
+    hudLeft: {
+      flex: 1,
+      marginRight: spacing[3],
+    },
+    hudLabel: {
+      ...typography.label_sm,
+      color: colors.on_primary,
+      textTransform: 'uppercase',
+      letterSpacing: 3,
+      opacity: 0.7,
+    },
+    hudHeadline: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 28,
+      fontWeight: '900',
+      fontStyle: 'italic',
+      color: colors.on_primary,
+      textTransform: 'uppercase',
+      lineHeight: 34,
+      marginTop: spacing[1],
+    },
+    hudScore: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 40,
+      fontWeight: '900',
+      color: colors.on_primary,
+      lineHeight: 44,
+    },
+    hudScoreMax: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 20,
+      fontWeight: '900',
+      color: colors.on_primary,
+      opacity: 0.5,
+    },
+    hudBadge: {
+      borderRadius: roundness.sm,
+      paddingVertical: spacing[1],
+      paddingHorizontal: spacing[2],
+      marginTop: spacing[1],
+    },
+    hudBadgeText: {
+      ...typography.label_sm,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    hudProgressFill: {
+      height: 6,
+      backgroundColor: colors.secondary,
+      borderRadius: roundness.sm,
+      shadowColor: colors.secondary,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+
+    // ── Empty State ──
+    emptyHeadline: {
+      ...typography.headline_sm,
+      color: colors.on_surface,
+      textAlign: 'center',
+      textTransform: 'uppercase',
+      fontWeight: '900',
+    },
+    emptyBody: {
+      ...typography.body_md,
+      color: colors.outline,
+      textAlign: 'center',
+      maxWidth: 300,
+    },
+
+    // ── Bento Cards ──
+    abbrevBadge: {
+      backgroundColor: colors.surface_container,
+      borderRadius: roundness.sm,
+      paddingVertical: 2,
+      paddingHorizontal: spacing[2],
+    },
+    abbrevText: {
+      ...typography.label_sm,
+      color: colors.on_surface,
+      textTransform: 'uppercase',
+      letterSpacing: 1.5,
+    },
+
+    // Deadlift card
+    bentoCardDeadlift: {
+      backgroundColor: colors.surface_container_highest,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      minHeight: 44,
+    },
+    bentoEventName: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 14,
+      fontWeight: '900',
+      color: colors.on_surface,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    bentoValueDefault: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 32,
+      fontWeight: '900',
+      color: colors.on_surface,
+      lineHeight: 38,
+      marginTop: spacing[1],
+    },
+    bentoUnit: {
+      ...typography.label_sm,
+      color: colors.outline,
+      textTransform: 'uppercase',
+    },
+
+    // Push-ups card
+    bentoCardPushups: {
+      backgroundColor: colors.secondary_container,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      minHeight: 44,
+    },
+    abbrevBadgeSecondary: {
+      backgroundColor: 'rgba(0,0,0,0.08)',
+      borderRadius: roundness.sm,
+      paddingVertical: 2,
+      paddingHorizontal: spacing[2],
+    },
+    abbrevTextSecondary: {
+      ...typography.label_sm,
+      color: colors.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 1.5,
+    },
+    bentoEventNameSecondary: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 14,
+      fontWeight: '900',
+      color: colors.secondary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    bentoValueSecondary: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 32,
+      fontWeight: '900',
+      color: colors.secondary,
+      lineHeight: 38,
+      marginTop: spacing[1],
+    },
+    bentoUnitSecondary: {
+      ...typography.label_sm,
+      color: colors.secondary,
+      opacity: 0.6,
+      textTransform: 'uppercase',
+    },
+
+    // Power Throw card
+    bentoCardPowerThrow: {
+      backgroundColor: colors.surface_container_high,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      minHeight: 44,
+    },
+
+    // Plank card — primary bg (POP card)
+    bentoCardPlank: {
+      backgroundColor: colors.primary,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      minHeight: 44,
+    },
+    abbrevBadgePlank: {
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      borderRadius: roundness.sm,
+      paddingVertical: 2,
+      paddingHorizontal: spacing[2],
+    },
+    abbrevTextPlank: {
+      ...typography.label_sm,
+      color: colors.on_primary,
+      textTransform: 'uppercase',
+      letterSpacing: 1.5,
+    },
+    bentoEventNamePlank: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 14,
+      fontWeight: '900',
+      color: colors.on_primary,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    bentoValuePlank: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 32,
+      fontWeight: '900',
+      color: colors.on_primary,
+      lineHeight: 38,
+      marginTop: spacing[1],
+    },
+    bentoUnitPlank: {
+      ...typography.label_sm,
+      color: colors.on_primary,
+      opacity: 0.7,
+      textTransform: 'uppercase',
+    },
+
+    // Sprint-Drag-Carry
+    bentoCardSDC: {
+      backgroundColor: colors.surface_container,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      minHeight: 44,
+    },
+
+    // 2-Mile Run
+    bentoCard2MR: {
+      backgroundColor: colors.surface_container_low,
+      borderRadius: roundness.sm,
+      padding: spacing[4],
+      minHeight: 44,
+    },
+    paceLabel: {
+      ...typography.label_sm,
+      color: colors.outline,
+      textTransform: 'uppercase',
+      letterSpacing: 2,
+    },
+    paceValue: {
+      ...typography.title_lg,
+      color: colors.on_surface,
+      fontWeight: '700',
+    },
+
+    // ── Form ──
+    formTitle: {
+      fontFamily: 'PublicSans-Black',
+      fontSize: 16,
+      fontWeight: '900',
+      color: colors.on_surface,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+
+    // ── Assessment History ──
+    historyTitle: {
+      ...typography.label_md,
+      color: colors.outline,
+      textTransform: 'uppercase',
+      letterSpacing: 2,
+      marginBottom: spacing[3],
+    },
+  });
+}
