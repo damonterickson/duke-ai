@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { colors, typography, spacing, roundness } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeProvider';
+import { typography, spacing, roundness } from '../theme/tokens';
 
 export interface VInsightCardProps {
   /** Material icon name */
@@ -20,9 +21,18 @@ export const VInsightCard: React.FC<VInsightCardProps> = ({
   text,
   style,
 }) => {
+  const { colors } = useTheme();
+
   return (
     <View
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface_container_high,
+          borderLeftColor: colors.primary,
+        },
+        style,
+      ]}
       accessibilityLabel={`${label}: ${text}`}
       accessibilityRole="text"
     >
@@ -33,8 +43,10 @@ export const VInsightCard: React.FC<VInsightCardProps> = ({
         style={styles.icon}
       />
       <View style={styles.textContainer}>
-        <Text style={styles.label}>{label.toUpperCase()}</Text>
-        <Text style={styles.text}>{text}</Text>
+        <Text style={[styles.label, { color: colors.outline_accessible ?? colors.outline }]}>
+          {label.toUpperCase()}
+        </Text>
+        <Text style={[styles.text, { color: colors.on_surface }]}>{text}</Text>
       </View>
     </View>
   );
@@ -44,9 +56,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: `rgba(69, 0, 132, 0.10)`, // primary_container at 10%
     borderLeftWidth: 4,
-    borderLeftColor: '#d9b9ff', // primary color (purple)
     borderTopRightRadius: roundness.lg,
     borderBottomRightRadius: roundness.lg,
     padding: spacing[5],
@@ -65,13 +75,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1.5,
     lineHeight: typography.label_sm.lineHeight,
-    color: colors.primary,
   },
   text: {
-    fontFamily: typography.body_lg.fontFamily,
-    fontSize: typography.body_lg.fontSize,
-    fontWeight: '500',
-    lineHeight: 22,
-    color: colors.primary,
+    fontFamily: typography.body_md.fontFamily,
+    fontSize: typography.body_md.fontSize,
+    fontWeight: '400',
+    lineHeight: 20,
   },
 });

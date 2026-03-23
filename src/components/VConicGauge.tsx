@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
-import { colors, typography, spacing, roundness } from '../theme/tokens';
+import Svg, { Path } from 'react-native-svg';
+import { useTheme } from '../theme/ThemeProvider';
+import { typography } from '../theme/tokens';
 
 export interface VConicGaugeProps {
   /** Value from 0 to 1 */
@@ -12,6 +13,8 @@ export interface VConicGaugeProps {
   strokeWidth?: number;
   /** Center label (e.g. score) */
   label?: string;
+  /** Optional sublabel below the main label */
+  sublabel?: string;
   style?: ViewStyle;
   accessibilityLabel?: string;
 }
@@ -44,9 +47,11 @@ export const VConicGauge: React.FC<VConicGaugeProps> = ({
   size = 120,
   strokeWidth = 10,
   label,
+  sublabel,
   style,
   accessibilityLabel,
 }) => {
+  const { colors } = useTheme();
   const clamped = Math.min(1, Math.max(0, progress));
   const cx = size / 2;
   const cy = size / 2;
@@ -79,27 +84,31 @@ export const VConicGauge: React.FC<VConicGaugeProps> = ({
         {/* Track */}
         <Path
           d={bgPath}
-          stroke={`rgba(200, 199, 184, 0.15)`}
+          stroke={colors.outline_variant}
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"
+          opacity={0.3}
         />
         {/* Fill */}
         {fillPath !== '' && (
           <Path
             d={fillPath}
-            stroke={colors.tertiary}
+            stroke={colors.primary}
             strokeWidth={strokeWidth}
             fill="none"
             strokeLinecap="round"
           />
         )}
       </Svg>
-      {label != null && (
-        <View style={styles.labelContainer}>
-          <Text style={styles.label}>{label}</Text>
-        </View>
-      )}
+      <View style={styles.labelContainer}>
+        {label != null && (
+          <Text style={[styles.label, { color: colors.on_surface }]}>{label}</Text>
+        )}
+        {sublabel != null && (
+          <Text style={[styles.sublabel, { color: colors.outline }]}>{sublabel}</Text>
+        )}
+      </View>
     </View>
   );
 };
@@ -116,6 +125,11 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.headline_md,
-    color: colors.on_surface,
+  },
+  sublabel: {
+    ...typography.label_sm,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginTop: 2,
   },
 });

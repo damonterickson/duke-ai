@@ -1,16 +1,21 @@
 /**
  * Zustand store — Cadet Profile
  *
- * On app start: loadFromSQLite() reads profile table -> sets Zustand state.
- * On update: Zustand state updates immediately, then writes through to SQLite.
+ * Native: SQLite for persistence (read on start, write-through on update).
+ * Web: AsyncStorage fallback (SQLite unavailable).
  */
 
 import { create } from 'zustand';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   getProfile,
   upsertProfile,
   type CadetProfileRow,
 } from '../services/storage';
+
+const ASYNC_KEY = '@duke_profile';
+const isWeb = Platform.OS === 'web';
 
 export interface ProfileState {
   id: number | null;
@@ -42,6 +47,19 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
   loadFromSQLite: async () => {
     try {
+      if (isWeb) {
+        // Web: load from AsyncStorage
+        const stored = await AsyncStorage.getItem(ASYNC_KEY);
+        if (stored) {
+          const data = JSON.parse(stored);
+          set({ ...data, isLoaded: true });
+        } else {
+          set({ isLoaded: true });
+        }
+        return;
+      }
+
+      // Native: load from SQLite
       const row = await getProfile();
       if (row) {
         set({
@@ -57,7 +75,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         set({ isLoaded: true });
       }
     } catch (error) {
-      console.error('Failed to load profile from SQLite:', error);
+      console.error('Failed to load profile:', error);
       set({ isLoaded: true });
     }
   },
@@ -66,10 +84,21 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     // Optimistic: update Zustand immediately
     set(updates);
 
-    // Write through to SQLite — need at least yearGroup to write
     const state = get();
     if (!state.yearGroup) return;
 
+    if (isWeb) {
+      // Web: persist to AsyncStorage
+      try {
+        const { isLoaded: _, loadFromSQLite: _l, updateProfile: _u, reset: _r, ...data } = state;
+        await AsyncStorage.setItem(ASYNC_KEY, JSON.stringify(data));
+      } catch (error) {
+        console.error('Failed to persist profile to AsyncStorage:', error);
+      }
+      return;
+    }
+
+    // Native: persist to SQLite
     try {
       const newId = await upsertProfile({
         year_group: state.yearGroup,
