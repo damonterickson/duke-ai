@@ -44,10 +44,11 @@ export function getSupabase(): SupabaseClient {
         },
       });
     } else {
+      const isWeb = typeof window !== 'undefined';
       supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           storage: AsyncStorage,
-          detectSessionInUrl: false,
+          detectSessionInUrl: isWeb,
           autoRefreshToken: true,
           persistSession: true,
         },
@@ -106,10 +107,13 @@ export interface SharedAchievementRow {
 
 export async function signInWithMagicLink(email: string): Promise<{ error: string | null }> {
   const sb = getSupabase();
+  const redirectTo = typeof window !== 'undefined'
+    ? window.location.origin
+    : 'dukevanguard://auth-callback';
   const { error } = await sb.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: 'dukevanguard://auth-callback',
+      emailRedirectTo: redirectTo,
     },
   });
   return { error: error?.message ?? null };
