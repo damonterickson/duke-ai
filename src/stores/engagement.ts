@@ -7,6 +7,7 @@
 
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { syncAchievement } from '../services/supabase';
 
 const STORAGE_KEY = '@duke_engagement';
 
@@ -177,6 +178,7 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
 
   unlockBadge: (badgeId: string) => {
     const { badges } = get();
+    const badge = badges.find((b) => b.id === badgeId);
     const updated = badges.map((b) =>
       b.id === badgeId && !b.unlockedAt
         ? { ...b, unlockedAt: new Date().toISOString() }
@@ -184,6 +186,15 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
     );
     set({ badges: updated });
     get().saveToStorage();
+
+    // Sync badge unlock to squad mates via Supabase
+    if (badge && !badge.unlockedAt) {
+      syncAchievement({
+        type: 'badge_unlock',
+        title: badge.name,
+        description: badge.description,
+      }).catch(() => {}); // fire-and-forget, errors logged in supabase.ts
+    }
   },
 
   acceptMission: (mission: Mission) => {
@@ -208,6 +219,13 @@ export const useEngagementStore = create<EngagementState>((set, get) => ({
       xpTotal: xpTotal + completed.xpReward,
     });
     get().saveToStorage();
+
+    // Sync mission completion to squad mates via Supabase
+    syncAchievement({
+      type: 'mission_complete',
+      title: completed.title,
+      description: completed.description,
+    }).catch(() => {}); // fire-and-forget, errors logged in supabase.ts
   },
 
   saveToStorage: async () => {
