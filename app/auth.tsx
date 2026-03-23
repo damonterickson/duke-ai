@@ -34,6 +34,7 @@ export default function AuthScreen() {
 
   const handleSend = useCallback(async () => {
     if (!email.trim()) { setError('Please enter your email.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return; }
     setError(null);
     setLoading(true);
     const { error: apiErr } = await signInWithMagicLink(email.trim());
@@ -99,7 +100,7 @@ export default function AuthScreen() {
             </>
           )}
 
-          <Pressable onPress={() => router.back()} style={styles.skip}>
+          <Pressable onPress={() => router.replace('/')} style={styles.skip}>
             <Text style={[styles.skipText, { color: colors.outline }]}>
               Skip {'\u2014'} use app without squads
             </Text>
