@@ -33,15 +33,26 @@ export function getSupabase(): SupabaseClient {
   if (!supabase) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_ANON_KEY. Squad features disabled.');
+      // Return a dummy client that won't crash — all operations will fail gracefully
+      // with "Not authenticated" since there's no session.
+      supabase = createClient('https://placeholder.supabase.co', 'placeholder-key', {
+        auth: {
+          storage: AsyncStorage,
+          detectSessionInUrl: false,
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
+    } else {
+      supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          storage: AsyncStorage,
+          detectSessionInUrl: false,
+          autoRefreshToken: true,
+          persistSession: true,
+        },
+      });
     }
-    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        storage: AsyncStorage,
-        detectSessionInUrl: false,
-        autoRefreshToken: true,
-        persistSession: true,
-      },
-    });
   }
   return supabase;
 }
