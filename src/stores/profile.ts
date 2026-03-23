@@ -19,6 +19,8 @@ const isWeb = Platform.OS === 'web';
 
 export interface ProfileState {
   id: number | null;
+  name: string | null;
+  photoUri: string | null;
   yearGroup: 'MSI' | 'MSII' | 'MSIII' | 'MSIV' | null;
   gender: 'M' | 'F' | null;
   ageBracket: '17-21' | '22-26' | '27-31' | null;
@@ -28,12 +30,14 @@ export interface ProfileState {
 
   // Actions
   loadFromSQLite: () => Promise<void>;
-  updateProfile: (updates: Partial<Pick<ProfileState, 'yearGroup' | 'gender' | 'ageBracket' | 'targetBranch' | 'goalOml'>>) => Promise<void>;
+  updateProfile: (updates: Partial<Pick<ProfileState, 'name' | 'photoUri' | 'yearGroup' | 'gender' | 'ageBracket' | 'targetBranch' | 'goalOml'>>) => Promise<void>;
   reset: () => void;
 }
 
 const initialState = {
   id: null as number | null,
+  name: null as string | null,
+  photoUri: null as string | null,
   yearGroup: null as ProfileState['yearGroup'],
   gender: null as ProfileState['gender'],
   ageBracket: null as ProfileState['ageBracket'],
@@ -64,6 +68,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       if (row) {
         set({
           id: row.id ?? null,
+          name: (row as any).name ?? null,
+          photoUri: (row as any).photo_uri ?? null,
           yearGroup: row.year_group as ProfileState['yearGroup'],
           gender: row.gender as ProfileState['gender'],
           ageBracket: row.age_bracket as ProfileState['ageBracket'],
@@ -106,6 +112,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         age_bracket: state.ageBracket ?? '17-21',
         target_branch: state.targetBranch,
         goal_oml: state.goalOml,
+        name: state.name,
+        photo_uri: state.photoUri,
       });
       set({ id: newId });
     } catch (error) {
