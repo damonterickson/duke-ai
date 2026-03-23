@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { VGlassPanel, VSkeletonLoader, VFAB, VChatSheet } from '../../src/components';
 import type { ChatMessage } from '../../src/components';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -25,6 +26,7 @@ import type { CadetProfile, OMLResult } from '../../src/engine/oml';
 import type { ConversationTurn } from '../../src/engine/context';
 
 export default function IntelScreen() {
+  const router = useRouter();
   const { colors, isDark } = useTheme();
   const profile = useProfileStore();
   const scores = useScoresStore();
@@ -162,7 +164,11 @@ export default function IntelScreen() {
             </Text>
           )}
           <View style={styles.briefingActions}>
-            <TouchableOpacity style={[styles.briefBtn, { backgroundColor: colors.primary }]}>
+            <TouchableOpacity
+              style={[styles.briefBtn, { backgroundColor: colors.primary }]}
+              onPress={() => router.push('/intelligence-brief' as any)}
+              accessibilityLabel="View full intelligence brief"
+            >
               <Text style={[styles.briefBtnText, { color: colors.on_primary }]}>Full Analysis</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.briefBtn, { backgroundColor: colors.surface_container }]}>

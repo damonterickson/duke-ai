@@ -116,11 +116,12 @@ function EditableField({
 // Section types
 // ---------------------------------------------------------------------------
 
-type Section = { type: 'personal' | 'oml' | 'scorecards' | 'status' };
+type Section = { type: 'personal' | 'oml' | 'scorecards' | 'quickActions' | 'status' };
 const SECTIONS: Section[] = [
   { type: 'personal' },
   { type: 'oml' },
   { type: 'scorecards' },
+  { type: 'quickActions' },
   { type: 'status' },
 ];
 
@@ -429,6 +430,35 @@ export default function ProfileScreen() {
         );
       }
 
+      // ─── Quick Actions ──────────────────────────────────────────────
+      case 'quickActions': {
+        const actions = [
+          { icon: 'cloud-upload' as const, label: 'Upload & Sync', route: '/upload' as const, desc: 'Import documents' },
+          { icon: 'fitness-center' as const, label: 'ACFT Log', route: '/acft-log' as const, desc: 'Log fitness tests' },
+          { icon: 'analytics' as const, label: 'Intel Brief', route: '/intelligence-brief' as const, desc: 'Full AI analysis' },
+          { icon: 'school' as const, label: 'Canvas', route: '/canvas' as const, desc: 'LMS integration' },
+        ];
+        return (
+          <View style={s.sec}>
+            <Text style={[s.secTitle, { color: colors.on_surface }]}>Quick Actions</Text>
+            <View style={s.actionsGrid}>
+              {actions.map((action, i) => (
+                <Pressable
+                  key={i}
+                  style={[s.actionCard, { backgroundColor: colors.surface_container_low }]}
+                  onPress={() => router.push(action.route as any)}
+                  accessibilityLabel={action.label}
+                >
+                  <MaterialIcons name={action.icon} size={24} color={colors.primary} />
+                  <Text style={[s.actionLabel, { color: colors.on_surface }]}>{action.label}</Text>
+                  <Text style={[s.actionDesc, { color: colors.outline }]}>{action.desc}</Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        );
+      }
+
       // ─── Status Section ─────────────────────────────────────────────
       case 'status':
         return (
@@ -622,6 +652,23 @@ const s = StyleSheet.create({
     ...typography.label_sm,
     marginTop: 2,
   },
+
+  // Quick actions
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing[2],
+  },
+  actionCard: {
+    width: '48%' as any,
+    alignItems: 'center',
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[2],
+    borderRadius: roundness.lg,
+    gap: spacing[1],
+  },
+  actionLabel: { ...typography.label_lg },
+  actionDesc: { ...typography.label_sm },
 
   // Status section
   statusSection: {
