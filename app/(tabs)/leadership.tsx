@@ -54,6 +54,7 @@ export default function LeadershipScreen() {
   const [cstScore, setCstScore] = useState('');
   const [clcScore, setClcScore] = useState('');
   const [extracurricularHours, setExtracurricularHours] = useState('');
+  const [ecHoursLoaded, setEcHoursLoaded] = useState(false);
 
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -65,6 +66,16 @@ export default function LeadershipScreen() {
       if (latestScore.clc_score != null) setClcScore(String(latestScore.clc_score));
     }
   }, [latestScore?.leadership_eval, latestScore?.cst_score, latestScore?.clc_score]);
+
+  // Load extracurricular hours from AsyncStorage
+  useEffect(() => {
+    AsyncStorage.getItem('@duke_extracurricular_hours')
+      .then((val) => {
+        if (val != null) setExtracurricularHours(val);
+        setEcHoursLoaded(true);
+      })
+      .catch(() => setEcHoursLoaded(true));
+  }, []);
 
   useEffect(() => {
     loadEntries();
@@ -335,7 +346,31 @@ export default function LeadershipScreen() {
             keyboardType="numeric"
             accessibilityLabel="Extracurricular hours input"
           />
-          <Text style={styles.scoreHint}>Display only — storage coming soon</Text>
+          <VButton
+            label="Save Hours"
+            onPress={async () => {
+              const trimmed = extracurricularHours.trim();
+              if (!trimmed) {
+                Alert.alert('Missing Value', 'Please enter a number of hours.');
+                return;
+              }
+              const num = parseFloat(trimmed);
+              if (isNaN(num) || num < 0 || num > 10000) {
+                Alert.alert('Invalid Hours', 'Hours must be between 0 and 10,000.');
+                return;
+              }
+              try {
+                await AsyncStorage.setItem('@duke_extracurricular_hours', trimmed);
+                Alert.alert('Saved', `${trimmed} extracurricular hours recorded.`);
+              } catch (error) {
+                console.error('Failed to save extracurricular hours:', error);
+                Alert.alert('Error', 'Failed to save hours. Please try again.');
+              }
+            }}
+            variant="secondary"
+            style={staticStyles.scoreSaveButton}
+            accessibilityLabel="Save extracurricular hours"
+          />
         </VCard>
 
         {/* Summary */}

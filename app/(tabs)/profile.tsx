@@ -8,7 +8,10 @@ import {
   Pressable,
   TextInput,
   Alert,
+  Platform,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -136,6 +139,8 @@ export default function ProfileScreen() {
   const scores = useScoresStore();
   const squad = useSquadStore();
 
+  const [photoUri, setPhotoUri] = useState<string | null>(profile.photoUri ?? null);
+
   const ls = scores.scoreHistory[0];
   const gpa = ls?.gpa;
   const acftTotal = ls?.acft_total;
@@ -223,18 +228,51 @@ export default function ProfileScreen() {
 
             {/* Avatar + info */}
             <View style={s.personalContent}>
-              {/* Photo placeholder */}
+              {/* Profile photo */}
               <Pressable
-                onPress={() => Alert.alert('Photo', 'Coming soon')}
+                onPress={async () => {
+                  if (Platform.OS === 'web') {
+                    Alert.alert('Not Available', 'Photo picker is not supported on web. Use a native device to change your photo.');
+                    return;
+                  }
+                  try {
+                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (status !== 'granted') {
+                      Alert.alert('Permission Denied', 'We need photo library access to change your avatar.');
+                      return;
+                    }
+                    const result = await ImagePicker.launchImageLibraryAsync({
+                      mediaTypes: ['images'],
+                      allowsEditing: true,
+                      aspect: [1, 1],
+                      quality: 0.7,
+                    });
+                    if (!result.canceled && result.assets[0]) {
+                      const uri = result.assets[0].uri;
+                      setPhotoUri(uri);
+                      await profile.updateProfile({ photoUri: uri });
+                    }
+                  } catch (error) {
+                    console.error('Image picker error:', error);
+                    Alert.alert('Error', 'Failed to pick image. Please try again.');
+                  }
+                }}
                 accessibilityLabel="Change profile photo"
                 style={[
                   s.avatar,
                   { backgroundColor: colors.primary_container },
                 ]}
               >
-                <Text style={[s.avatarText, { color: colors.on_primary_container }]}>
-                  {initials}
-                </Text>
+                {photoUri ? (
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={{ width: 72, height: 72, borderRadius: roundness.xl }}
+                  />
+                ) : (
+                  <Text style={[s.avatarText, { color: colors.on_primary_container }]}>
+                    {initials}
+                  </Text>
+                )}
               </Pressable>
 
               {/* Editable fields */}

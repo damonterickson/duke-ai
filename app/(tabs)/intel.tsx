@@ -6,6 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -35,6 +36,7 @@ export default function IntelScreen() {
 
   const [briefing, setBriefing] = useState<string | null>(null);
   const [briefingLoading, setBriefingLoading] = useState(true);
+  const [briefingArchived, setBriefingArchived] = useState(false);
   const [chatVisible, setChatVisible] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -130,10 +132,10 @@ export default function IntelScreen() {
     });
   }, [conversations, buildCadetProfile, buildOmlResult]);
 
-  const pathCards: Array<{ icon: keyof typeof MaterialIcons.glyphMap; title: string; desc: string; highlighted?: boolean }> = [
-    { icon: 'menu-book', title: 'Academic Optimization', desc: 'Maximize GPA impact on your OML' },
-    { icon: 'directions-run', title: 'Physical Optimization', desc: 'Push your ACFT score higher' },
-    { icon: 'balance', title: 'Balanced Approach', desc: 'Optimize all pillars equally', highlighted: true },
+  const pathCards: Array<{ icon: keyof typeof MaterialIcons.glyphMap; title: string; desc: string; highlighted?: boolean; route: string }> = [
+    { icon: 'menu-book', title: 'Academic Optimization', desc: 'Maximize GPA impact on your OML', route: '/(tabs)/academics' },
+    { icon: 'directions-run', title: 'Physical Optimization', desc: 'Push your ACFT score higher', route: '/(tabs)/fitness' },
+    { icon: 'balance', title: 'Balanced Approach', desc: 'Optimize all pillars equally', highlighted: true, route: '/(tabs)/profile' },
   ];
 
   return (
@@ -171,7 +173,15 @@ export default function IntelScreen() {
             >
               <Text style={[styles.briefBtnText, { color: colors.on_primary }]}>Full Analysis</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.briefBtn, { backgroundColor: colors.surface_container }]}>
+            <TouchableOpacity
+              style={[styles.briefBtn, { backgroundColor: colors.surface_container }]}
+              onPress={() => {
+                setBriefingArchived(true);
+                setBriefing(null);
+                Alert.alert('Archived', 'Briefing has been archived. A new one will be generated on your next visit.');
+              }}
+              accessibilityLabel="Archive current briefing"
+            >
               <Text style={[styles.briefBtnText, { color: colors.on_surface }]}>Archive</Text>
             </TouchableOpacity>
           </View>
@@ -187,6 +197,7 @@ export default function IntelScreen() {
               { backgroundColor: card.highlighted ? colors.primary : colors.surface_container },
             ]}
             accessibilityLabel={card.title}
+            onPress={() => router.navigate(card.route as any)}
           >
             <MaterialIcons
               name={card.icon as any}

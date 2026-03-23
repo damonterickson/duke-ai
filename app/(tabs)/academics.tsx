@@ -27,6 +27,7 @@ import {
   type CourseRow,
 } from '../../src/services/storage';
 import { generateMicroInsight } from '../../src/services/ai';
+import { useScoresStore } from '../../src/stores/scores';
 
 const GRADE_POINTS: Record<string, number> = {
   'A+': 4.0, A: 4.0, 'A-': 3.7,
@@ -55,10 +56,14 @@ export default function AcademicsScreen() {
   const [isMsl, setIsMsl] = useState(false);
   const [semester, setSemester] = useState('');
 
+  const scores = useScoresStore();
+  const latestScore = scores.scoreHistory[0];
+
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     loadCourses();
+    if (!scores.isLoaded) scores.loadFromSQLite();
   }, []);
 
   async function loadCourses() {
@@ -436,19 +441,35 @@ export default function AcademicsScreen() {
           <View style={staticStyles.omlPillar}>
             <View style={staticStyles.omlPillarRow}>
               <Text style={styles.omlPillarLabel}>Leadership (40%)</Text>
-              {/* TODO: wire to real data */}
-              <Text style={styles.omlPillarValue}>--/40</Text>
+              <Text style={styles.omlPillarValue}>
+                {latestScore?.leadership_eval != null
+                  ? `${Math.min((latestScore.leadership_eval / 100) * 40, 40).toFixed(1)}/40`
+                  : '--/40'}
+              </Text>
             </View>
-            <VProgressBar progress={0} accessibilityLabel="Leadership pillar: not yet calculated" />
+            <VProgressBar
+              progress={latestScore?.leadership_eval != null ? Math.min(latestScore.leadership_eval / 100, 1) : 0}
+              accessibilityLabel={latestScore?.leadership_eval != null
+                ? `Leadership pillar: ${Math.min((latestScore.leadership_eval / 100) * 40, 40).toFixed(1)} of 40`
+                : 'Leadership pillar: not yet calculated'}
+            />
           </View>
 
           <View style={staticStyles.omlPillar}>
             <View style={staticStyles.omlPillarRow}>
               <Text style={styles.omlPillarLabel}>Physical (20%)</Text>
-              {/* TODO: wire to real data */}
-              <Text style={styles.omlPillarValue}>--/20</Text>
+              <Text style={styles.omlPillarValue}>
+                {latestScore?.acft_total != null
+                  ? `${Math.min((latestScore.acft_total / 600) * 20, 20).toFixed(1)}/20`
+                  : '--/20'}
+              </Text>
             </View>
-            <VProgressBar progress={0} accessibilityLabel="Physical pillar: not yet calculated" />
+            <VProgressBar
+              progress={latestScore?.acft_total != null ? Math.min(latestScore.acft_total / 600, 1) : 0}
+              accessibilityLabel={latestScore?.acft_total != null
+                ? `Physical pillar: ${Math.min((latestScore.acft_total / 600) * 20, 20).toFixed(1)} of 20`
+                : 'Physical pillar: not yet calculated'}
+            />
           </View>
 
           <View style={staticStyles.omlInsight}>
@@ -478,8 +499,24 @@ export default function AcademicsScreen() {
           <VCard tier="low" style={staticStyles.statCard}>
             <Text style={styles.statLabel}>DEAN'S LIST</Text>
             <View style={staticStyles.statValueRow}>
-              {/* TODO: compute from semester history */}
-              <Text style={styles.statValue}>{'\u2014'}</Text>
+              <Text style={styles.statValue}>
+                {(() => {
+                  // Group courses by semester, compute per-semester GPA
+                  const semesters = new Map<string, CourseRow[]>();
+                  for (const c of courses) {
+                    const sem = c.semester || 'Unknown';
+                    if (!semesters.has(sem)) semesters.set(sem, []);
+                    semesters.get(sem)!.push(c);
+                  }
+                  let count = 0;
+                  for (const semCourses of semesters.values()) {
+                    const semGpa = calculateGPA(semCourses);
+                    if (semGpa >= 3.5) count++;
+                  }
+                  return count > 0 ? String(count) : '\u2014';
+                })()}
+              </Text>
+              <Text style={styles.statSuffix}>sem</Text>
             </View>
           </VCard>
         </View>

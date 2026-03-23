@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -63,6 +64,7 @@ export default function MissionScreen() {
 
   const mission = engagement.activeMission;
   const topBranch = engagement.branchFit[0];
+  const [missionAccepted, setMissionAccepted] = useState(false);
 
   // Pillar scores (normalized 0-1)
   const physical = latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0;
@@ -106,7 +108,7 @@ export default function MissionScreen() {
         {/* Active Mission Card */}
         <Text style={[styles.sectionTitle, { color: colors.on_surface }]}>Active Mission</Text>
         <VGlassPanel style={styles.missionCard}>
-          {mission ? (
+          {mission && !missionAccepted ? (
             <>
               <Text style={[styles.missionTitle, { color: colors.on_surface }]}>{mission.title}</Text>
               <Text style={[styles.missionLocation, { color: colors.outline }]}>{mission.location}</Text>
@@ -114,10 +116,22 @@ export default function MissionScreen() {
               <TouchableOpacity
                 style={[styles.acceptBtn, { backgroundColor: colors.primary }]}
                 accessibilityLabel="Accept Brief"
+                onPress={() => {
+                  engagement.acceptMission(mission);
+                  setMissionAccepted(true);
+                  Alert.alert(
+                    'Mission Accepted',
+                    `You accepted "${mission.title}". Track your progress to complete it.`,
+                  );
+                }}
               >
                 <Text style={[styles.acceptBtnText, { color: colors.on_primary }]}>Accept Brief</Text>
               </TouchableOpacity>
             </>
+          ) : missionAccepted ? (
+            <Text style={[styles.emptyText, { color: colors.primary }]}>
+              Mission accepted! Track your progress in the Intel tab.
+            </Text>
           ) : (
             <Text style={[styles.emptyText, { color: colors.outline }]}>
               Complete your profile to get daily missions.
