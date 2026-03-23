@@ -6,7 +6,9 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
+  Platform,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   VCard,
   VButton,
@@ -21,9 +23,14 @@ import {
   getLeadershipEntries,
   insertLeadershipEntry,
   deleteLeadershipEntry,
+  updateLatestScoreHistory,
   type LeadershipEntryRow,
 } from '../../src/services/storage';
 import { generateMicroInsight } from '../../src/services/ai';
+import { useScoresStore } from '../../src/stores/scores';
+
+const isWeb = Platform.OS === 'web';
+const ASYNC_KEY_SCORES = '@duke_scores';
 
 const ENTRY_TYPES = ['Command Role', 'Staff Position', 'Extracurricular', 'Achievement'];
 
@@ -38,8 +45,26 @@ export default function LeadershipScreen() {
   const [description, setDescription] = useState('');
   const [points, setPoints] = useState('');
 
+  // Score input state
+  const scores = useScoresStore();
+  const latestScore = scores.scoreHistory.length > 0 ? scores.scoreHistory[0] : null;
+  const [leadershipEval, setLeadershipEval] = useState('');
+  const [cstScore, setCstScore] = useState('');
+  const [clcScore, setClcScore] = useState('');
+  const [extracurricularHours, setExtracurricularHours] = useState('');
+
+  // Pre-populate from latest scores
+  useEffect(() => {
+    if (latestScore) {
+      if (latestScore.leadership_eval != null) setLeadershipEval(String(latestScore.leadership_eval));
+      if (latestScore.cst_score != null) setCstScore(String(latestScore.cst_score));
+      if (latestScore.clc_score != null) setClcScore(String(latestScore.clc_score));
+    }
+  }, [latestScore?.leadership_eval, latestScore?.cst_score, latestScore?.clc_score]);
+
   useEffect(() => {
     loadEntries();
+    if (!scores.isLoaded) scores.loadFromSQLite();
   }, []);
 
   async function loadEntries() {
@@ -50,6 +75,84 @@ export default function LeadershipScreen() {
       console.error('Failed to load leadership entries:', error);
     }
     setIsLoaded(true);
+  }
+
+  function validateScore(value: string, label: string): number | null {
+    if (!value.trim()) return null;
+    const num = parseFloat(value);
+    if (isNaN(num) || num < 0 || num > 100) {
+      Alert.alert('Invalid Score', `${label} must be between 0 and 100.`);
+      return null;
+    }
+    return num;
+  }
+
+  async function handleSaveLeadershipEval() {
+    const val = validateScore(leadershipEval, 'PMS Evaluation Score');
+    if (val === null && leadershipEval.trim()) return; // validation failed
+    if (val === null) {
+      Alert.alert('Missing Score', 'Please enter a PMS Evaluation Score.');
+      return;
+    }
+    try {
+      if (isWeb) {
+        // Web fallback: update via AsyncStorage through the store
+        await scores.addScoreEntry({
+          gpa: latestScore?.gpa ?? null,
+          msl_gpa: latestScore?.msl_gpa ?? null,
+          acft_total: latestScore?.acft_total ?? null,
+          leadership_eval: val,
+          cst_score: latestScore?.cst_score ?? null,
+          clc_score: latestScore?.clc_score ?? null,
+          total_oml: latestScore?.total_oml ?? null,
+        });
+      } else {
+        await updateLatestScoreHistory({ leadership_eval: val });
+      }
+      await scores.loadFromSQLite();
+      Alert.alert('Saved', 'PMS Evaluation Score updated.');
+    } catch (error) {
+      console.error('Failed to save leadership eval:', error);
+      Alert.alert('Error', 'Failed to save score. Please try again.');
+    }
+  }
+
+  async function handleSaveCSTCLC() {
+    const cstVal = validateScore(cstScore, 'CST Score');
+    const clcVal = validateScore(clcScore, 'CLC Score');
+    // At least one must be provided
+    if (cstVal === null && clcVal === null) {
+      Alert.alert('Missing Scores', 'Please enter at least one score (CST or CLC).');
+      return;
+    }
+    // If a field has text but failed validation, stop
+    if (cstScore.trim() && cstVal === null) return;
+    if (clcScore.trim() && clcVal === null) return;
+
+    const updates: Record<string, number | null> = {};
+    if (cstVal !== null) updates.cst_score = cstVal;
+    if (clcVal !== null) updates.clc_score = clcVal;
+
+    try {
+      if (isWeb) {
+        await scores.addScoreEntry({
+          gpa: latestScore?.gpa ?? null,
+          msl_gpa: latestScore?.msl_gpa ?? null,
+          acft_total: latestScore?.acft_total ?? null,
+          leadership_eval: latestScore?.leadership_eval ?? null,
+          cst_score: cstVal ?? latestScore?.cst_score ?? null,
+          clc_score: clcVal ?? latestScore?.clc_score ?? null,
+          total_oml: latestScore?.total_oml ?? null,
+        });
+      } else {
+        await updateLatestScoreHistory(updates);
+      }
+      await scores.loadFromSQLite();
+      Alert.alert('Saved', 'CST / CLC scores updated.');
+    } catch (error) {
+      console.error('Failed to save CST/CLC scores:', error);
+      Alert.alert('Error', 'Failed to save scores. Please try again.');
+    }
   }
 
   async function handleAddEntry() {
@@ -162,6 +265,74 @@ export default function LeadershipScreen() {
         <Text style={styles.header} accessibilityRole="header">
           Leadership Log
         </Text>
+
+        {/* Commander's Assessment */}
+        <VCard tier="low" style={styles.scoreSection}>
+          <Text style={styles.scoreSectionTitle}>Commander's Assessment</Text>
+          <VInput
+            label="PMS Evaluation Score"
+            value={leadershipEval}
+            onChangeText={setLeadershipEval}
+            placeholder="0–100"
+            keyboardType="numeric"
+            accessibilityLabel="PMS Evaluation Score input"
+          />
+          <VButton
+            label="Save Evaluation"
+            onPress={handleSaveLeadershipEval}
+            variant="secondary"
+            style={styles.scoreSaveButton}
+            accessibilityLabel="Save PMS Evaluation Score"
+          />
+        </VCard>
+
+        {/* CST / CLC Scores */}
+        <VCard tier="low" style={styles.scoreSection}>
+          <Text style={styles.scoreSectionTitle}>CST / CLC Scores</Text>
+          <View style={styles.scoreRow}>
+            <View style={styles.scoreInputHalf}>
+              <VInput
+                label="CST Score"
+                value={cstScore}
+                onChangeText={setCstScore}
+                placeholder="0–100"
+                keyboardType="numeric"
+                accessibilityLabel="CST Score input"
+              />
+            </View>
+            <View style={styles.scoreInputHalf}>
+              <VInput
+                label="CLC Score"
+                value={clcScore}
+                onChangeText={setClcScore}
+                placeholder="0–100"
+                keyboardType="numeric"
+                accessibilityLabel="CLC Score input"
+              />
+            </View>
+          </View>
+          <VButton
+            label="Save CST / CLC"
+            onPress={handleSaveCSTCLC}
+            variant="secondary"
+            style={styles.scoreSaveButton}
+            accessibilityLabel="Save CST and CLC scores"
+          />
+        </VCard>
+
+        {/* Extracurricular Hours */}
+        <VCard tier="low" style={styles.scoreSection}>
+          <Text style={styles.scoreSectionTitle}>Extracurricular Hours</Text>
+          <VInput
+            label="Total Hours"
+            value={extracurricularHours}
+            onChangeText={setExtracurricularHours}
+            placeholder="Enter total hours"
+            keyboardType="numeric"
+            accessibilityLabel="Extracurricular hours input"
+          />
+          <Text style={styles.scoreHint}>Display only — storage coming soon</Text>
+        </VCard>
 
         {/* Summary */}
         <View style={styles.metricsRow}>
@@ -425,5 +596,28 @@ const styles = StyleSheet.create({
     ...typography.body_sm,
     color: colors.outline,
     marginBottom: spacing[2],
+  },
+  scoreSection: {
+    marginBottom: spacing[4],
+    gap: spacing[3],
+  },
+  scoreSectionTitle: {
+    ...typography.title_md,
+    color: colors.on_surface,
+  },
+  scoreRow: {
+    flexDirection: 'row',
+    gap: spacing[3],
+  },
+  scoreInputHalf: {
+    flex: 1,
+  },
+  scoreSaveButton: {
+    marginTop: spacing[1],
+  },
+  scoreHint: {
+    ...typography.body_sm,
+    color: colors.outline,
+    fontStyle: 'italic',
   },
 });

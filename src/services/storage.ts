@@ -118,6 +118,16 @@ export async function initDatabase(): Promise<void> {
   for (const sql of tables) {
     await database.execAsync(sql);
   }
+
+  // Migrations — add columns to existing tables (safe to re-run)
+  const migrations = [
+    'ALTER TABLE cadet_profile ADD COLUMN name TEXT',
+    'ALTER TABLE cadet_profile ADD COLUMN photo_uri TEXT',
+  ];
+  for (const m of migrations) {
+    try { await database.execAsync(m); } catch { /* column already exists */ }
+  }
+
   dbInitialized = true;
 }
 
@@ -137,6 +147,8 @@ export async function healthCheck(): Promise<boolean> {
 
 export interface CadetProfileRow {
   id?: number;
+  name?: string | null;
+  photo_uri?: string | null;
   year_group: string;
   gender: string;
   age_bracket: string;
@@ -159,14 +171,14 @@ export async function upsertProfile(profile: Omit<CadetProfileRow, 'id' | 'creat
 
   if (existing?.id) {
     await database.runAsync(
-      `UPDATE cadet_profile SET year_group = ?, gender = ?, age_bracket = ?, target_branch = ?, goal_oml = ?, updated_at = datetime('now') WHERE id = ?`,
-      profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null, existing.id
+      `UPDATE cadet_profile SET name = ?, photo_uri = ?, year_group = ?, gender = ?, age_bracket = ?, target_branch = ?, goal_oml = ?, updated_at = datetime('now') WHERE id = ?`,
+      profile.name ?? null, profile.photo_uri ?? null, profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null, existing.id
     );
     return existing.id;
   } else {
     const result = await database.runAsync(
-      `INSERT INTO cadet_profile (year_group, gender, age_bracket, target_branch, goal_oml) VALUES (?, ?, ?, ?, ?)`,
-      profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null
+      `INSERT INTO cadet_profile (name, photo_uri, year_group, gender, age_bracket, target_branch, goal_oml) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      profile.name ?? null, profile.photo_uri ?? null, profile.year_group, profile.gender, profile.age_bracket, profile.target_branch ?? null, profile.goal_oml ?? null
     );
     return result.lastInsertRowId;
   }
@@ -193,6 +205,47 @@ export async function insertScoreHistory(row: Omit<ScoreHistoryRow, 'id' | 'reco
     row.gpa, row.msl_gpa, row.acft_total, row.leadership_eval, row.cst_score, row.clc_score, row.total_oml
   );
   return result.lastInsertRowId;
+}
+
+/**
+ * Update specific fields on the latest score_history row.
+ * If no row exists, inserts a new one with the provided fields (others default to null).
+ */
+export async function updateLatestScoreHistory(
+  fields: Partial<Omit<ScoreHistoryRow, 'id' | 'recorded_at'>>
+): Promise<void> {
+  const database = await getDatabase();
+  const latest = await database.getFirstAsync<ScoreHistoryRow>(
+    'SELECT * FROM score_history ORDER BY recorded_at DESC LIMIT 1'
+  );
+
+  if (latest?.id) {
+    // Merge: keep existing values, override with new fields
+    const merged = {
+      gpa: fields.gpa !== undefined ? fields.gpa : latest.gpa,
+      msl_gpa: fields.msl_gpa !== undefined ? fields.msl_gpa : latest.msl_gpa,
+      acft_total: fields.acft_total !== undefined ? fields.acft_total : latest.acft_total,
+      leadership_eval: fields.leadership_eval !== undefined ? fields.leadership_eval : latest.leadership_eval,
+      cst_score: fields.cst_score !== undefined ? fields.cst_score : latest.cst_score,
+      clc_score: fields.clc_score !== undefined ? fields.clc_score : latest.clc_score,
+      total_oml: fields.total_oml !== undefined ? fields.total_oml : latest.total_oml,
+    };
+    await database.runAsync(
+      `UPDATE score_history SET gpa = ?, msl_gpa = ?, acft_total = ?, leadership_eval = ?, cst_score = ?, clc_score = ?, total_oml = ? WHERE id = ?`,
+      merged.gpa, merged.msl_gpa, merged.acft_total, merged.leadership_eval, merged.cst_score, merged.clc_score, merged.total_oml, latest.id
+    );
+  } else {
+    // No existing row — insert with defaults
+    await insertScoreHistory({
+      gpa: fields.gpa ?? null,
+      msl_gpa: fields.msl_gpa ?? null,
+      acft_total: fields.acft_total ?? null,
+      leadership_eval: fields.leadership_eval ?? null,
+      cst_score: fields.cst_score ?? null,
+      clc_score: fields.clc_score ?? null,
+      total_oml: fields.total_oml ?? null,
+    });
+  }
 }
 
 export async function getScoreHistory(limit = 50): Promise<ScoreHistoryRow[]> {
