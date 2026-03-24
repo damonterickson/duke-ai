@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import {
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { VCard, VButton, VInput } from '../src/components';
-import { colors, typography, spacing } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeProvider';
+import { typography, spacing } from '../src/theme/tokens';
 import { useProfileStore } from '../src/stores/profile';
 import {
   getSettings,
@@ -24,6 +25,7 @@ const AI_COACH_KEY = '@iron_vanguard_ai_coach_enabled';
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { colors, isDark, glass } = useTheme();
   const profile = useProfileStore();
   const [settings, setLocalSettings] = useState<AppSettings>({});
   const [targetBranch, setTargetBranch] = useState(profile.targetBranch ?? '');
@@ -31,6 +33,8 @@ export default function SettingsScreen() {
     profile.goalOml != null ? String(profile.goalOml) : '',
   );
   const [aiCoachEnabled, setAiCoachEnabled] = useState(false);
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   useEffect(() => {
     setLocalSettings(getSettings());
@@ -83,7 +87,7 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
+        <View style={staticStyles.headerRow}>
           <Text style={styles.header} accessibilityRole="header">
             Settings
           </Text>
@@ -97,18 +101,18 @@ export default function SettingsScreen() {
 
         {/* Profile Section */}
         <Text style={styles.sectionTitle}>Profile</Text>
-        <VCard tier="low" style={styles.section}>
-          <View style={styles.profileRow}>
+        <VCard tier="low" style={staticStyles.section}>
+          <View style={staticStyles.profileRow}>
             <Text style={styles.profileLabel}>Year Group</Text>
             <Text style={styles.profileValue}>{profile.yearGroup ?? '--'}</Text>
           </View>
-          <View style={styles.profileRow}>
+          <View style={staticStyles.profileRow}>
             <Text style={styles.profileLabel}>Gender</Text>
             <Text style={styles.profileValue}>
               {profile.gender === 'M' ? 'Male' : profile.gender === 'F' ? 'Female' : '--'}
             </Text>
           </View>
-          <View style={styles.profileRow}>
+          <View style={staticStyles.profileRow}>
             <Text style={styles.profileLabel}>Age Bracket</Text>
             <Text style={styles.profileValue}>{profile.ageBracket ?? '--'}</Text>
           </View>
@@ -116,7 +120,7 @@ export default function SettingsScreen() {
 
         {/* Goals Section */}
         <Text style={styles.sectionTitle}>Goals</Text>
-        <VCard tier="low" style={styles.section}>
+        <VCard tier="low" style={staticStyles.section}>
           <VInput
             label="Target Branch"
             value={targetBranch}
@@ -130,23 +134,23 @@ export default function SettingsScreen() {
             onChangeText={setGoalOml}
             placeholder="700"
             keyboardType="numeric"
-            style={styles.goalInput}
+            style={staticStyles.goalInput}
             accessibilityLabel="Goal OML score input"
           />
           <VButton
             label="Save Goals"
             onPress={handleSaveProfile}
             variant="secondary"
-            style={styles.saveButton}
+            style={staticStyles.saveButton}
             accessibilityLabel="Save profile goals"
           />
         </VCard>
 
         {/* AI Coach Section */}
         <Text style={styles.sectionTitle}>AI Coach</Text>
-        <VCard tier="low" style={styles.section}>
-          <View style={styles.aiCoachRow}>
-            <View style={styles.aiCoachTextBlock}>
+        <VCard tier="low" style={staticStyles.section}>
+          <View style={staticStyles.aiCoachRow}>
+            <View style={staticStyles.aiCoachTextBlock}>
               <Text style={styles.aiCoachLabel}>AI Coach</Text>
               <Text style={styles.aiCoachDesc}>
                 Vanguard AI will create and manage goals based on your profile
@@ -163,7 +167,7 @@ export default function SettingsScreen() {
               accessibilityLabel="Toggle AI Coach"
               accessibilityRole="switch"
               accessibilityState={{ checked: aiCoachEnabled }}
-              style={styles.aiCoachSwitch}
+              style={staticStyles.aiCoachSwitch}
             />
           </View>
           {aiCoachEnabled && (
@@ -175,7 +179,7 @@ export default function SettingsScreen() {
 
         {/* App Section */}
         <Text style={styles.sectionTitle}>App</Text>
-        <VCard tier="low" style={styles.section}>
+        <VCard tier="low" style={staticStyles.section}>
           <VButton
             label="Restart Onboarding"
             onPress={handleResetOnboarding}
@@ -185,7 +189,7 @@ export default function SettingsScreen() {
         </VCard>
 
         {/* About */}
-        <VCard tier="low" style={styles.aboutCard}>
+        <VCard tier="low" style={staticStyles.aboutCard}>
           <Text style={styles.aboutTitle}>Duke Vanguard</Text>
           <Text style={styles.aboutVersion}>Version 1.0.0</Text>
           <Text style={styles.aboutDesc}>
@@ -198,34 +202,14 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing[4],
-    paddingBottom: spacing[12],
-  },
+// Static styles (no color dependencies)
+const staticStyles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[4],
-  },
-  header: {
-    ...typography.headline_lg,
-    color: colors.on_surface,
-  },
-  sectionTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
-    marginBottom: spacing[3],
-    marginTop: spacing[4],
   },
   section: {
     gap: spacing[3],
@@ -235,21 +219,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  profileLabel: {
-    ...typography.body_md,
-    color: colors.outline,
-  },
-  profileValue: {
-    ...typography.title_sm,
-    color: colors.on_surface,
-  },
   goalInput: {
     marginTop: spacing[1],
   },
   saveButton: {
     marginTop: spacing[2],
   },
-  // AI Coach styles
   aiCoachRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -259,40 +234,75 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: spacing[3],
   },
-  aiCoachLabel: {
-    ...typography.title_sm,
-    color: colors.on_surface,
-  },
-  aiCoachDesc: {
-    ...typography.body_sm,
-    color: colors.outline,
-    marginTop: spacing[1],
-  },
   aiCoachSwitch: {
     minHeight: 44,
     minWidth: 44,
-  },
-  aiCoachActiveNote: {
-    ...typography.label_sm,
-    color: colors.tertiary,
   },
   aboutCard: {
     marginTop: spacing[8],
     alignItems: 'center',
   },
-  aboutTitle: {
-    ...typography.title_md,
-    color: colors.primary,
-  },
-  aboutVersion: {
-    ...typography.label_sm,
-    color: colors.outline,
-    marginTop: spacing[1],
-  },
-  aboutDesc: {
-    ...typography.body_sm,
-    color: colors.outline,
-    textAlign: 'center',
-    marginTop: spacing[2],
-  },
 });
+
+// Theme-dependent styles
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    header: {
+      ...typography.headline_lg,
+      color: colors.on_surface,
+    },
+    sectionTitle: {
+      ...typography.title_md,
+      color: colors.on_surface,
+      marginBottom: spacing[3],
+      marginTop: spacing[4],
+    },
+    profileLabel: {
+      ...typography.body_md,
+      color: colors.outline,
+    },
+    profileValue: {
+      ...typography.title_sm,
+      color: colors.on_surface,
+    },
+    aiCoachLabel: {
+      ...typography.title_sm,
+      color: colors.on_surface,
+    },
+    aiCoachDesc: {
+      ...typography.body_sm,
+      color: colors.outline,
+      marginTop: spacing[1],
+    },
+    aiCoachActiveNote: {
+      ...typography.label_sm,
+      color: colors.tertiary,
+    },
+    aboutTitle: {
+      ...typography.title_md,
+      color: colors.primary,
+    },
+    aboutVersion: {
+      ...typography.label_sm,
+      color: colors.outline,
+      marginTop: spacing[1],
+    },
+    aboutDesc: {
+      ...typography.body_sm,
+      color: colors.outline,
+      textAlign: 'center',
+      marginTop: spacing[2],
+    },
+  });
+}

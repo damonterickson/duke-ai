@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { VButton, VInput } from '../../src/components';
-import { colors, typography, spacing } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing } from '../../src/theme/tokens';
 import { useProfileStore } from '../../src/stores/profile';
 
 export default function AftScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const profile = useProfileStore();
   const [acftTotal, setAcftTotal] = useState('');
   const [gender, setGender] = useState<'M' | 'F' | null>(null);
   const [ageBracket, setAgeBracket] = useState<'17-21' | '22-26' | '27-31' | null>(null);
   const [error, setError] = useState('');
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   async function handleNext() {
     if (!gender) {
@@ -42,7 +45,7 @@ export default function AftScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         {/* Step Indicator */}
-        <View style={styles.steps}>
+        <View style={staticStyles.steps}>
           {[1, 2, 3, 4, 5].map((step) => (
             <View
               key={step}
@@ -58,33 +61,33 @@ export default function AftScreen() {
 
         {/* Gender Selection */}
         <Text style={styles.label}>Gender (for ACFT scoring)</Text>
-        <View style={styles.optionRow}>
+        <View style={staticStyles.optionRow}>
           <VButton
             label="Male"
             onPress={() => { setGender('M'); setError(''); }}
             variant={gender === 'M' ? 'primary' : 'secondary'}
-            style={styles.optionButton}
+            style={staticStyles.optionButton}
             accessibilityLabel={`Male${gender === 'M' ? ', selected' : ''}`}
           />
           <VButton
             label="Female"
             onPress={() => { setGender('F'); setError(''); }}
             variant={gender === 'F' ? 'primary' : 'secondary'}
-            style={styles.optionButton}
+            style={staticStyles.optionButton}
             accessibilityLabel={`Female${gender === 'F' ? ', selected' : ''}`}
           />
         </View>
 
         {/* Age Bracket */}
         <Text style={styles.label}>Age Bracket</Text>
-        <View style={styles.optionRow}>
+        <View style={staticStyles.optionRow}>
           {(['17-21', '22-26', '27-31'] as const).map((bracket) => (
             <VButton
               key={bracket}
               label={bracket}
               onPress={() => { setAgeBracket(bracket); setError(''); }}
               variant={ageBracket === bracket ? 'primary' : 'secondary'}
-              style={styles.bracketButton}
+              style={staticStyles.bracketButton}
               accessibilityLabel={`Age ${bracket}${ageBracket === bracket ? ', selected' : ''}`}
             />
           ))}
@@ -100,7 +103,7 @@ export default function AftScreen() {
           helperText="Enter your most recent ACFT total (0-600). You can add details later."
           error={!!error}
           errorText={error}
-          style={styles.acftInput}
+          style={staticStyles.acftInput}
           accessibilityLabel="ACFT total score input, optional"
         />
 
@@ -108,7 +111,7 @@ export default function AftScreen() {
           label="Next"
           onPress={handleNext}
           disabled={!gender || !ageBracket}
-          style={styles.nextButton}
+          style={staticStyles.nextButton}
           accessibilityLabel="Continue to next step"
         />
       </View>
@@ -116,42 +119,12 @@ export default function AftScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: spacing[8],
-    paddingTop: spacing[12],
-  },
+const staticStyles = StyleSheet.create({
   steps: {
     flexDirection: 'row',
     gap: spacing[2],
     marginBottom: spacing[8],
     justifyContent: 'center',
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.outline_variant,
-  },
-  dotActive: {
-    backgroundColor: colors.primary,
-    width: 24,
-  },
-  prompt: {
-    ...typography.display_sm,
-    color: colors.on_surface,
-    marginBottom: spacing[6],
-  },
-  label: {
-    ...typography.label_lg,
-    color: colors.on_surface,
-    marginBottom: spacing[2],
-    marginTop: spacing[4],
   },
   optionRow: {
     flexDirection: 'row',
@@ -173,3 +146,38 @@ const styles = StyleSheet.create({
     marginBottom: spacing[8],
   },
 });
+
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: spacing[8],
+      paddingTop: spacing[12],
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: colors.outline_variant,
+    },
+    dotActive: {
+      backgroundColor: colors.primary,
+      width: 24,
+    },
+    prompt: {
+      ...typography.display_sm,
+      color: colors.on_surface,
+      marginBottom: spacing[6],
+    },
+    label: {
+      ...typography.label_lg,
+      color: colors.on_surface,
+      marginBottom: spacing[2],
+      marginTop: spacing[4],
+    },
+  });
+}

@@ -13,12 +13,14 @@ import {
   VInput,
   VMetricCard,
 } from '../src/components';
-import { colors, typography, spacing } from '../src/theme/tokens';
+import { useTheme } from '../src/theme/ThemeProvider';
+import { typography, spacing } from '../src/theme/tokens';
 import { useScoresStore } from '../src/stores/scores';
 import { useProfileStore } from '../src/stores/profile';
 
 export default function WhatIfScreen() {
   const router = useRouter();
+  const { colors, isDark, glass } = useTheme();
   const scores = useScoresStore();
   const profile = useProfileStore();
 
@@ -33,6 +35,8 @@ export default function WhatIfScreen() {
   const [whatIfLeadership, setWhatIfLeadership] = useState(
     String(currentLeadership || '85'),
   );
+
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   // Simple OML estimation (proportional to pillar weights)
   const projectedOml = useMemo(() => {
@@ -60,7 +64,7 @@ export default function WhatIfScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.headerRow}>
+        <View style={staticStyles.headerRow}>
           <Text style={styles.header} accessibilityRole="header">
             What-If Simulator
           </Text>
@@ -77,17 +81,17 @@ export default function WhatIfScreen() {
         </Text>
 
         {/* Projection */}
-        <View style={styles.projectionRow}>
+        <View style={staticStyles.projectionRow}>
           <VMetricCard
             value={String(projectedOml)}
             label="Projected OML"
-            style={styles.projectionCard}
+            style={staticStyles.projectionCard}
             accessibilityLabel={`Projected OML: ${projectedOml}`}
           />
           {delta !== 0 && (
             <VCard
               tier={delta > 0 ? 'low' : 'high'}
-              style={styles.deltaCard}
+              style={staticStyles.deltaCard}
               accessibilityLabel={`Change: ${deltaSign}${delta} OML points`}
             >
               <Text
@@ -106,7 +110,7 @@ export default function WhatIfScreen() {
         {/* Sliders / Inputs */}
         <Text style={styles.sectionTitle}>Adjust Variables</Text>
 
-        <VCard tier="low" style={styles.inputCard}>
+        <VCard tier="low" style={staticStyles.inputCard}>
           <VInput
             label={`GPA (Current: ${currentGpa.toFixed(2)})`}
             value={whatIfGpa}
@@ -117,7 +121,7 @@ export default function WhatIfScreen() {
           />
         </VCard>
 
-        <VCard tier="low" style={styles.inputCard}>
+        <VCard tier="low" style={staticStyles.inputCard}>
           <VInput
             label={`ACFT Total (Current: ${Math.round(currentAcft)})`}
             value={whatIfAcft}
@@ -128,7 +132,7 @@ export default function WhatIfScreen() {
           />
         </VCard>
 
-        <VCard tier="low" style={styles.inputCard}>
+        <VCard tier="low" style={staticStyles.inputCard}>
           <VInput
             label={`Leadership Eval (Current: ${Math.round(currentLeadership)})`}
             value={whatIfLeadership}
@@ -141,7 +145,7 @@ export default function WhatIfScreen() {
 
         {/* Goal comparison */}
         {profile.goalOml != null && (
-          <VCard tier="high" style={styles.goalCard}>
+          <VCard tier="high" style={staticStyles.goalCard}>
             <Text style={styles.goalTitle}>
               Target: {Math.round(profile.goalOml)} OML
             </Text>
@@ -157,33 +161,14 @@ export default function WhatIfScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    padding: spacing[4],
-    paddingBottom: spacing[12],
-  },
+// Static styles (no color dependencies)
+const staticStyles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing[2],
     marginBottom: spacing[2],
-  },
-  header: {
-    ...typography.headline_lg,
-    color: colors.on_surface,
-  },
-  subtitle: {
-    ...typography.body_md,
-    color: colors.outline,
-    marginBottom: spacing[4],
   },
   projectionRow: {
     flexDirection: 'row',
@@ -198,31 +183,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deltaText: {
-    ...typography.headline_md,
-  },
-  deltaLabel: {
-    ...typography.label_sm,
-    color: colors.outline,
-  },
-  sectionTitle: {
-    ...typography.title_md,
-    color: colors.on_surface,
-    marginBottom: spacing[3],
-  },
   inputCard: {
     marginBottom: spacing[3],
   },
   goalCard: {
     marginTop: spacing[4],
   },
-  goalTitle: {
-    ...typography.title_sm,
-    color: colors.tertiary,
-    marginBottom: spacing[1],
-  },
-  goalDesc: {
-    ...typography.body_sm,
-    color: colors.on_surface,
-  },
 });
+
+// Theme-dependent styles
+function makeStyles(colors: ReturnType<typeof useTheme>['colors']) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.surface,
+    },
+    scroll: {
+      flex: 1,
+    },
+    content: {
+      padding: spacing[4],
+      paddingBottom: spacing[12],
+    },
+    header: {
+      ...typography.headline_lg,
+      color: colors.on_surface,
+    },
+    subtitle: {
+      ...typography.body_md,
+      color: colors.outline,
+      marginBottom: spacing[4],
+    },
+    deltaText: {
+      ...typography.headline_md,
+    },
+    deltaLabel: {
+      ...typography.label_sm,
+      color: colors.outline,
+    },
+    sectionTitle: {
+      ...typography.title_md,
+      color: colors.on_surface,
+      marginBottom: spacing[3],
+    },
+    goalTitle: {
+      ...typography.title_sm,
+      color: colors.tertiary,
+      marginBottom: spacing[1],
+    },
+    goalDesc: {
+      ...typography.body_sm,
+      color: colors.on_surface,
+    },
+  });
+}

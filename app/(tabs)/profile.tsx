@@ -8,7 +8,10 @@ import {
   Pressable,
   TextInput,
   Alert,
+  Platform,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/theme/ThemeProvider';
@@ -116,11 +119,12 @@ function EditableField({
 // Section types
 // ---------------------------------------------------------------------------
 
-type Section = { type: 'personal' | 'oml' | 'scorecards' | 'status' };
+type Section = { type: 'personal' | 'oml' | 'scorecards' | 'quickActions' | 'status' };
 const SECTIONS: Section[] = [
   { type: 'personal' },
   { type: 'oml' },
   { type: 'scorecards' },
+  { type: 'quickActions' },
   { type: 'status' },
 ];
 
@@ -134,6 +138,8 @@ export default function ProfileScreen() {
   const profile = useProfileStore();
   const scores = useScoresStore();
   const squad = useSquadStore();
+
+  const [photoUri, setPhotoUri] = useState<string | null>(profile.photoUri ?? null);
 
   const ls = scores.scoreHistory[0];
   const gpa = ls?.gpa;
@@ -222,18 +228,51 @@ export default function ProfileScreen() {
 
             {/* Avatar + info */}
             <View style={s.personalContent}>
-              {/* Photo placeholder */}
+              {/* Profile photo */}
               <Pressable
-                onPress={() => Alert.alert('Photo', 'Coming soon')}
+                onPress={async () => {
+                  if (Platform.OS === 'web') {
+                    Alert.alert('Not Available', 'Photo picker is not supported on web. Use a native device to change your photo.');
+                    return;
+                  }
+                  try {
+                    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                    if (status !== 'granted') {
+                      Alert.alert('Permission Denied', 'We need photo library access to change your avatar.');
+                      return;
+                    }
+                    const result = await ImagePicker.launchImageLibraryAsync({
+                      mediaTypes: ['images'],
+                      allowsEditing: true,
+                      aspect: [1, 1],
+                      quality: 0.7,
+                    });
+                    if (!result.canceled && result.assets[0]) {
+                      const uri = result.assets[0].uri;
+                      setPhotoUri(uri);
+                      await profile.updateProfile({ photoUri: uri });
+                    }
+                  } catch (error) {
+                    console.error('Image picker error:', error);
+                    Alert.alert('Error', 'Failed to pick image. Please try again.');
+                  }
+                }}
                 accessibilityLabel="Change profile photo"
                 style={[
                   s.avatar,
                   { backgroundColor: colors.primary_container },
                 ]}
               >
-                <Text style={[s.avatarText, { color: colors.on_primary_container }]}>
-                  {initials}
-                </Text>
+                {photoUri ? (
+                  <Image
+                    source={{ uri: photoUri }}
+                    style={{ width: 72, height: 72, borderRadius: roundness.xl }}
+                  />
+                ) : (
+                  <Text style={[s.avatarText, { color: colors.on_primary_container }]}>
+                    {initials}
+                  </Text>
+                )}
               </Pressable>
 
               {/* Editable fields */}
@@ -425,6 +464,35 @@ export default function ProfileScreen() {
                 />
               </Pressable>
             ))}
+          </View>
+        );
+      }
+
+      // ─── Quick Actions ──────────────────────────────────────────────
+      case 'quickActions': {
+        const actions = [
+          { icon: 'cloud-upload' as const, label: 'Upload & Sync', route: '/upload' as const, desc: 'Import documents' },
+          { icon: 'fitness-center' as const, label: 'ACFT Log', route: '/acft-log' as const, desc: 'Log fitness tests' },
+          { icon: 'analytics' as const, label: 'Intel Brief', route: '/intelligence-brief' as const, desc: 'Full AI analysis' },
+          { icon: 'school' as const, label: 'Canvas', route: '/canvas' as const, desc: 'LMS integration' },
+        ];
+        return (
+          <View style={s.sec}>
+            <Text style={[s.secTitle, { color: colors.on_surface }]}>Quick Actions</Text>
+            <View style={s.actionsGrid}>
+              {actions.map((action, i) => (
+                <Pressable
+                  key={i}
+                  style={[s.actionCard, { backgroundColor: colors.surface_container_low }]}
+                  onPress={() => router.push(action.route as any)}
+                  accessibilityLabel={action.label}
+                >
+                  <MaterialIcons name={action.icon} size={24} color={colors.primary} />
+                  <Text style={[s.actionLabel, { color: colors.on_surface }]}>{action.label}</Text>
+                  <Text style={[s.actionDesc, { color: colors.outline }]}>{action.desc}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         );
       }
@@ -622,6 +690,23 @@ const s = StyleSheet.create({
     ...typography.label_sm,
     marginTop: 2,
   },
+
+  // Quick actions
+  actionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing[2],
+  },
+  actionCard: {
+    width: '48%' as any,
+    alignItems: 'center',
+    paddingVertical: spacing[3],
+    paddingHorizontal: spacing[2],
+    borderRadius: roundness.lg,
+    gap: spacing[1],
+  },
+  actionLabel: { ...typography.label_lg },
+  actionDesc: { ...typography.label_sm },
 
   // Status section
   statusSection: {

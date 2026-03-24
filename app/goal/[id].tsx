@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,25 +6,20 @@ import {
   StyleSheet,
   SafeAreaView,
   Alert,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { VCard, VButton, VConicGauge, VProgressBar, VRankBadge } from '../../src/components';
-import { colors, typography, spacing, roundness } from '../../src/theme/tokens';
+import { useTheme } from '../../src/theme/ThemeProvider';
+import { typography, spacing, roundness } from '../../src/theme/tokens';
+import { useGoalsStore } from '../../src/stores/goals';
+import {
+  getGoalProgressLog,
+  updateGoal,
+  type GoalProgressLogRow,
+} from '../../src/services/storage';
 
-// Mock goal data — will be replaced with real store lookup after merge
-const MOCK_GOALS: Record<string, {
-  id: string;
-  title: string;
-  category: 'gpa' | 'acft' | 'leadership' | 'oml';
-  currentValue: number;
-  targetValue: number;
-  baselineValue: number;
-  deadline: string;
-  omlImpact?: number;
-  createdBy: 'user' | 'ai';
-  status: 'active' | 'completed' | 'expired' | 'paused';
-  createdAt: string;
-}> = {};
+const isWeb = Platform.OS === 'web';
 
 const categoryIcons: Record<string, string> = {
   acft: '\u{1F4AA}',
@@ -40,28 +35,66 @@ const statusLabels: Record<string, string> = {
   paused: 'Paused',
 };
 
-const statusColors: Record<string, string> = {
-  active: colors.primary,
-  completed: colors.tertiary,
-  expired: colors.error,
-  paused: colors.outline,
-};
-
 export default function GoalDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [isPausing, setIsPausing] = useState(false);
+  const { colors } = useTheme();
+  const [progressLog, setProgressLog] = useState<GoalProgressLogRow[]>([]);
 
-  // Will be replaced with store lookup: useGoalsStore((s) => s.goals.find(g => g.id === id))
-  const goal = id ? MOCK_GOALS[id] : undefined;
+  const goals = useGoalsStore((s) => s.goals);
+  const isLoaded = useGoalsStore((s) => s.isLoaded);
+  const loadGoals = useGoalsStore((s) => s.loadFromSQLite);
+  const removeGoal = useGoalsStore((s) => s.removeGoal);
+
+  const goalId = id ? parseInt(id, 10) : NaN;
+  const goal = !isNaN(goalId) ? goals.find((g) => g.id === goalId) : undefined;
+
+  // Ensure goals are loaded
+  useEffect(() => {
+    if (!isLoaded) {
+      loadGoals();
+    }
+  }, [isLoaded, loadGoals]);
+
+  // Load progress history
+  const loadProgressLog = useCallback(async () => {
+    if (isNaN(goalId) || isWeb) return;
+    try {
+      const log = await getGoalProgressLog(goalId);
+      setProgressLog(log);
+    } catch (error) {
+      console.error('Failed to load progress log:', error);
+    }
+  }, [goalId]);
+
+  useEffect(() => {
+    loadProgressLog();
+  }, [loadProgressLog]);
+
+  const statusColors: Record<string, string> = {
+    active: colors.primary,
+    completed: colors.tertiary,
+    expired: colors.error,
+    paused: colors.outline,
+  };
+
+  if (!isLoaded) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
+        <View style={styles.emptyContainer}>
+          <Text style={[styles.emptyBody, { color: colors.outline }]}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!goal) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>{'\u{1F3AF}'}</Text>
-          <Text style={styles.emptyHeadline}>Goal Not Found</Text>
-          <Text style={styles.emptyBody}>
+          <Text style={[styles.emptyHeadline, { color: colors.on_surface }]}>Goal Not Found</Text>
+          <Text style={[styles.emptyBody, { color: colors.outline }]}>
             This goal may have been deleted or hasn't been created yet.
           </Text>
           <VButton
@@ -76,30 +109,41 @@ export default function GoalDetailScreen() {
     );
   }
 
-  // Safe to access — we returned early above if goal is undefined
-  const g = goal!;
-  const progress = g.targetValue > 0 ? Math.min(1, g.currentValue / g.targetValue) : 0;
+  const currentValue = goal.current_value ?? goal.baseline_value;
+  const targetValue = goal.target_value;
+  const progress = targetValue > 0 ? Math.min(1, currentValue / targetValue) : 0;
   const percentText = `${Math.round(progress * 100)}%`;
-  const icon = categoryIcons[g.category] ?? '\u{1F4CA}';
-  const isCompleted = g.status === 'completed';
+  const icon = categoryIcons[goal.category] ?? '\u{1F4CA}';
+  const isCompleted = goal.status === 'completed';
 
-  const currentDisplay = g.currentValue % 1 === 0 ? String(Math.round(g.currentValue)) : g.currentValue.toFixed(2);
-  const targetDisplay = g.targetValue % 1 === 0 ? String(Math.round(g.targetValue)) : g.targetValue.toFixed(2);
+  const currentDisplay = currentValue % 1 === 0 ? String(Math.round(currentValue)) : currentValue.toFixed(2);
+  const targetDisplay = targetValue % 1 === 0 ? String(Math.round(targetValue)) : targetValue.toFixed(2);
 
-  function handlePause() {
+  async function handlePause() {
+    const isPaused = goal!.status === 'paused';
+    const newStatus = isPaused ? 'active' : 'paused';
+
     Alert.alert(
-      g.status === 'paused' ? 'Resume Goal' : 'Pause Goal',
-      g.status === 'paused'
+      isPaused ? 'Resume Goal' : 'Pause Goal',
+      isPaused
         ? 'This will reactivate your goal.'
         : 'You can resume this goal anytime.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: g.status === 'paused' ? 'Resume' : 'Pause',
-          onPress: () => {
-            // TODO: update goal status in store after merge
-            setIsPausing(true);
-            Alert.alert('Done', `Goal ${g.status === 'paused' ? 'resumed' : 'paused'}.`);
+          text: isPaused ? 'Resume' : 'Pause',
+          onPress: async () => {
+            try {
+              if (!isWeb && goal!.id != null) {
+                await updateGoal(goal!.id, { status: newStatus });
+              }
+              // Reload goals from storage to reflect the change
+              await loadGoals();
+              Alert.alert('Done', `Goal ${isPaused ? 'resumed' : 'paused'}.`);
+            } catch (error) {
+              console.error('Failed to update goal status:', error);
+              Alert.alert('Error', 'Failed to update goal. Please try again.');
+            }
           },
         },
       ],
@@ -115,9 +159,16 @@ export default function GoalDetailScreen() {
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => {
-            // TODO: delete goal from store after merge
-            router.back();
+          onPress: async () => {
+            try {
+              if (goal!.id != null) {
+                await removeGoal(goal!.id);
+              }
+              router.back();
+            } catch (error) {
+              console.error('Failed to delete goal:', error);
+              Alert.alert('Error', 'Failed to delete goal. Please try again.');
+            }
           },
         },
       ],
@@ -125,7 +176,7 @@ export default function GoalDetailScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.surface }]}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -145,18 +196,18 @@ export default function GoalDetailScreen() {
         <View style={styles.titleSection}>
           <View style={styles.titleRow}>
             <Text style={styles.categoryIcon}>{icon}</Text>
-            <Text style={styles.title}>{g.title}</Text>
+            <Text style={[styles.title, { color: colors.on_surface }]}>{goal.title}</Text>
           </View>
           <View style={styles.badgeRow}>
             <VRankBadge
-              rank={statusLabels[g.status]}
+              rank={statusLabels[goal.status] ?? goal.status}
               style={{
                 ...styles.statusBadge,
-                backgroundColor: `${statusColors[g.status]}20`,
+                backgroundColor: `${statusColors[goal.status] ?? colors.outline}20`,
               }}
-              accessibilityLabel={`Status: ${statusLabels[g.status]}`}
+              accessibilityLabel={`Status: ${statusLabels[goal.status] ?? goal.status}`}
             />
-            {g.createdBy === 'ai' && (
+            {goal.created_by === 'ai' && (
               <VRankBadge
                 rank="AI Coach"
                 accessibilityLabel="Created by AI Coach"
@@ -180,18 +231,18 @@ export default function GoalDetailScreen() {
         <VCard tier="lowest" style={styles.valuesCard}>
           <View style={styles.valuesRow}>
             <View style={styles.valueBlock}>
-              <Text style={styles.valueNumber}>{currentDisplay}</Text>
-              <Text style={styles.valueLabel}>Current</Text>
+              <Text style={[styles.valueNumber, { color: colors.on_surface }]}>{currentDisplay}</Text>
+              <Text style={[styles.valueLabel, { color: colors.outline }]}>Current</Text>
             </View>
-            <Text style={styles.valueDivider}>/</Text>
+            <Text style={[styles.valueDivider, { color: colors.outline }]}>/</Text>
             <View style={styles.valueBlock}>
-              <Text style={styles.valueNumber}>{targetDisplay}</Text>
-              <Text style={styles.valueLabel}>Target</Text>
+              <Text style={[styles.valueNumber, { color: colors.on_surface }]}>{targetDisplay}</Text>
+              <Text style={[styles.valueLabel, { color: colors.outline }]}>Target</Text>
             </View>
           </View>
-          {g.omlImpact != null && g.omlImpact > 0 && (
-            <Text style={styles.omlImpactText}>
-              +{g.omlImpact} OML points when complete
+          {goal.oml_impact != null && goal.oml_impact > 0 && (
+            <Text style={[styles.omlImpactText, { color: colors.tertiary }]}>
+              +{goal.oml_impact} OML points when complete
             </Text>
           )}
           <VProgressBar
@@ -202,38 +253,67 @@ export default function GoalDetailScreen() {
           />
         </VCard>
 
-        {/* Progress history placeholder */}
-        <Text style={styles.sectionTitle}>Progress History</Text>
+        {/* Progress History */}
+        <Text style={[styles.sectionTitle, { color: colors.on_surface }]}>Progress History</Text>
         <VCard tier="low" style={styles.historyCard}>
-          <Text style={styles.placeholderText}>
-            Keep logging to see your trend
-          </Text>
-          <Text style={styles.placeholderSubtext}>
-            Your progress will be charted here as you log new scores.
-          </Text>
+          {progressLog.length > 0 ? (
+            progressLog.map((entry, idx) => {
+              const date = entry.logged_at
+                ? new Date(entry.logged_at).toLocaleDateString()
+                : `Entry ${idx + 1}`;
+              const val = entry.value % 1 === 0
+                ? String(Math.round(entry.value))
+                : entry.value.toFixed(2);
+              return (
+                <View key={entry.id ?? idx} style={styles.historyRow}>
+                  <Text style={[styles.historyDate, { color: colors.outline }]}>{date}</Text>
+                  <Text style={[styles.historyValue, { color: colors.on_surface }]}>{val}</Text>
+                </View>
+              );
+            })
+          ) : (
+            <>
+              <Text style={[styles.placeholderText, { color: colors.on_surface }]}>
+                No progress logged yet
+              </Text>
+              <Text style={[styles.placeholderSubtext, { color: colors.outline }]}>
+                Your progress will appear here as you log new scores.
+              </Text>
+            </>
+          )}
         </VCard>
 
-        {/* AI Insights placeholder */}
-        <Text style={styles.sectionTitle}>AI Insights</Text>
-        <VCard tier="low" style={styles.insightsCard}>
-          <Text style={styles.insightIcon}>{'\u{1F916}'}</Text>
-          <Text style={styles.placeholderText}>
-            AI Coach will share insights on your next briefing
-          </Text>
-          <Text style={styles.placeholderSubtext}>
-            Personalized tips and strategies will appear here after your next conversation with Vanguard AI.
-          </Text>
+        {/* Deadline */}
+        <VCard tier="low" style={styles.historyCard}>
+          <View style={styles.historyRow}>
+            <Text style={[styles.historyDate, { color: colors.outline }]}>Deadline</Text>
+            <Text style={[styles.historyValue, { color: colors.on_surface }]}>
+              {goal.deadline ? new Date(goal.deadline).toLocaleDateString() : '--'}
+            </Text>
+          </View>
+          <View style={styles.historyRow}>
+            <Text style={[styles.historyDate, { color: colors.outline }]}>Baseline</Text>
+            <Text style={[styles.historyValue, { color: colors.on_surface }]}>
+              {goal.baseline_value % 1 === 0 ? String(Math.round(goal.baseline_value)) : goal.baseline_value.toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.historyRow}>
+            <Text style={[styles.historyDate, { color: colors.outline }]}>Category</Text>
+            <Text style={[styles.historyValue, { color: colors.on_surface }]}>
+              {goal.category}
+            </Text>
+          </View>
         </VCard>
 
         {/* Actions */}
         {!isCompleted && (
           <View style={styles.actionsSection}>
             <VButton
-              label={g.status === 'paused' ? 'Resume Goal' : 'Pause Goal'}
+              label={goal.status === 'paused' ? 'Resume Goal' : 'Pause Goal'}
               onPress={handlePause}
               variant="secondary"
               style={styles.actionButton}
-              accessibilityLabel={g.status === 'paused' ? 'Resume this goal' : 'Pause this goal'}
+              accessibilityLabel={goal.status === 'paused' ? 'Resume this goal' : 'Pause this goal'}
             />
             <VButton
               label="Delete Goal"
@@ -252,7 +332,6 @@ export default function GoalDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surface,
   },
   scroll: {
     flex: 1,
@@ -281,7 +360,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headline_sm,
-    color: colors.on_surface,
     flex: 1,
   },
   badgeRow: {
@@ -311,20 +389,16 @@ const styles = StyleSheet.create({
   },
   valueNumber: {
     ...typography.headline_md,
-    color: colors.on_surface,
   },
   valueLabel: {
     ...typography.label_sm,
-    color: colors.outline,
     marginTop: spacing[1],
   },
   valueDivider: {
     ...typography.headline_md,
-    color: colors.outline,
   },
   omlImpactText: {
     ...typography.label_md,
-    color: colors.tertiary,
     marginBottom: spacing[3],
   },
   detailProgressBar: {
@@ -332,31 +406,32 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.title_md,
-    color: colors.on_surface,
     marginBottom: spacing[3],
     marginTop: spacing[2],
   },
   historyCard: {
-    alignItems: 'center',
-    paddingVertical: spacing[6],
+    paddingVertical: spacing[4],
+    paddingHorizontal: spacing[4],
+    marginBottom: spacing[4],
   },
-  insightsCard: {
+  historyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing[6],
-    gap: spacing[2],
+    paddingVertical: spacing[2],
   },
-  insightIcon: {
-    fontSize: 32,
-    marginBottom: spacing[1],
+  historyDate: {
+    ...typography.label_sm,
+  },
+  historyValue: {
+    ...typography.title_sm,
   },
   placeholderText: {
     ...typography.body_md,
-    color: colors.on_surface,
     textAlign: 'center',
   },
   placeholderSubtext: {
     ...typography.body_sm,
-    color: colors.outline,
     textAlign: 'center',
     marginTop: spacing[1],
   },
@@ -379,12 +454,10 @@ const styles = StyleSheet.create({
   },
   emptyHeadline: {
     ...typography.headline_sm,
-    color: colors.on_surface,
     textAlign: 'center',
   },
   emptyBody: {
     ...typography.body_md,
-    color: colors.outline,
     textAlign: 'center',
   },
   backButton: {
