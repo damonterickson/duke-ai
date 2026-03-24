@@ -15,19 +15,25 @@ import {
   MAX_TOKENS_INSIGHT,
 } from '@/services/prompts';
 import { parseGoalActions } from '@/services/goalEngine';
+import { requireAuth, sanitizeContext } from '../_auth';
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return Response.json({ error: 'API key not configured' }, { status: 500 });
   }
 
-  let body: { context: string; enableGoals?: boolean };
+  let rawBody: { context: unknown; enableGoals?: boolean };
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
+
+  const body = { context: sanitizeContext(rawBody.context), enableGoals: rawBody.enableGoals === true };
 
   const { context, enableGoals } = body;
 

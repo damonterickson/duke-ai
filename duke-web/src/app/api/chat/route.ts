@@ -13,33 +13,30 @@ import {
   CHAT_MODEL,
   MAX_TOKENS_CHAT,
 } from '@/services/prompts';
+import { requireAuth, sanitizeContext, sanitizeMessages } from '../_auth';
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: 'API key not configured' }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } },
-    );
+    return Response.json({ error: 'API key not configured' }, { status: 500 });
   }
 
-  let body: { messages: Array<{ role: string; content: string }>; context: string; enableGoals?: boolean };
+  let body: { messages: unknown; context: unknown; enableGoals?: boolean };
   try {
     body = await request.json();
   } catch {
-    return new Response(
-      JSON.stringify({ error: 'Invalid JSON body' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    );
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { messages, context, enableGoals } = body;
+  const messages = sanitizeMessages(body.messages);
+  const context = sanitizeContext(body.context);
+  const enableGoals = body.enableGoals === true;
 
-  if (!Array.isArray(messages) || typeof context !== 'string') {
-    return new Response(
-      JSON.stringify({ error: 'Missing required fields: messages (array), context (string)' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } },
-    );
+  if (messages.length === 0) {
+    return Response.json({ error: 'No valid messages provided' }, { status: 400 });
   }
 
   const systemPrompt = enableGoals
@@ -60,7 +57,7 @@ export async function POST(request: NextRequest) {
         max_tokens: MAX_TOKENS_CHAT,
         messages: [
           { role: 'system', content: systemPrompt },
-          ...messages.map((m) => ({ role: m.role, content: m.content })),
+          ...messages,
         ],
         stream: true,
       }),

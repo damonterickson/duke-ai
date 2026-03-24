@@ -12,21 +12,25 @@ import {
   BRIEFING_MODEL,
   MAX_TOKENS_INSIGHT,
 } from '@/services/prompts';
+import { requireAuth, sanitizeContext } from '../_auth';
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return Response.json({ error: 'API key not configured' }, { status: 500 });
   }
 
-  let body: { context: string };
+  let rawBody: { context: unknown };
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { context } = body;
+  const context = sanitizeContext(rawBody.context);
 
   if (typeof context !== 'string') {
     return Response.json({ error: 'Missing required field: context (string)' }, { status: 400 });

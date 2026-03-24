@@ -12,31 +12,37 @@ import {
   BRIEFING_MODEL,
   MAX_TOKENS_INSIGHT,
 } from '@/services/prompts';
+import { requireAuth, sanitizeContext, sanitizeEvent, sanitizeNumber, capString } from '../_auth';
 
 export async function POST(request: NextRequest) {
+  const authError = await requireAuth();
+  if (authError) return authError;
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     return Response.json({ error: 'API key not configured' }, { status: 500 });
   }
 
-  let body: {
-    context: string;
-    metric?: string;
-    value?: number;
-    previousValue?: number;
-    topic?: string;
-    event?: string;
-    omlDelta?: number;
-  };
+  let rawBody: Record<string, unknown>;
   try {
-    body = await request.json();
+    rawBody = await request.json();
   } catch {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
+  const body = {
+    context: sanitizeContext(rawBody.context),
+    metric: capString(rawBody.metric, 100),
+    value: sanitizeNumber(rawBody.value),
+    previousValue: sanitizeNumber(rawBody.previousValue),
+    topic: capString(rawBody.topic, 200),
+    event: sanitizeEvent(rawBody.event),
+    omlDelta: sanitizeNumber(rawBody.omlDelta),
+  };
+
   const { context } = body;
 
-  if (typeof context !== 'string') {
+  if (!context) {
     return Response.json({ error: 'Missing required field: context (string)' }, { status: 400 });
   }
 
