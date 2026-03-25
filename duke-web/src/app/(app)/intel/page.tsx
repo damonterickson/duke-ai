@@ -314,25 +314,49 @@ export default function IntelPage() {
               {activeGoals.map((goal) => {
                 const cat = CATEGORIES.find((c) => c.key === goal.category) ?? CATEGORIES[0];
                 const progress = goal.target_value > 0 ? Math.min((goal.current_value ?? 0) / goal.target_value, 1) : 0;
+                const isComplete = progress >= 1;
                 return (
-                  <div key={goal.id} className="group cursor-pointer p-6 bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg border-l-4" style={{ borderLeftColor: cat.bgColor }}>
+                  <div key={goal.id} className="group p-6 bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg border-l-4" style={{ borderLeftColor: cat.bgColor }}>
                     <div className="flex justify-between items-start mb-3">
                       <span className="material-symbols-outlined" style={{ color: cat.color, fontVariationSettings: "'FILL' 1" }}>{cat.icon}</span>
-                      <span className="text-[10px] uppercase font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: cat.color }}>
-                        {Math.round(progress * 100)}%
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[10px] uppercase font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: isComplete ? '#c3cc8c' : cat.color }}>
+                          {isComplete ? 'COMPLETE' : `${Math.round(progress * 100)}%`}
+                        </span>
+                      </div>
                     </div>
                     <h4 className="text-lg uppercase font-black mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>{goal.title}</h4>
                     {/* Progress bar */}
                     <div className="w-full h-1.5 bg-[#373438] rounded-full mt-3">
                       <div
                         className="h-full rounded-full transition-all"
-                        style={{ width: `${progress * 100}%`, backgroundColor: cat.color, boxShadow: `0 0 8px ${cat.color}` }}
+                        style={{ width: `${progress * 100}%`, backgroundColor: isComplete ? '#c3cc8c' : cat.color, boxShadow: `0 0 8px ${isComplete ? '#c3cc8c' : cat.color}` }}
                       />
                     </div>
                     <div className="flex justify-between mt-2">
-                      <span className="text-[10px] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{goal.current_value ?? 0}</span>
-                      <span className="text-[10px] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{goal.target_value}</span>
+                      <span className="text-[10px] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{goal.current_value ?? 0} / {goal.target_value}</span>
+                      <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {isComplete ? (
+                          <button
+                            onClick={() => goalsStore.completeGoal(goal.id!)}
+                            className="text-[10px] text-[#c3cc8c] uppercase font-bold hover:text-[#dfe8a6] transition-colors"
+                            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                          >
+                            ✓ Retire
+                          </button>
+                        ) : null}
+                        <button
+                          onClick={() => {
+                            if (confirm('Remove this optimization path?')) {
+                              goalsStore.removeGoal(goal.id!);
+                            }
+                          }}
+                          className="text-[10px] text-[#968d9d] uppercase font-bold hover:text-[#ffb4ab] transition-colors"
+                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
