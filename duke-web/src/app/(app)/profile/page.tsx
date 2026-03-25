@@ -6,7 +6,7 @@ import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useSquadStore } from '@/stores/squad';
 import { calculateOML } from '@/engine/oml';
-import type { OMLConfig, ACFTTables } from '@/engine/oml';
+import type { OMLConfig, ACFTTables, ACFTScores } from '@/engine/oml';
 import omlConfig from '@/data/oml-config.json';
 import acftTables from '@/data/acft-tables.json';
 
@@ -77,19 +77,20 @@ export default function ProfilePage() {
   const omlResult = useMemo(() => {
     if (!profile.yearGroup || !profile.gender || !profile.ageBracket) return null;
     try {
+      const gender = (profile.gender ?? 'M') as 'M' | 'F';
       return calculateOML(
         {
           gpa: ls?.gpa ?? 0,
           mslGpa: ls?.msl_gpa ?? 0,
-          acftScores: {},
+          acftScores: {} as ACFTScores,
           leadershipEval: ls?.leadership_eval ?? 0,
           cstScore: ls?.cst_score ?? undefined,
           clcScore: ls?.clc_score ?? undefined,
           commandRoles: [],
           extracurricularHours: 0,
-          yearGroup: profile.yearGroup,
-          gender: profile.gender,
-          ageBracket: profile.ageBracket,
+          yearGroup: profile.yearGroup as 'MSI' | 'MSII' | 'MSIII' | 'MSIV',
+          gender,
+          ageBracket: profile.ageBracket as '17-21' | '22-26' | '27-31',
         },
         omlConfig as OMLConfig,
         acftTables as unknown as ACFTTables,
@@ -121,9 +122,9 @@ export default function ProfilePage() {
   const streak = squad.weeklyRankHistory?.length ?? 0;
 
   const scoreCards = [
-    { icon: 'fitness_center', label: 'ACFT', value: acftTotal != null ? String(Math.round(acftTotal)) : '--', sublabel: 'Total Score', accent: '#c3cc8c', bg: '#2c3303' },
-    { icon: 'school', label: 'GPA', value: gpa != null ? gpa.toFixed(2) : '--', sublabel: 'Cumulative', accent: '#f8e19e', bg: '#544511' },
-    { icon: 'military_tech', label: 'Leadership', value: leadershipScore != null ? String(leadershipScore) : '--', sublabel: ls?.leadership_eval != null && ls?.cst_score != null ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}` : 'Eval + CST', accent: '#d9b9ff', bg: '#450084' },
+    { icon: 'fitness_center', label: 'ACFT', value: acftTotal != null ? String(Math.round(acftTotal)) : '--', sublabel: 'Total Score', accent: '#c3cc8c', bg: '#2c3303', route: '/acft-log' },
+    { icon: 'school', label: 'GPA', value: gpa != null ? gpa.toFixed(2) : '--', sublabel: 'Cumulative', accent: '#f8e19e', bg: '#544511', route: '/canvas' },
+    { icon: 'military_tech', label: 'Leadership', value: leadershipScore != null ? String(leadershipScore) : '--', sublabel: ls?.leadership_eval != null && ls?.cst_score != null ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}` : 'Eval + CST', accent: '#d9b9ff', bg: '#450084', route: '/settings' },
   ];
 
   const quickActions = [
@@ -286,7 +287,7 @@ export default function ProfilePage() {
                     key={card.label}
                     className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 flex items-center gap-5 border-l-4 cursor-pointer group"
                     style={{ borderLeftColor: card.bg }}
-                    onClick={() => router.push('/profile')}
+                    onClick={() => router.push(card.route)}
                   >
                     <div className="p-3 rounded-sm" style={{ backgroundColor: card.bg }}>
                       <span className="material-symbols-outlined" style={{ color: card.accent, fontVariationSettings: "'FILL' 1" }}>{card.icon}</span>
