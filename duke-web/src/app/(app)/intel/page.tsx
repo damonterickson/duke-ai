@@ -1,102 +1,11 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { MdAnalytics, MdMenuBook, MdDirectionsRun, MdBalance, MdAutoAwesome } from 'react-icons/md';
-import { VGlassPanel, VSkeletonLoader, VFAB, VChatSheet } from '@/components';
-import type { ChatMessage } from '@/components';
-import { useProfileStore } from '@/stores/profile';
-import { useScoresStore } from '@/stores/scores';
-import { useConversationsStore } from '@/stores/conversations';
-import { useGoalsStore } from '@/stores/goals';
+import { MdAnalytics, MdMenuBook, MdDirectionsRun, MdBalance, MdLock } from 'react-icons/md';
 
 export default function IntelPage() {
   const router = useRouter();
-  const profile = useProfileStore();
-  const scores = useScoresStore();
-  const conversations = useConversationsStore();
-  const goalsStore = useGoalsStore();
-
-  const [briefing, setBriefing] = useState<string | null>(null);
-  const [briefingLoading, setBriefingLoading] = useState(true);
-  const [chatVisible, setChatVisible] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [isStreaming, setIsStreaming] = useState(false);
-
-  // Simulate briefing load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (profile.yearGroup) {
-        setBriefing(
-          'Based on your current scores and profile, here are your optimization opportunities. Focus on maximizing your strongest pillar while maintaining steady improvement across all areas.',
-        );
-      }
-      setBriefingLoading(false);
-    }, 1500);
-    return () => clearTimeout(timer);
-  }, [profile.yearGroup]);
-
-  // Chat messages from store
-  useEffect(() => {
-    setChatMessages(
-      conversations.messages.map((m: any, i: number) => ({
-        id: String(m.id ?? i),
-        text: m.content,
-        sender: m.role === 'user' ? ('user' as const) : ('ai' as const),
-      })),
-    );
-  }, [conversations.messages]);
-
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      const userMsg: ChatMessage = { id: `user_${Date.now()}`, text, sender: 'user' };
-      setChatMessages((prev) => [...prev, userMsg]);
-
-      const aiMsgId = `ai_${Date.now()}`;
-      setChatMessages((prev) => [...prev, { id: aiMsgId, text: '', sender: 'ai' }]);
-      setIsStreaming(true);
-
-      try {
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: [{ role: 'user', content: text }] }),
-        });
-
-        if (!res.ok) throw new Error('Chat API error');
-
-        const reader = res.body?.getReader();
-        const decoder = new TextDecoder();
-        let fullText = '';
-
-        if (reader) {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            const chunk = decoder.decode(value, { stream: true });
-            fullText += chunk;
-            const cur = fullText;
-            setChatMessages((prev) =>
-              prev.map((m) => (m.id === aiMsgId ? { ...m, text: cur } : m)),
-            );
-          }
-        }
-
-        setChatMessages((prev) =>
-          prev.map((m) => (m.id === aiMsgId ? { ...m, text: fullText || 'Vanguard AI is temporarily unavailable.' } : m)),
-        );
-      } catch {
-        setChatMessages((prev) =>
-          prev.map((m) =>
-            m.id === aiMsgId ? { ...m, text: 'Vanguard AI is temporarily unavailable.' } : m,
-          ),
-        );
-      } finally {
-        setIsStreaming(false);
-      }
-    },
-    [],
-  );
 
   const pathCards = [
     {
@@ -129,41 +38,17 @@ export default function IntelPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-6">
-        {/* AI Briefing Hero */}
-        <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
-          <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 block font-[family-name:var(--font-label)]">
-            Vanguard Intelligence Brief
-          </span>
-          {briefingLoading ? (
-            <div className="flex flex-col gap-2">
-              <VSkeletonLoader width="100%" height={16} />
-              <VSkeletonLoader width="80%" height={16} />
-              <VSkeletonLoader width="60%" height={16} />
-            </div>
-          ) : (
-            <p className="text-sm md:text-base leading-relaxed text-[var(--color-on-surface)]">
-              {briefing ?? 'Enter your scores to receive an intelligence brief.'}
-            </p>
-          )}
-          <div className="flex gap-3 mt-5">
-            <button
-              className="px-5 py-2.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
-              onClick={() => router.push('/intelligence-brief')}
-              aria-label="View full intelligence brief"
-            >
-              Full Analysis
-            </button>
-            <button
-              className="px-5 py-2.5 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] text-[var(--color-on-surface)] text-sm font-semibold cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
-              onClick={() => {
-                setBriefing(null);
-                window.alert('Archived. Briefing has been archived. A new one will be generated on your next visit.');
-              }}
-              aria-label="Archive current briefing"
-            >
-              Archive
-            </button>
+        {/* Coming Soon Card (replaces AI Briefing) */}
+        <section className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md p-6 shadow-[var(--shadow-sm)] flex flex-col items-center text-center gap-3">
+          <div className="w-12 h-12 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center">
+            <MdLock size={24} className="text-[var(--color-on-primary-container)]" />
           </div>
+          <h2 className="text-lg font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+            Intelligence Briefings Coming Soon
+          </h2>
+          <p className="text-sm text-[var(--color-on-surface-variant)] leading-relaxed max-w-sm font-[family-name:var(--font-body)]">
+            AI-powered strategic analysis and personalized intelligence briefs are on the way. In the meantime, explore the optimization paths below.
+          </p>
         </section>
 
         {/* Optimization Paths */}
@@ -177,7 +62,7 @@ export default function IntelPage() {
               return (
                 <button
                   key={i}
-                  className={`w-full flex items-center gap-4 p-4 rounded-md text-left cursor-pointer hover:opacity-90 transition-all border ${
+                  className={`w-full flex items-center gap-4 p-4 rounded-md text-left cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all border ${
                     card.highlighted
                       ? 'gradient-primary border-transparent shadow-glow'
                       : 'bg-[var(--color-surface-container-low)] border-[var(--ghost-border)] shadow-[var(--shadow-sm)]'
@@ -220,22 +105,6 @@ export default function IntelPage() {
           </div>
         </section>
       </div>
-
-      {/* Chat FAB */}
-      <VFAB
-        onPress={() => setChatVisible(!chatVisible)}
-        icon={MdAutoAwesome}
-        label="Open AI chat"
-      />
-
-      {/* Chat Sheet */}
-      <VChatSheet
-        messages={chatMessages}
-        onSend={handleSendMessage}
-        visible={chatVisible}
-        onClose={() => setChatVisible(false)}
-        loading={isStreaming}
-      />
     </div>
   );
 }

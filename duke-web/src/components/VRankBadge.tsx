@@ -13,7 +13,7 @@ export const VRankBadge: React.FC<VRankBadgeProps> = ({
 }) => {
   return (
     <span
-      className={`inline-flex items-center rounded-lg border border-[rgba(200,199,184,0.2)] px-2 py-1 text-sm font-medium uppercase tracking-wide text-[var(--color-secondary)] ${className}`}
+      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-bold uppercase tracking-wider border border-[var(--color-primary)] text-[var(--color-primary)] font-[family-name:var(--font-label)] ${className}`}
       aria-label={label ?? `Rank: ${rank}`}
     >
       {rank}

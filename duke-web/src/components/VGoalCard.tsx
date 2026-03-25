@@ -56,7 +56,6 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
   const progress = targetValue > 0 ? Math.min(1, currentValue / targetValue) : 0;
   const isCompleted = status === 'completed';
   const icon = categoryIcons[category];
-  const highProgress = progress > 0.8;
 
   const currentDisplay =
     currentValue % 1 === 0 ? String(Math.round(currentValue)) : currentValue.toFixed(2);
@@ -68,17 +67,14 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
   return (
     <Wrapper
       onClick={onPress}
-      className={`${onPress ? 'cursor-pointer hover:opacity-85 active:opacity-75 w-full text-left' : ''} ${className}`}
+      className={`${onPress ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] w-full text-left transition-all' : ''} ${className}`}
     >
-      <VCard
-        tier="lowest"
-        className={isCompleted ? 'bg-[rgba(204,167,48,0.08)]' : ''}
-      >
+      <VCard tier="lowest">
         {/* Top row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <span className="text-lg">{icon}</span>
-            <span className="text-sm font-semibold text-[var(--color-on-surface)] truncate">
+            <span className="text-sm font-bold text-[var(--color-on-surface)] truncate font-[family-name:var(--font-display)]">
               {title}
             </span>
           </div>
@@ -89,21 +85,21 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
         </div>
 
         {/* Progress bar */}
-        <div className={`my-3 ${highProgress ? 'shadow-[0_0_12px_rgba(219,197,133,0.4)]' : ''}`}>
+        <div className="my-3">
           <VProgressBar progress={progress} height={6} />
         </div>
 
         {/* Bottom row */}
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-[var(--color-on-surface)]">
+          <span className="text-sm font-semibold text-[var(--color-on-surface)] font-[family-name:var(--font-body)]">
             {currentDisplay}/{targetDisplay} — {formatDelta(currentValue, targetValue)}
           </span>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[var(--color-outline)]">
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">
               Due {formatDeadline(deadline)}
             </span>
             {omlImpact != null && omlImpact > 0 && (
-              <span className="text-xs font-medium text-[var(--color-tertiary)]">
+              <span className="text-xs font-bold text-[var(--color-primary)] font-[family-name:var(--font-label)]">
                 +{omlImpact} OML pts
               </span>
             )}

@@ -20,17 +20,20 @@ export const VButton: React.FC<VButtonProps> = ({
   className = '',
 }) => {
   const base =
-    'inline-flex items-center justify-center min-h-[48px] py-3 px-6 rounded-lg font-semibold text-sm tracking-wide transition-opacity focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+    'inline-flex items-center justify-center min-h-[48px] py-3 px-6 rounded-md text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
 
   const variants: Record<string, string> = {
     primary:
-      'bg-gradient-to-r from-[var(--gradient-primary-from)] to-[var(--gradient-primary-to)] text-[var(--color-on-primary)] shadow-[0_0_15px_rgba(69,0,132,0.3)]',
+      'gradient-primary text-white uppercase tracking-wider font-bold shadow-[var(--shadow-sm)] hover:opacity-90 active:scale-[0.98] font-[family-name:var(--font-label)]',
     secondary:
-      'bg-[var(--color-surface-container-low)] text-[var(--color-primary)] shadow-[0_0_30px_rgba(84,69,17,0.15)]',
-    tertiary: 'bg-transparent text-[var(--color-primary)]',
+      'bg-transparent border border-[var(--ghost-border)] text-[var(--color-primary)] uppercase tracking-wider font-bold hover:opacity-90 active:scale-[0.98] font-[family-name:var(--font-label)]',
+    tertiary:
+      'bg-transparent text-[var(--color-primary)] font-semibold hover:opacity-90 active:scale-[0.98]',
   };
 
-  const disabledClass = disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:opacity-85 active:opacity-75';
+  const disabledClass = disabled
+    ? 'opacity-50 cursor-not-allowed'
+    : 'cursor-pointer';
 
   return (
     <button

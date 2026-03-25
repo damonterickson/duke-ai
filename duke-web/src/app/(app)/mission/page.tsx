@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { MdSettings, MdLocalFireDepartment, MdTrendingUp, MdMyLocation } from 'react-icons/md';
-import { VConicGauge, VGlassPanel, VProgressBar } from '@/components';
+import { MdSettings, MdLocalFireDepartment, MdTrendingUp, MdMyLocation, MdTrackChanges } from 'react-icons/md';
+import { VConicGauge, VProgressBar } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useEngagementStore } from '@/stores/engagement';
@@ -52,9 +52,7 @@ export default function MissionPage() {
       ? Math.round(((squad.totalCadets - squad.individualRank) / squad.totalCadets) * 100)
       : 0;
 
-  const mission = engagement.activeMission;
   const topBranch = engagement.branchFit[0];
-  const [missionAccepted, setMissionAccepted] = useState(false);
 
   // Pillar scores (normalized 0-1)
   const physical = latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0;
@@ -97,36 +95,21 @@ export default function MissionPage() {
           </div>
         </section>
 
-        {/* Active Mission Card */}
+        {/* Static Mission Card (replaces AI-generated missions) */}
         <section>
           <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">Active Mission</h2>
-          <div className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
-            {mission && !missionAccepted ? (
-              <>
-                <h3 className="text-lg font-bold text-[var(--color-on-surface)] mb-1 font-[family-name:var(--font-display)]">{mission.title}</h3>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[var(--color-primary)] mb-2 font-[family-name:var(--font-label)]">{mission.location}</p>
-                <p className="text-sm md:text-base text-[var(--color-on-surface-variant)] mb-4 leading-relaxed">{mission.description}</p>
-                <button
-                  className="px-5 py-2.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
-                  aria-label="Accept Brief"
-                  onClick={() => {
-                    engagement.acceptMission(mission);
-                    setMissionAccepted(true);
-                    window.alert(`Mission Accepted: You accepted "${mission.title}". Track your progress to complete it.`);
-                  }}
-                >
-                  Accept Brief
-                </button>
-              </>
-            ) : missionAccepted ? (
-              <p className="text-sm md:text-base text-center py-4 text-[var(--color-primary)] font-semibold">
-                Mission accepted! Track your progress in the Intel tab.
+          <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md p-5 shadow-[var(--shadow-sm)] flex items-center gap-4">
+            <div className="w-12 h-12 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
+              <MdTrackChanges size={24} className="text-[var(--color-on-primary-container)]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-base font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+                Track Your Scores
+              </h3>
+              <p className="text-sm text-[var(--color-on-surface-variant)] mt-1 leading-relaxed font-[family-name:var(--font-body)]">
+                Track your scores to unlock daily missions. Update your GPA, ACFT, and leadership evaluations on the Profile tab.
               </p>
-            ) : (
-              <p className="text-sm md:text-base text-center py-4 text-[var(--color-on-surface-variant)]">
-                Complete your profile to get daily missions.
-              </p>
-            )}
+            </div>
           </div>
         </section>
 

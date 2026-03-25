@@ -21,7 +21,7 @@ export const VCard: React.FC<VCardProps> = ({
 }) => {
   return (
     <div
-      className={`rounded-xl p-4 shadow-[0_0_15px_rgba(69,0,132,0.15)] ${tierBgMap[tier]} ${className}`}
+      className={`rounded-md p-4 border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] ${tierBgMap[tier]} ${className}`}
       role="region"
     >
       {children}
