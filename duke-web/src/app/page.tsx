@@ -13,12 +13,10 @@ export default function RootPage() {
       try {
         // Handle magic link callback (hash fragment with access_token)
         if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
-          // Supabase will auto-detect and set the session from the URL hash
           const sb = getSupabase();
           const { data, error } = await sb.auth.getSession();
           if (error) console.error('Auth callback error:', error);
           if (data.session) {
-            // Check if profile exists (onboarding complete)
             const { data: profile } = await sb
               .from('profiles')
               .select('onboarding_complete')
@@ -37,7 +35,6 @@ export default function RootPage() {
         // Check existing session
         const session = await getSession();
         if (session) {
-          // User is authenticated — check if onboarding is done
           const sb = getSupabase();
           const { data: profile } = await sb
             .from('profiles')
@@ -51,7 +48,6 @@ export default function RootPage() {
             router.replace('/onboarding/welcome');
           }
         } else {
-          // No session — go to auth
           router.replace('/auth');
         }
       } catch (err) {
@@ -68,10 +64,15 @@ export default function RootPage() {
   if (!checking) return null;
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[var(--color-background)]">
-      <div className="animate-pulse text-[var(--color-on-surface-variant)] font-[var(--font-label)] text-sm uppercase tracking-widest">
-        Duke Vanguard
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--color-background)] gap-4">
+      <div className="w-16 h-16 rounded-md gradient-primary flex items-center justify-center shadow-glow">
+        <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
+        </svg>
       </div>
+      <span className="text-sm font-bold uppercase tracking-[4px] text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)] animate-pulse">
+        Duke Vanguard
+      </span>
     </div>
   );
 }

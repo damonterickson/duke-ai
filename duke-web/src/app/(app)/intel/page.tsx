@@ -120,18 +120,18 @@ export default function IntelPage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[var(--color-primary)]">
-        <h1 className="text-base font-bold tracking-[2px] text-white">DUKE VANGUARD</h1>
-        <MdAnalytics size={24} className="text-white" />
-      </div>
+      <header className="gradient-primary text-white px-4 py-4 flex items-center justify-between shadow-[var(--shadow-md)]">
+        <h1 className="text-sm font-bold uppercase tracking-[3px] font-[family-name:var(--font-label)]">DUKE VANGUARD</h1>
+        <MdAnalytics size={24} className="text-white/80" />
+      </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto bg-[var(--color-surface)] p-4 pb-16">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-6">
         {/* AI Briefing Hero */}
-        <VGlassPanel className="mb-4">
-          <span className="text-sm font-semibold uppercase tracking-[1px] text-[var(--color-primary)] mb-2 block">
+        <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
+          <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-3 block font-[family-name:var(--font-label)]">
             Vanguard Intelligence Brief
           </span>
           {briefingLoading ? (
@@ -141,20 +141,20 @@ export default function IntelPage() {
               <VSkeletonLoader width="60%" height={16} />
             </div>
           ) : (
-            <p className="text-sm leading-relaxed text-[var(--color-on-surface)]">
+            <p className="text-sm md:text-base leading-relaxed text-[var(--color-on-surface)]">
               {briefing ?? 'Enter your scores to receive an intelligence brief.'}
             </p>
           )}
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-3 mt-5">
             <button
-              className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-semibold cursor-pointer hover:opacity-85"
+              className="px-5 py-2.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
               onClick={() => router.push('/intelligence-brief')}
               aria-label="View full intelligence brief"
             >
               Full Analysis
             </button>
             <button
-              className="px-4 py-2 rounded-lg bg-[var(--color-surface-container)] text-[var(--color-on-surface)] text-sm font-semibold cursor-pointer hover:opacity-85"
+              className="px-5 py-2.5 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] text-[var(--color-on-surface)] text-sm font-semibold cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
               onClick={() => {
                 setBriefing(null);
                 window.alert('Archived. Briefing has been archived. A new one will be generated on your next visit.');
@@ -164,55 +164,61 @@ export default function IntelPage() {
               Archive
             </button>
           </div>
-        </VGlassPanel>
+        </section>
 
         {/* Optimization Paths */}
-        <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3 mt-2">
-          Optimization Paths
-        </h2>
-        {pathCards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <button
-              key={i}
-              className={`w-full flex items-center gap-3 p-4 rounded-xl mb-3 text-left cursor-pointer hover:opacity-90 transition-opacity ${
-                card.highlighted
-                  ? 'bg-[var(--color-primary)]'
-                  : 'bg-[var(--color-surface-container)]'
-              }`}
-              aria-label={card.title}
-              onClick={() => router.push('/profile')}
-            >
-              <Icon
-                size={28}
-                className={card.highlighted ? 'text-[var(--color-on-primary)]' : 'text-[var(--color-primary)]'}
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span
-                    className={`text-base font-semibold ${
-                      card.highlighted ? 'text-[var(--color-on-primary)]' : 'text-[var(--color-on-surface)]'
-                    }`}
-                  >
-                    {card.title}
-                  </span>
-                  {card.highlighted && (
-                    <span className="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--color-on-primary)] text-[var(--color-primary)]">
-                      Recommended
-                    </span>
-                  )}
-                </div>
-                <span
-                  className={`text-sm mt-1 block ${
-                    card.highlighted ? 'text-[var(--color-on-primary)]' : 'text-[var(--color-outline)]'
+        <section>
+          <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">
+            Optimization Paths
+          </h2>
+          <div className="space-y-3">
+            {pathCards.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <button
+                  key={i}
+                  className={`w-full flex items-center gap-4 p-4 rounded-md text-left cursor-pointer hover:opacity-90 transition-all border ${
+                    card.highlighted
+                      ? 'gradient-primary border-transparent shadow-glow'
+                      : 'bg-[var(--color-surface-container-low)] border-[var(--ghost-border)] shadow-[var(--shadow-sm)]'
                   }`}
+                  aria-label={card.title}
+                  onClick={() => router.push('/profile')}
                 >
-                  {card.desc}
-                </span>
-              </div>
-            </button>
-          );
-        })}
+                  <div className={`w-12 h-12 rounded-md flex items-center justify-center shrink-0 ${card.highlighted ? 'bg-white/20' : 'bg-[var(--color-primary-container)]'}`}>
+                    <Icon
+                      size={24}
+                      className={card.highlighted ? 'text-white' : 'text-[var(--color-on-primary-container)]'}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className={`text-base font-bold ${
+                          card.highlighted ? 'text-white' : 'text-[var(--color-on-surface)]'
+                        } font-[family-name:var(--font-display)]`}
+                      >
+                        {card.title}
+                      </span>
+                      {card.highlighted && (
+                        <span className="px-2 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider gradient-gold text-white font-[family-name:var(--font-label)]">
+                          Recommended
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className={`text-sm mt-1 block ${
+                        card.highlighted ? 'text-white/80' : 'text-[var(--color-on-surface-variant)]'
+                      }`}
+                    >
+                      {card.desc}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
       </div>
 
       {/* Chat FAB */}

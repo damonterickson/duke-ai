@@ -64,16 +64,16 @@ function EditableField({
         onKeyDown={(e) => e.key === 'Enter' && commit()}
         placeholder={placeholder}
         type={type}
-        className={`bg-[var(--color-surface-container)] text-[var(--color-on-surface)] rounded-lg px-2 py-1 min-w-[80px] outline-none border border-[var(--color-outline-variant)] ${className}`}
+        className={`bg-[var(--color-surface-container)] text-[var(--color-on-surface)] rounded-md px-3 py-1.5 min-w-[80px] outline-none border border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] ${className}`}
         autoFocus
       />
     );
   }
 
   return (
-    <button onClick={startEditing} className={`flex items-center gap-1 cursor-pointer ${className}`}>
+    <button onClick={startEditing} className={`flex items-center gap-1.5 cursor-pointer group ${className}`}>
       <span className="text-[var(--color-on-surface)] truncate">{value || placeholder}</span>
-      <MdEdit size={13} className="text-[var(--color-outline)]" />
+      <MdEdit size={14} className="text-[var(--color-outline)] group-hover:text-[var(--color-primary)] transition-colors" />
     </button>
   );
 }
@@ -167,53 +167,53 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full bg-[var(--color-surface)]">
-      <div className="overflow-y-auto pb-16">
+    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
+      <div className="overflow-y-auto pb-20">
         {/* Personal Info Section */}
-        <div className="px-4 pt-3 pb-4">
+        <div className="gradient-primary px-4 md:px-6 pt-4 pb-6 shadow-[var(--shadow-md)]">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-medium uppercase tracking-[1.5px] text-[var(--color-outline)]">
+            <span className="text-xs font-bold uppercase tracking-widest text-white/70 font-[family-name:var(--font-label)]">
               COMMAND PROFILE
             </span>
             <button
               onClick={() => router.push('/settings')}
               aria-label="Settings"
-              className="text-[var(--color-on-surface)] cursor-pointer"
+              className="text-white/70 hover:text-white cursor-pointer transition-colors"
             >
               <MdSettings size={22} />
             </button>
           </div>
 
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-4 max-w-lg mx-auto md:max-w-2xl">
             {/* Avatar */}
-            <div className="w-[72px] h-[72px] rounded-2xl bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
-              <span className="text-xl font-semibold text-[var(--color-on-primary-container)]">
+            <div className="w-[72px] h-[72px] rounded-md bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+              <span className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
                 {initials}
               </span>
             </div>
 
             {/* Fields */}
-            <div className="flex-1 flex flex-col gap-1">
+            <div className="flex-1 flex flex-col gap-1.5">
               <EditableField
                 value={profile.name ?? ''}
                 placeholder="Cadet Name"
                 onSave={(v) => profile.updateProfile({ name: v })}
-                className="text-xl font-bold"
+                className="text-xl font-bold [&_span]:text-white [&_svg]:text-white/60"
               />
-              <span className="text-sm font-medium uppercase tracking-[1px] text-[var(--color-outline)] mt-0.5">
+              <span className="text-sm font-semibold uppercase tracking-[2px] text-white/70 font-[family-name:var(--font-label)]">
                 {profile.yearGroup ?? 'MSI'} Cadet
               </span>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-[var(--color-outline)] min-w-[64px]">Branch</span>
+                <span className="text-xs text-white/50 min-w-[64px] font-[family-name:var(--font-label)]">Branch</span>
                 <EditableField
                   value={profile.targetBranch ?? ''}
                   placeholder="Target Branch"
                   onSave={(v) => profile.updateProfile({ targetBranch: v })}
-                  className="text-sm"
+                  className="text-sm [&_span]:text-white/90 [&_svg]:text-white/50"
                 />
               </div>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-[var(--color-outline)] min-w-[64px]">Goal OML</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-white/50 min-w-[64px] font-[family-name:var(--font-label)]">Goal OML</span>
                 <EditableField
                   value={profile.goalOml != null ? String(profile.goalOml) : ''}
                   placeholder="0-1000"
@@ -224,144 +224,149 @@ export default function ProfilePage() {
                     }
                   }}
                   type="number"
-                  className="text-sm"
+                  className="text-sm [&_span]:text-white/90 [&_svg]:text-white/50"
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* OML Command Center */}
-        <div className="px-4 mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3">
-            OML Command Center
-          </h2>
-          <div className="flex justify-center mb-3">
-            <VConicGauge
-              progress={Math.min(oml / 1000, 1)}
-              size={256}
-              strokeWidth={14}
-              label={oml > 0 ? String(Math.round(oml)) : '--'}
-              sublabel="/ 1000"
-            />
-          </div>
-          <p className="text-sm italic text-center text-[var(--color-on-surface)] opacity-70 mb-3">
-            {oml > 0
-              ? 'Performance trajectory: holding steady'
-              : 'Enter scores to compute your OML'}
-          </p>
-          <div className="flex gap-2 mb-3">
-            <div className="flex-1 flex flex-col items-center p-3 rounded-xl bg-[var(--glass-overlay)]">
-              <span className="text-lg font-semibold text-[var(--color-on-surface)]">
-                {oml > 0 ? `${Math.round((oml / 1000) * 100)}%` : '--'}
-              </span>
-              <span className="text-xs text-[var(--color-outline)]">OML Percentile</span>
+        {/* Content */}
+        <div className="px-4 md:px-6 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-6 -mt-2">
+          {/* OML Command Center */}
+          <section className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-5 pt-8">
+            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-4 font-[family-name:var(--font-label)]">
+              OML Command Center
+            </h2>
+            <div className="flex justify-center mb-4">
+              <VConicGauge
+                progress={Math.min(oml / 1000, 1)}
+                size={240}
+                strokeWidth={14}
+                label={oml > 0 ? String(Math.round(oml)) : '--'}
+                sublabel="/ 1000"
+              />
             </div>
-            <div className="flex-1 flex flex-col items-center p-3 rounded-xl bg-[var(--glass-overlay)]">
-              <span className="text-lg font-semibold text-[var(--color-on-surface)]">
-                {acftTotal != null ? 'GREEN' : '--'}
-              </span>
-              <span className="text-xs text-[var(--color-outline)]">Active Readiness</span>
+            <p className="text-sm italic text-center text-[var(--color-on-surface-variant)] mb-4">
+              {oml > 0
+                ? 'Performance trajectory: holding steady'
+                : 'Enter scores to compute your OML'}
+            </p>
+            <div className="flex gap-3 mb-4">
+              <div className="flex-1 flex flex-col items-center p-3 rounded-md bg-[var(--color-surface-container)] border border-[var(--ghost-border)]">
+                <span className="text-xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+                  {oml > 0 ? `${Math.round((oml / 1000) * 100)}%` : '--'}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">OML Percentile</span>
+              </div>
+              <div className="flex-1 flex flex-col items-center p-3 rounded-md bg-[var(--color-surface-container)] border border-[var(--ghost-border)]">
+                <span className="text-xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+                  {acftTotal != null ? 'GREEN' : '--'}
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">Active Readiness</span>
+              </div>
             </div>
-          </div>
-          <div className="flex justify-center">
-            <button
-              className="flex items-center gap-1 px-5 py-2 rounded-lg bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] text-sm font-semibold cursor-pointer hover:opacity-85"
-              onClick={() => router.push('/what-if')}
-              aria-label="What-If scenario planner"
-            >
-              <MdAutoFixHigh size={18} />
-              What If?
-            </button>
-          </div>
-        </div>
-
-        {/* Score Cards */}
-        <div className="px-4 mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3">
-            Performance Overview
-          </h2>
-          {scoreCards.map((card, i) => {
-            const Icon = card.icon;
-            return (
+            <div className="flex justify-center">
               <button
-                key={i}
-                className="w-full flex items-center gap-3 p-3 rounded-xl mb-2 bg-[var(--color-surface-container-low)] cursor-pointer hover:opacity-90 text-left"
-                onClick={() => router.push('/profile')}
-                aria-label={`View ${card.label} details`}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-md gradient-secondary text-white text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)]"
+                onClick={() => router.push('/what-if')}
+                aria-label="What-If scenario planner"
               >
-                <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-container)] flex items-center justify-center">
-                  <Icon size={20} className="text-[var(--color-on-primary-container)]" />
-                </div>
-                <div className="flex-1">
-                  <span className="text-xs font-medium uppercase tracking-[1px] text-[var(--color-outline)] block">
-                    {card.label}
-                  </span>
-                  <span className="text-xl font-semibold text-[var(--color-on-surface)] block mt-0.5">
-                    {card.value}
-                  </span>
-                  <span className="text-xs text-[var(--color-outline)] block mt-0.5 truncate">
-                    {card.sublabel}
-                  </span>
-                </div>
-                <MdChevronRight size={24} className="text-[var(--color-outline)]" />
+                <MdAutoFixHigh size={18} />
+                What If?
               </button>
-            );
-          })}
-        </div>
+            </div>
+          </section>
 
-        {/* Quick Actions */}
-        <div className="px-4 mb-4">
-          <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {quickActions.map((action, i) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={i}
-                  className="flex flex-col items-center py-3 px-2 rounded-xl bg-[var(--color-surface-container-low)] cursor-pointer hover:opacity-90 gap-1"
-                  onClick={() => router.push(action.route)}
-                  aria-label={action.label}
-                >
-                  <Icon size={24} className="text-[var(--color-primary)]" />
-                  <span className="text-sm font-semibold text-[var(--color-on-surface)]">
-                    {action.label}
-                  </span>
-                  <span className="text-xs text-[var(--color-outline)]">{action.desc}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+          {/* Score Cards */}
+          <section>
+            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">
+              Performance Overview
+            </h2>
+            <div className="space-y-2">
+              {scoreCards.map((card, i) => {
+                const Icon = card.icon;
+                return (
+                  <button
+                    key={i}
+                    className="w-full flex items-center gap-4 p-4 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors text-left group"
+                    onClick={() => router.push('/profile')}
+                    aria-label={`View ${card.label} details`}
+                  >
+                    <div className="w-11 h-11 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
+                      <Icon size={22} className="text-[var(--color-on-primary-container)]" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] block font-[family-name:var(--font-label)]">
+                        {card.label}
+                      </span>
+                      <span className="text-2xl font-bold text-[var(--color-on-surface)] block mt-0.5 font-[family-name:var(--font-display)]">
+                        {card.value}
+                      </span>
+                      <span className="text-xs text-[var(--color-on-surface-variant)] block mt-0.5 truncate">
+                        {card.sublabel}
+                      </span>
+                    </div>
+                    <MdChevronRight size={24} className="text-[var(--color-outline)] group-hover:text-[var(--color-primary)] transition-colors" />
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-        {/* Vanguard Status */}
-        <div className="px-4 mb-4">
-          <VGlassPanel className="p-4">
-            <span className="text-xs font-medium uppercase tracking-[1.5px] text-[var(--color-outline)] mb-3 block">
+          {/* Quick Actions */}
+          <section>
+            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">Quick Actions</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {quickActions.map((action, i) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={i}
+                    className="flex flex-col items-center py-4 px-3 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] hover:shadow-[var(--shadow-md)] transition-all gap-1.5"
+                    onClick={() => router.push(action.route)}
+                    aria-label={action.label}
+                  >
+                    <div className="w-10 h-10 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center">
+                      <Icon size={22} className="text-[var(--color-on-primary-container)]" />
+                    </div>
+                    <span className="text-sm font-bold text-[var(--color-on-surface)]">
+                      {action.label}
+                    </span>
+                    <span className="text-xs text-[var(--color-on-surface-variant)]">{action.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Vanguard Status */}
+          <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
+            <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-4 block font-[family-name:var(--font-label)]">
               VANGUARD STATUS
             </span>
             <div className="flex items-center">
-              <div className="flex-1 flex flex-col items-center gap-1">
-                <MdLeaderboard size={20} className="text-[var(--color-primary)]" />
-                <span className="text-xs text-[var(--color-outline)]">Battalion Rank</span>
-                <span className="text-xl font-bold text-[var(--color-on-surface)]">
+              <div className="flex-1 flex flex-col items-center gap-1.5">
+                <MdLeaderboard size={22} className="text-[var(--color-primary)]" />
+                <span className="text-xs uppercase tracking-wider text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Battalion Rank</span>
+                <span className="text-2xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
                   #{squad.individualRank}
-                  <span className="text-xs font-normal text-[var(--color-outline)]">
+                  <span className="text-sm font-normal text-[var(--color-on-surface-variant)]">
                     {' '}/ {squad.totalCadets}
                   </span>
                 </span>
               </div>
-              <div className="w-[1px] h-10 bg-[var(--color-surface-container-high)] mx-3" />
-              <div className="flex-1 flex flex-col items-center gap-1">
-                <MdLocalFireDepartment size={20} className="text-[var(--color-primary)]" />
-                <span className="text-xs text-[var(--color-outline)]">Streak</span>
-                <span className="text-xl font-bold text-[var(--color-on-surface)]">
+              <div className="w-[1px] h-12 bg-[var(--ghost-border)] mx-4" />
+              <div className="flex-1 flex flex-col items-center gap-1.5">
+                <MdLocalFireDepartment size={22} className="text-[var(--color-primary)]" />
+                <span className="text-xs uppercase tracking-wider text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Streak</span>
+                <span className="text-2xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
                   {streak}
-                  <span className="text-xs font-normal text-[var(--color-outline)]"> weeks</span>
+                  <span className="text-sm font-normal text-[var(--color-on-surface-variant)]"> weeks</span>
                 </span>
               </div>
             </div>
-          </VGlassPanel>
+          </section>
         </div>
       </div>
     </div>

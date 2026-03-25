@@ -132,140 +132,148 @@ export default function IntelligenceBriefPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[var(--color-primary)]">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-white cursor-pointer">
+      <header className="gradient-primary text-white px-4 py-4 flex items-center justify-between shadow-[var(--shadow-md)]">
+        <button onClick={() => router.back()} aria-label="Go back" className="text-white/80 hover:text-white cursor-pointer transition-colors">
           <MdArrowBack size={24} />
         </button>
-        <h1 className="text-base font-bold tracking-[2px] text-white">INTELLIGENCE BRIEF</h1>
-        <button onClick={handleShare} aria-label="Share brief" className="text-white cursor-pointer">
+        <h1 className="text-sm font-bold uppercase tracking-[3px] font-[family-name:var(--font-label)]">INTELLIGENCE BRIEF</h1>
+        <button onClick={handleShare} aria-label="Share brief" className="text-white/80 hover:text-white cursor-pointer transition-colors">
           <MdShare size={24} />
         </button>
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-y-auto bg-[var(--color-surface)] p-4 pb-16">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-5">
         {/* Classification Banner */}
-        <div className="flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--color-primary-container)] mb-4">
+        <div className="flex items-center justify-center gap-2 py-2.5 rounded-md bg-[var(--color-primary-container)] border border-[var(--color-primary)]/20">
           <MdVerifiedUser size={16} className="text-[var(--color-on-primary-container)]" />
-          <span className="text-xs font-medium uppercase tracking-[1.5px] text-[var(--color-on-primary-container)]">
-            VANGUARD INTELLIGENCE BRIEF — {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
+          <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-primary-container)] font-[family-name:var(--font-label)]">
+            VANGUARD INTELLIGENCE BRIEF -- {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
           </span>
         </div>
 
         {/* OML Summary */}
-        <VGlassPanel className="mb-4">
-          <span className="text-xs font-medium uppercase tracking-[1.5px] text-[var(--color-outline)] mb-1 block">
+        <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
+          <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-2 block font-[family-name:var(--font-label)]">
             COMPOSITE OML SCORE
           </span>
-          <div className="flex items-baseline mb-2">
-            <span className="text-4xl font-bold text-[var(--color-on-surface)]">
+          <div className="flex items-baseline mb-3">
+            <span className="text-5xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
               {oml > 0 ? Math.round(oml) : '--'}
             </span>
-            <span className="text-lg font-semibold text-[var(--color-outline)]"> / 1000</span>
+            <span className="text-xl font-semibold text-[var(--color-on-surface-variant)] ml-1"> / 1000</span>
           </div>
           <VProgressBar progress={Math.min(oml / 1000, 1)} />
           {profile.goalOml != null && (
-            <p className="text-sm font-medium text-[var(--color-primary)] mt-2">
+            <p className="text-sm font-bold text-[var(--color-primary)] mt-3">
               Target: {profile.goalOml} ({oml > 0 ? `${Math.round(profile.goalOml - oml)} points to go` : 'Set scores to track'})
             </p>
           )}
-          <div className="flex gap-3 mt-4">
+          <div className="flex gap-3 mt-5">
             {[
               { label: 'Academic', value: latestScore?.gpa ? Math.min(latestScore.gpa / 4.0, 1) : 0, display: latestScore?.gpa?.toFixed(2) ?? '--' },
               { label: 'Physical', value: latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0, display: latestScore?.acft_total ? `${Math.round(latestScore.acft_total)}` : '--' },
               { label: 'Leadership', value: latestScore?.leadership_eval ? Math.min(latestScore.leadership_eval / 100, 1) : 0, display: latestScore?.leadership_eval?.toString() ?? '--' },
             ].map((pillar, i) => (
-              <div key={i} className="flex-1">
-                <span className="text-xs text-[var(--color-outline)] block mb-1">{pillar.label}</span>
-                <span className="text-base font-semibold text-[var(--color-on-surface)] block mb-1">{pillar.display}</span>
+              <div key={i} className="flex-1 bg-[var(--color-surface-container-low)] rounded-md p-3 border border-[var(--ghost-border)]">
+                <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] block mb-1 font-[family-name:var(--font-label)]">{pillar.label}</span>
+                <span className="text-lg font-bold text-[var(--color-on-surface)] block mb-2 font-[family-name:var(--font-display)]">{pillar.display}</span>
                 <VProgressBar progress={pillar.value} />
               </div>
             ))}
           </div>
-        </VGlassPanel>
+        </section>
 
         {/* AI Analysis */}
         {loading ? (
-          <div className="flex flex-col items-center py-8">
-            <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-[var(--color-outline)] mt-3">Generating intelligence brief...</p>
+          <div className="flex flex-col items-center py-10">
+            <div className="w-10 h-10 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-[var(--color-on-surface-variant)] mt-4 font-semibold">Generating intelligence brief...</p>
           </div>
         ) : briefingText ? (
-          <VGlassPanel className="mb-4">
+          <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
             <div className="flex items-center gap-2 mb-3">
               <MdAutoAwesome size={20} className="text-[var(--color-primary)]" />
-              <span className="text-sm font-semibold uppercase tracking-[1.5px] text-[var(--color-primary)]">
+              <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] font-[family-name:var(--font-label)]">
                 AI STRATEGIC ANALYSIS
               </span>
             </div>
-            <p className="text-sm leading-relaxed text-[var(--color-on-surface)]">{briefingText}</p>
-          </VGlassPanel>
+            <p className="text-sm md:text-base leading-relaxed text-[var(--color-on-surface)]">{briefingText}</p>
+          </section>
         ) : null}
 
         {/* Detailed Sections */}
         {sections.length > 0 && (
-          <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3 mt-2">Detailed Assessment</h2>
+          <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] font-[family-name:var(--font-label)]">Detailed Assessment</h2>
         )}
-        {sections.map((section) => {
-          const isExpanded = expandedSection === section.title;
-          const Icon = section.icon;
-          return (
-            <button
-              key={section.title}
-              className="w-full text-left p-4 rounded-2xl mb-2 bg-[var(--glass-overlay)] border border-[var(--ghost-border-color)] cursor-pointer"
-              onClick={() => setExpandedSection(isExpanded ? null : section.title)}
-              aria-label={`${section.title} - ${section.priority} priority`}
-            >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 flex-1">
-                  <Icon size={22} className="text-[var(--color-primary)]" />
-                  <span className="text-base font-semibold text-[var(--color-on-surface)]">{section.title}</span>
+        <div className="space-y-2">
+          {sections.map((section) => {
+            const isExpanded = expandedSection === section.title;
+            const Icon = section.icon;
+            return (
+              <button
+                key={section.title}
+                className="w-full text-left p-4 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
+                onClick={() => setExpandedSection(isExpanded ? null : section.title)}
+                aria-label={`${section.title} - ${section.priority} priority`}
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className="w-9 h-9 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
+                      <Icon size={20} className="text-[var(--color-on-primary-container)]" />
+                    </div>
+                    <span className="text-base font-bold text-[var(--color-on-surface)]">{section.title}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 px-2 py-0.5 rounded-sm" style={{ backgroundColor: `${priorityColor(section.priority)}20` }}>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: priorityColor(section.priority) }} />
+                      <span className="text-xs font-bold uppercase" style={{ color: priorityColor(section.priority) }}>
+                        {section.priority}
+                      </span>
+                    </div>
+                    {isExpanded ? (
+                      <MdExpandLess size={20} className="text-[var(--color-outline)]" />
+                    ) : (
+                      <MdExpandMore size={20} className="text-[var(--color-outline)]" />
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: priorityColor(section.priority) }} />
-                  <span className="text-xs font-medium" style={{ color: priorityColor(section.priority) }}>
-                    {section.priority.toUpperCase()}
-                  </span>
-                  {isExpanded ? (
-                    <MdExpandLess size={20} className="text-[var(--color-outline)]" />
-                  ) : (
-                    <MdExpandMore size={20} className="text-[var(--color-outline)]" />
-                  )}
-                </div>
-              </div>
-              {isExpanded && (
-                <p className="text-sm leading-relaxed text-[var(--color-on-surface)] mt-3">{section.content}</p>
-              )}
-            </button>
-          );
-        })}
+                {isExpanded && (
+                  <p className="text-sm md:text-base leading-relaxed text-[var(--color-on-surface)] mt-3 ml-12">{section.content}</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
         {/* No Data State */}
         {sections.length === 0 && !loading && (
-          <VGlassPanel className="flex flex-col items-center gap-2">
-            <MdInfoOutline size={32} className="text-[var(--color-outline)]" />
-            <h3 className="text-lg font-semibold text-[var(--color-on-surface)]">Insufficient Data</h3>
-            <p className="text-sm text-[var(--color-outline)] text-center">
+          <section className="glass-panel rounded-md p-6 flex flex-col items-center gap-3">
+            <MdInfoOutline size={36} className="text-[var(--color-outline)]" />
+            <h3 className="text-lg font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">Insufficient Data</h3>
+            <p className="text-sm text-[var(--color-on-surface-variant)] text-center leading-relaxed">
               Complete your profile and enter scores to receive a full intelligence brief.
             </p>
-          </VGlassPanel>
+          </section>
         )}
 
         {/* Priority Actions */}
         {sections.filter((s) => s.priority === 'high').length > 0 && (
-          <>
-            <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3 mt-2">Priority Actions</h2>
-            {sections
-              .filter((s) => s.priority === 'high')
-              .map((s, i) => (
-                <div key={i} className="border-l-[3px] border-l-[var(--color-error)] pl-3 py-2 mb-2">
-                  <p className="text-sm text-[var(--color-on-surface)]">
-                    {s.title}: {s.content.split('.')[1]?.trim() ?? s.content}
-                  </p>
-                </div>
-              ))}
-          </>
+          <section>
+            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">Priority Actions</h2>
+            <div className="space-y-2">
+              {sections
+                .filter((s) => s.priority === 'high')
+                .map((s, i) => (
+                  <div key={i} className="border-l-[3px] border-l-[var(--color-error)] pl-4 py-3 bg-[var(--color-surface-container-low)] rounded-r-md">
+                    <p className="text-sm md:text-base font-semibold text-[var(--color-on-surface)]">
+                      {s.title}: {s.content.split('.')[1]?.trim() ?? s.content}
+                    </p>
+                  </div>
+                ))}
+            </div>
+          </section>
         )}
       </div>
     </div>

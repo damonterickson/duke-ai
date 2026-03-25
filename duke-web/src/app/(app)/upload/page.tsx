@@ -16,7 +16,6 @@ import {
   MdCheck,
   MdEditNote,
 } from 'react-icons/md';
-import { VGlassPanel } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 
@@ -72,26 +71,25 @@ export default function UploadSyncPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[var(--color-primary)]">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-white cursor-pointer">
+      <header className="gradient-primary text-white px-4 py-4 flex items-center gap-3 shadow-[var(--shadow-md)]">
+        <button onClick={() => router.back()} aria-label="Go back" className="text-white/80 hover:text-white cursor-pointer transition-colors">
           <MdArrowBack size={24} />
         </button>
-        <h1 className="text-base font-bold tracking-[2px] text-white">UPLOAD & SYNC</h1>
-        <div className="w-6" />
-      </div>
+        <h1 className="text-sm font-bold uppercase tracking-[3px] font-[family-name:var(--font-label)]">UPLOAD & SYNC</h1>
+      </header>
 
-      <div className="flex-1 overflow-y-auto bg-[var(--color-surface)] p-4 pb-16">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-6">
         {/* Sync Status Card */}
-        <VGlassPanel className="mb-6">
+        <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
           <div className="flex justify-between items-center mb-4">
             <div className="flex-1">
-              <span className="text-xs font-medium uppercase tracking-[1.5px] text-[var(--color-outline)] mb-1 block">DATA SYNC STATUS</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-1 block font-[family-name:var(--font-label)]">DATA SYNC STATUS</span>
               <span className="text-sm text-[var(--color-on-surface)]">Last sync: {lastSync}</span>
             </div>
             <button
-              className={`flex items-center gap-1 py-2 px-3 rounded-lg text-[var(--color-on-primary)] text-sm font-semibold cursor-pointer ${syncStatus === 'synced' ? 'bg-[#4caf50]' : 'bg-[var(--color-primary)]'}`}
+              className={`flex items-center gap-1.5 py-2 px-4 rounded-md text-white text-sm font-bold cursor-pointer transition-all shadow-[var(--shadow-sm)] ${syncStatus === 'synced' ? 'bg-[#4caf50]' : 'gradient-primary'}`}
               onClick={handleSync}
               disabled={syncStatus === 'syncing'}
               aria-label="Sync data"
@@ -108,70 +106,76 @@ export default function UploadSyncPage() {
           </div>
           <div className="flex items-center">
             <div className="flex-1 text-center">
-              <span className="text-lg font-semibold text-[var(--color-on-surface)] block">{scores.scoreHistory.length}</span>
-              <span className="text-xs text-[var(--color-outline)]">Score Entries</span>
+              <span className="text-xl font-bold text-[var(--color-on-surface)] block font-[family-name:var(--font-display)]">{scores.scoreHistory.length}</span>
+              <span className="text-xs font-semibold text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Score Entries</span>
             </div>
-            <div className="w-[1px] h-8 bg-[var(--color-outline-variant)]" />
+            <div className="w-[1px] h-8 bg-[var(--ghost-border)]" />
             <div className="flex-1 text-center">
-              <span className="text-lg font-semibold text-[var(--color-on-surface)] block">{profile.name ? '1' : '0'}</span>
-              <span className="text-xs text-[var(--color-outline)]">Profile</span>
+              <span className="text-xl font-bold text-[var(--color-on-surface)] block font-[family-name:var(--font-display)]">{profile.name ? '1' : '0'}</span>
+              <span className="text-xs font-semibold text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Profile</span>
             </div>
-            <div className="w-[1px] h-8 bg-[var(--color-outline-variant)]" />
+            <div className="w-[1px] h-8 bg-[var(--ghost-border)]" />
             <div className="flex-1 text-center">
-              <span className="text-lg font-semibold text-[var(--color-on-surface)] block">0</span>
-              <span className="text-xs text-[var(--color-outline)]">Documents</span>
+              <span className="text-xl font-bold text-[var(--color-on-surface)] block font-[family-name:var(--font-display)]">0</span>
+              <span className="text-xs font-semibold text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Documents</span>
             </div>
           </div>
-        </VGlassPanel>
+        </section>
 
         {/* Upload Section */}
-        <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-1">Upload Documents</h2>
-        <p className="text-sm text-[var(--color-outline)] mb-4">
-          Upload your military documents to auto-populate scores and profile data. AI will extract relevant information automatically.
-        </p>
+        <section>
+          <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-1 font-[family-name:var(--font-label)]">Upload Documents</h2>
+          <p className="text-sm text-[var(--color-on-surface-variant)] mb-4 leading-relaxed">
+            Upload your military documents to auto-populate scores and profile data. AI will extract relevant information automatically.
+          </p>
 
-        {items.map((item) => {
-          const statusInfo = getStatusIcon(item.status);
-          const Icon = item.icon;
-          const StatusIcon = statusInfo.Icon;
-          return (
-            <button
-              key={item.type}
-              className="w-full flex gap-3 p-4 rounded-2xl mb-3 text-left bg-[var(--glass-overlay)] border border-[var(--ghost-border-color)] cursor-pointer hover:opacity-90 disabled:opacity-60"
-              onClick={() => handleUpload(item.type)}
-              disabled={item.status === 'uploading'}
-              style={{ borderColor: item.status === 'success' ? '#4caf50' : undefined }}
-              aria-label={`Upload ${item.title}`}
-            >
-              <div className="w-12 h-12 rounded-xl bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
-                <Icon size={24} className="text-[var(--color-on-primary-container)]" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-base font-semibold text-[var(--color-on-surface)]">{item.title}</span>
-                  {item.status === 'uploading' ? (
-                    <div className="w-5 h-5 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <StatusIcon size={20} style={{ color: statusInfo.color }} />
-                  )}
-                </div>
-                <p className="text-sm text-[var(--color-outline)] mb-1">{item.description}</p>
-                <span className="text-xs text-[var(--color-outline-variant)]">Accepts: {item.accepted}</span>
-              </div>
-            </button>
-          );
-        })}
+          <div className="space-y-3">
+            {items.map((item) => {
+              const statusInfo = getStatusIcon(item.status);
+              const Icon = item.icon;
+              const StatusIcon = statusInfo.Icon;
+              return (
+                <button
+                  key={item.type}
+                  className="w-full flex gap-4 p-4 rounded-md text-left bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors disabled:opacity-60"
+                  onClick={() => handleUpload(item.type)}
+                  disabled={item.status === 'uploading'}
+                  style={{ borderColor: item.status === 'success' ? '#4caf50' : undefined }}
+                  aria-label={`Upload ${item.title}`}
+                >
+                  <div className="w-12 h-12 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
+                    <Icon size={24} className="text-[var(--color-on-primary-container)]" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-base font-bold text-[var(--color-on-surface)]">{item.title}</span>
+                      {item.status === 'uploading' ? (
+                        <div className="w-5 h-5 border-2 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <StatusIcon size={20} style={{ color: statusInfo.color }} />
+                      )}
+                    </div>
+                    <p className="text-sm text-[var(--color-on-surface-variant)] mb-1">{item.description}</p>
+                    <span className="text-xs font-semibold text-[var(--color-outline)] font-[family-name:var(--font-label)]">Accepts: {item.accepted}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         {/* Manual Entry */}
-        <VGlassPanel className="flex items-center gap-3 mt-2">
-          <MdEditNote size={28} className="text-[var(--color-primary)]" />
+        <section className="glass-panel rounded-md p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
+            <MdEditNote size={24} className="text-[var(--color-on-primary-container)]" />
+          </div>
           <div className="flex-1">
-            <h3 className="text-base font-semibold text-[var(--color-on-surface)] mb-1">Prefer manual entry?</h3>
-            <p className="text-sm text-[var(--color-outline)]">
+            <h3 className="text-base font-bold text-[var(--color-on-surface)] mb-0.5">Prefer manual entry?</h3>
+            <p className="text-sm text-[var(--color-on-surface-variant)]">
               You can always enter scores directly on the Profile or individual tracker screens.
             </p>
           </div>
-        </VGlassPanel>
+        </section>
       </div>
     </div>
   );

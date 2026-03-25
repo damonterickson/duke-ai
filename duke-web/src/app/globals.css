@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Duke Vanguard — Design Token CSS Variables
-   Generated from src/theme/tokens.ts
+   Duke Vanguard — Design Tokens as CSS Custom Properties
+   Light theme is default. Dark theme via [data-theme="dark"].
    ============================================================ */
 
-@theme {
-  /* Light Theme Colors (Modern Vanguard) — Default */
+:root {
+  /* Primary (Army Olive) */
   --color-primary: #343c0a;
   --color-primary-container: #4b5320;
   --color-on-primary: #ffffff;
@@ -15,16 +15,19 @@
   --color-primary-fixed-dim: #c3cc8c;
   --color-inverse-primary: #c3cc8c;
 
+  /* Secondary (Royal Purple) */
   --color-secondary: #7643b6;
   --color-secondary-container: #bc88ff;
   --color-on-secondary: #ffffff;
   --color-on-secondary-container: #4d118c;
 
+  /* Tertiary (Warm Gold) */
   --color-tertiary: #6b5d2d;
   --color-tertiary-container: #bcaa72;
   --color-on-tertiary: #ffffff;
   --color-on-tertiary-container: #4b3e11;
 
+  /* Surface Tiers */
   --color-surface: #fbf9f8;
   --color-surface-dim: #dbdad9;
   --color-surface-bright: #fbf9f8;
@@ -34,49 +37,59 @@
   --color-surface-container-high: #eae8e7;
   --color-surface-container-highest: #e4e2e2;
   --color-surface-variant: #e4e2e2;
+  --color-surface-tint: #5a632e;
 
+  /* On-colors */
   --color-on-surface: #1b1c1c;
   --color-on-surface-variant: #47483c;
   --color-background: #fbf9f8;
   --color-on-background: #1b1c1c;
 
+  /* Inverse */
+  --color-inverse-surface: #303030;
+  --color-inverse-on-surface: #f2f0f0;
+
+  /* Semantic */
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-on-error: #ffffff;
   --color-on-error-container: #93000a;
-
   --color-outline: #77786b;
   --color-outline-variant: #c8c7b8;
-
-  --color-inverse-surface: #303030;
-  --color-inverse-on-surface: #f2f0f0;
 
   /* Gradients */
   --gradient-primary-start: #343c0a;
   --gradient-primary-end: #4b5320;
   --gradient-secondary-start: #7643b6;
-  --gradient-secondary-end: #4d118c;
+  --gradient-secondary-end: #9b6dd4;
   --gradient-gold-start: #6b5d2d;
   --gradient-gold-end: #bcaa72;
 
   /* Glass */
   --glass-overlay: rgba(245, 243, 243, 0.70);
   --glass-blur: 20px;
-  --ghost-border: rgba(200, 199, 184, 0.15);
+  --ghost-border: rgba(200, 199, 184, 0.20);
 
   /* Shadows */
-  --shadow-color: #343c0a;
+  --shadow-color: rgba(52, 60, 10, 0.12);
+  --shadow-lg: 0 8px 24px var(--shadow-color);
+  --shadow-md: 0 4px 16px var(--shadow-color);
+  --shadow-sm: 0 2px 8px var(--shadow-color);
 
   /* Typography */
-  --font-display: 'Public Sans', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-label: 'Space Grotesk', sans-serif;
+  --font-display: 'Public Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-label: 'Space Grotesk', system-ui, sans-serif;
+
+  /* Accent for highlights */
+  --color-accent: #7643b6;
+  --color-success: #2d6a2e;
+  --color-warning: #6b5d2d;
 }
 
 /* ============================================================
    Dark Theme (Kinetic Command)
    ============================================================ */
-
 [data-theme="dark"] {
   --color-primary: #d9b9ff;
   --color-primary-container: #450084;
@@ -105,24 +118,23 @@
   --color-surface-container-high: #2c292d;
   --color-surface-container-highest: #373438;
   --color-surface-variant: #373438;
+  --color-surface-tint: #d9b9ff;
 
   --color-on-surface: #e7e1e6;
   --color-on-surface-variant: #cdc3d4;
   --color-background: #151317;
   --color-on-background: #e7e1e6;
 
+  --color-inverse-surface: #e7e1e6;
+  --color-inverse-on-surface: #322f34;
+
   --color-error: #ffb4ab;
   --color-error-container: #93000a;
   --color-on-error: #690005;
   --color-on-error-container: #ffdad6;
-
   --color-outline: #968d9d;
   --color-outline-variant: #4b4452;
 
-  --color-inverse-surface: #e7e1e6;
-  --color-inverse-on-surface: #322f34;
-
-  /* Gradients */
   --gradient-primary-start: #450084;
   --gradient-primary-end: #d9b9ff;
   --gradient-secondary-start: #544511;
@@ -130,48 +142,83 @@
   --gradient-gold-start: #544511;
   --gradient-gold-end: #dbc585;
 
-  /* Glass */
   --glass-overlay: rgba(55, 52, 56, 0.50);
   --glass-blur: 24px;
-  --ghost-border: rgba(75, 68, 82, 0.15);
+  --ghost-border: rgba(75, 68, 82, 0.20);
 
-  /* Shadows */
-  --shadow-color: #450084;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --color-accent: #d9b9ff;
+  --color-success: #a8d5a9;
+  --color-warning: #dbc585;
 }
 
 /* ============================================================
    Base Styles
    ============================================================ */
-
 html {
   font-family: var(--font-body);
   color: var(--color-on-surface);
   background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   min-height: 100dvh;
+  background-color: var(--color-background);
 }
 
 /* Smooth theme transitions */
-* {
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+*, *::before, *::after {
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-outline-variant);
-  border-radius: 3px;
-}
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 3px; }
 
-/* Selection color */
+/* Selection */
 ::selection {
   background: var(--color-primary-fixed-dim);
-  color: var(--color-on-primary-fixed);
+  color: var(--color-on-surface);
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+.glass-panel {
+  background: var(--glass-overlay);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--ghost-border);
+}
+
+.gradient-primary {
+  background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end));
+}
+
+.gradient-secondary {
+  background: linear-gradient(135deg, var(--gradient-secondary-start), var(--gradient-secondary-end));
+}
+
+.gradient-gold {
+  background: linear-gradient(135deg, var(--gradient-gold-start), var(--gradient-gold-end));
+}
+
+.shadow-glow {
+  box-shadow: var(--shadow-lg);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
