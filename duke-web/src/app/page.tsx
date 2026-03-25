@@ -74,14 +74,37 @@ export default function RootPage() {
   if (!checking) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--color-background)] gap-4">
-      <div className="w-16 h-16 rounded-md gradient-primary flex items-center justify-center shadow-glow">
-        <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z" />
-        </svg>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#151317] gap-6 relative overflow-hidden">
+      {/* Material Symbols font */}
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+      {/* Kinetic grid background */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(217, 185, 255, 0.05) 1px, transparent 0)',
+          backgroundSize: '40px 40px',
+        }}
+      />
+
+      {/* Ambient glow */}
+      <div className="absolute w-[400px] h-[400px] bg-[#d9b9ff]/10 rounded-full blur-[120px] animate-pulse" />
+
+      {/* Shield icon pulsing */}
+      <div className="relative z-10 animate-pulse" style={{ filter: 'drop-shadow(0 0 30px rgba(69,0,132,0.4))' }}>
+        <span
+          className="material-symbols-outlined text-[80px] text-[#d9b9ff]"
+          style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24" }}
+        >
+          shield_with_heart
+        </span>
       </div>
-      <span className="text-sm font-bold uppercase tracking-[4px] text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)] animate-pulse">
-        Duke Vanguard
+
+      <span
+        className="relative z-10 text-sm font-black uppercase tracking-[4px] text-[#968d9d]"
+        style={{ fontFamily: 'Public Sans, sans-serif' }}
+      >
+        DUKE VANGUARD
       </span>
     </div>
   );

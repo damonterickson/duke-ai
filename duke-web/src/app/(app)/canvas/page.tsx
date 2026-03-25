@@ -2,14 +2,6 @@
 
 import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  MdArrowBack,
-  MdSchool,
-  MdSync,
-  MdAnalytics,
-  MdCalculate,
-  MdMilitaryTech,
-} from 'react-icons/md';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -74,44 +66,43 @@ export default function CanvasPage() {
     : null;
 
   return (
-    <div className="flex flex-col min-h-full bg-[#151317]">
-      {/* Header — glass bar */}
-      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center gap-3 shadow-lg shadow-purple-900/20 sticky top-0 z-40">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors">
-          <MdArrowBack size={24} />
-        </button>
-        <h1
-          className="text-lg font-black uppercase tracking-tighter text-[#dbc585]"
-          style={{ fontFamily: 'Public Sans, sans-serif' }}
-        >
-          CANVAS INTEGRATION
-        </h1>
-      </header>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-8">
+      <style jsx global>{`
+        .glass-panel-canvas { background: rgba(55, 52, 56, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+      `}</style>
+
+      <div className="pt-6 pb-8 px-6 max-w-4xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-tighter text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+            CANVAS INTEGRATION
+          </h1>
+        </div>
+
         {/* Connection Status */}
-        <section className="glass-card ghost-border rounded-sm p-5 glow-shadow-gold">
-          <div className="flex items-center gap-3">
+        <section className="glass-panel-canvas rounded-lg p-8" style={{ boxShadow: '0 0 20px rgba(219,197,133,0.12)' }}>
+          <div className="flex items-center gap-4">
             <div
-              className="w-3.5 h-3.5 rounded-full"
+              className="w-4 h-4 rounded-full"
               style={{
                 backgroundColor:
                   status === 'connected' ? '#c3cc8c'
                     : status === 'connecting' ? '#dbc585'
                     : status === 'error' ? '#ffb4ab'
                     : '#968d9d',
-                boxShadow:
-                  status === 'connected' ? '0 0 10px #c3cc8c' : 'none',
+                boxShadow: status === 'connected' ? '0 0 10px #c3cc8c' : 'none',
               }}
             />
             <div className="flex-1">
-              <span
-                className="text-base font-black text-[#e7e1e6] block uppercase tracking-tight"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
+              <span className="text-lg font-black uppercase tracking-tight block" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                 Canvas LMS
               </span>
-              <span className="text-sm text-[#cdc3d4] mt-0.5 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+              <span className="text-sm text-[#968d9d] mt-0.5 block">
                 {status === 'connected' ? 'Connected - Duke University'
                   : status === 'connecting' ? 'Connecting...'
                   : status === 'error' ? 'Connection failed'
@@ -123,17 +114,15 @@ export default function CanvasPage() {
             ) : status === 'connected' ? (
               <button
                 onClick={handleDisconnect}
-                className="py-2 px-4 rounded-sm text-[#ffb4ab] text-sm font-bold cursor-pointer glass-card ghost-border hover:bg-[#93000a]/20 transition-colors"
-                aria-label="Disconnect Canvas"
+                className="py-2.5 px-5 rounded-sm text-[#ffb4ab] text-sm font-bold bg-[#211f23] hover:bg-[#93000a]/20 transition-colors"
               >
                 Disconnect
               </button>
             ) : (
               <button
                 onClick={handleConnect}
-                className="py-2 px-4 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
-                aria-label="Connect to Canvas"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                className="py-2.5 px-5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold hover:scale-[1.02] transition-all"
+                style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
               >
                 Connect
               </button>
@@ -144,49 +133,37 @@ export default function CanvasPage() {
         {/* Not Connected - Features & Setup */}
         {status === 'disconnected' && (
           <>
-            <section className="bg-[#1d1b1f] rounded-sm p-6">
-              <h2
-                className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-              >
-                WHAT CANVAS INTEGRATION DOES
-              </h2>
+            <section>
+              <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                What Canvas Integration Does
+              </h3>
               <div className="space-y-4">
                 {[
-                  { icon: MdSchool, title: 'Auto-Import Grades', desc: 'Pulls your current semester grades directly into your GPA tracker.' },
-                  { icon: MdSync, title: 'Real-Time Sync', desc: 'Grades update automatically as instructors post them.' },
-                  { icon: MdAnalytics, title: 'MSL Course Detection', desc: 'Automatically identifies Military Science courses for MSL GPA calculation.' },
-                  { icon: MdCalculate, title: 'OML Impact', desc: 'See how grade changes affect your OML score in real time.' },
-                ].map((feature, i) => {
-                  const Icon = feature.icon;
-                  return (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-sm bg-[#450084] flex items-center justify-center shrink-0">
-                        <Icon size={20} className="text-[#b27ff5]" />
-                      </div>
-                      <div className="flex-1">
-                        <span
-                          className="text-sm font-black text-[#e7e1e6] block mb-0.5 uppercase tracking-tight"
-                          style={{ fontFamily: 'Public Sans, sans-serif' }}
-                        >
-                          {feature.title}
-                        </span>
-                        <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>{feature.desc}</span>
-                      </div>
+                  { icon: 'school', title: 'Auto-Import Grades', desc: 'Pulls your current semester grades directly into your GPA tracker.', color: '#f8e19e', bg: '#544511' },
+                  { icon: 'sync', title: 'Real-Time Sync', desc: 'Grades update automatically as instructors post them.', color: '#d9b9ff', bg: '#450084' },
+                  { icon: 'analytics', title: 'MSL Course Detection', desc: 'Automatically identifies Military Science courses for MSL GPA calculation.', color: '#c3cc8c', bg: '#2c3303' },
+                  { icon: 'calculate', title: 'OML Impact', desc: 'See how grade changes affect your OML score in real time.', color: '#dbc585', bg: '#544511' },
+                ].map((feature) => (
+                  <div key={feature.title} className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 flex items-start gap-4 border-l-4" style={{ borderLeftColor: feature.bg }}>
+                    <div className="p-3 rounded-sm" style={{ backgroundColor: feature.bg }}>
+                      <span className="material-symbols-outlined" style={{ color: feature.color, fontVariationSettings: "'FILL' 1" }}>{feature.icon}</span>
                     </div>
-                  );
-                })}
+                    <div>
+                      <span className="text-sm font-black uppercase tracking-tight block mb-0.5" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                        {feature.title}
+                      </span>
+                      <span className="text-sm text-[#968d9d]">{feature.desc}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </section>
 
-            <section className="glass-card ghost-border rounded-sm p-5">
-              <h3
-                className="text-base font-black uppercase tracking-tight text-[#e7e1e6] mb-4"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
+            <section className="glass-panel-canvas rounded-lg p-8">
+              <h3 className="text-lg font-black uppercase tracking-tight mb-6" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                 SETUP INSTRUCTIONS
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {[
                   'Log into your university Canvas portal',
                   'Go to Account > Settings',
@@ -195,16 +172,13 @@ export default function CanvasPage() {
                   'Name it "Duke Vanguard" and generate',
                   'Copy the token and paste it here',
                 ].map((step, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="w-7 h-7 rounded-sm bg-[#450084] flex items-center justify-center shrink-0">
-                      <span
-                        className="text-xs font-bold text-[#b27ff5]"
-                        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                      >
+                  <div key={i} className="flex items-center gap-4">
+                    <div className="w-8 h-8 rounded-sm bg-[#450084] flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-[#d9b9ff]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                         {i + 1}
                       </span>
                     </div>
-                    <span className="text-sm text-[#e7e1e6] flex-1" style={{ fontFamily: 'Inter, sans-serif' }}>{step}</span>
+                    <span className="text-sm text-[#e7e1e6]">{step}</span>
                   </div>
                 ))}
               </div>
@@ -216,83 +190,57 @@ export default function CanvasPage() {
         {status === 'connected' && courses.length > 0 && (
           <>
             {/* GPA Summary */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="glass-card ghost-border rounded-sm flex flex-col items-center py-4 glow-shadow-gold">
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mb-1.5"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
-                  CUMULATIVE GPA
+            <section className="grid grid-cols-2 gap-4">
+              <div className="glass-panel-canvas rounded-lg flex flex-col items-center py-6" style={{ boxShadow: '0 0 20px rgba(219,197,133,0.12)' }}>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Cumulative GPA
                 </span>
-                <span
-                  className="text-2xl font-black text-[#f8e19e]"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
+                <span className="text-4xl font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                   {computedGPA}
                 </span>
               </div>
-              <div className="glass-card ghost-border rounded-sm flex flex-col items-center py-4 glow-shadow-purple">
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mb-1.5"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
+              <div className="glass-panel-canvas rounded-lg flex flex-col items-center py-6" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.2)' }}>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                   MSL GPA
                 </span>
-                <span
-                  className="text-2xl font-black text-[#d9b9ff]"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
+                <span className="text-4xl font-black text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                   {mslGPA ?? '--'}
                 </span>
               </div>
-            </div>
+            </section>
 
             {/* Courses */}
-            <section className="bg-[#1d1b1f] rounded-sm p-6">
-              <h2
-                className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-              >
-                CURRENT COURSES ({courses.length})
-              </h2>
-              <div className="space-y-3">
+            <section>
+              <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                Current Courses ({courses.length})
+              </h3>
+              <div className="space-y-4">
                 {courses.map((course) => (
                   <div
                     key={course.id}
-                    className={`p-4 rounded-sm glass-card ${course.isMilScience ? 'glow-shadow-purple' : 'ghost-border'}`}
+                    className={`bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-6 transition-all border-l-4 ${course.isMilScience ? 'border-[#450084]' : 'border-[#373438]'}`}
+                    style={course.isMilScience ? { boxShadow: '0 0 15px rgba(69,0,132,0.15)' } : undefined}
                   >
                     <div className="flex justify-between items-center">
-                      <div className="flex-1 mr-3">
-                        <span
-                          className="text-[10px] uppercase tracking-[0.2em] text-[#d9b9ff] block"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                        >
+                      <div className="flex-1 mr-4">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-[#d9b9ff] block" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                           {course.code}
                         </span>
-                        <span className="text-sm text-[#e7e1e6] block mt-0.5 truncate" style={{ fontFamily: 'Inter, sans-serif' }}>{course.name}</span>
+                        <span className="text-sm text-[#e7e1e6] block mt-0.5 truncate">{course.name}</span>
                       </div>
                       <div className="text-right">
-                        <span
-                          className="text-xl font-black text-[#f8e19e] block"
-                          style={{ fontFamily: 'Public Sans, sans-serif' }}
-                        >
+                        <span className="text-2xl font-black text-[#f8e19e] block" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                           {course.grade ?? '--'}
                         </span>
-                        <span
-                          className="text-[10px] text-[#968d9d]"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                        >
+                        <span className="text-[10px] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                           {course.credits} cr
                         </span>
                       </div>
                     </div>
                     {course.isMilScience && (
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-[#450084] mt-2">
-                        <MdMilitaryTech size={12} className="text-[#b27ff5]" />
-                        <span
-                          className="text-[10px] font-bold text-[#b27ff5]"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                        >
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm bg-[#450084] mt-3">
+                        <span className="material-symbols-outlined text-xs text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+                        <span className="text-[10px] font-bold text-[#d9b9ff]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                           Military Science
                         </span>
                       </div>
@@ -304,20 +252,16 @@ export default function CanvasPage() {
 
             {/* Auto-sync toggle */}
             <button
-              className="w-full flex items-center p-4 rounded-sm glass-card ghost-border cursor-pointer text-left hover:bg-[#450084]/10 transition-colors"
+              className="w-full bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-6 flex items-center text-left transition-all"
               onClick={() => setAutoSync(!autoSync)}
-              aria-label={`Auto-sync is ${autoSync ? 'on' : 'off'}`}
               role="switch"
               aria-checked={autoSync}
             >
-              <div className="flex-1 mr-3">
-                <span
-                  className="text-base font-black text-[#e7e1e6] block uppercase tracking-tight"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
+              <div className="flex-1 mr-4">
+                <span className="text-base font-black uppercase tracking-tight block" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                   Auto-Sync Grades
                 </span>
-                <span className="text-sm text-[#cdc3d4] block mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>Automatically update grades when you open the app</span>
+                <span className="text-sm text-[#968d9d] block mt-0.5">Automatically update grades when you open the app</span>
               </div>
               <div className={`w-12 h-7 rounded-full relative transition-colors ${autoSync ? 'bg-[#d9b9ff]' : 'bg-[#373438]'}`}>
                 <div className={`w-5 h-5 rounded-full absolute top-1 transition-transform shadow-sm ${autoSync ? 'bg-[#450084] translate-x-[24px]' : 'bg-[#968d9d] translate-x-[3px]'}`} />
@@ -327,8 +271,8 @@ export default function CanvasPage() {
             {/* Import Button */}
             <button
               onClick={handleImportGrades}
-              className="w-full py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              className="w-full py-4 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
+              style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
             >
               Import Grades to OML Engine
             </button>

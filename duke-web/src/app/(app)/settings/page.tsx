@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MdLogout, MdPerson, MdArrowBack } from 'react-icons/md';
-import { VInput } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 import { getSession, signOut } from '@/services/supabase';
 
@@ -44,86 +42,77 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full bg-[#151317]">
-      {/* Header — glass bar */}
-      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center gap-3 shadow-lg shadow-purple-900/20 sticky top-0 z-40">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors">
-          <MdArrowBack size={24} />
-        </button>
-        <h1
-          className="text-lg font-black uppercase tracking-tighter text-[#d9b9ff]"
-          style={{ fontFamily: 'Public Sans, sans-serif' }}
-        >
-          SETTINGS
-        </h1>
-      </header>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-8">
+      <style jsx global>{`
+        .glass-panel-settings { background: rgba(55, 52, 56, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+      `}</style>
+
+      <div className="pt-6 pb-8 px-6 max-w-3xl mx-auto space-y-10">
+
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-tighter text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+            SETTINGS
+          </h1>
+        </div>
+
         {/* Profile Section */}
         <section>
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            PROFILE
+          <h2 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Profile
           </h2>
-          <div className="glass-card ghost-border rounded-sm p-5 space-y-5">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>Year Group</span>
-              <span
-                className="text-base font-black text-[#f8e19e]"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
-                {profile.yearGroup ?? '--'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>Gender</span>
-              <span
-                className="text-base font-black text-[#f8e19e]"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
-                {profile.gender === 'M' ? 'Male' : profile.gender === 'F' ? 'Female' : '--'}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>Age Bracket</span>
-              <span
-                className="text-base font-black text-[#f8e19e]"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
-                {profile.ageBracket ?? '--'}
-              </span>
-            </div>
+          <div className="glass-panel-settings rounded-lg p-6 space-y-5">
+            {[
+              { label: 'Year Group', value: profile.yearGroup ?? '--' },
+              { label: 'Gender', value: profile.gender === 'M' ? 'Male' : profile.gender === 'F' ? 'Female' : '--' },
+              { label: 'Age Bracket', value: profile.ageBracket ?? '--' },
+            ].map((item) => (
+              <div key={item.label} className="flex justify-between items-center">
+                <span className="text-sm text-[#968d9d]">{item.label}</span>
+                <span className="text-base font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                  {item.value}
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* Goals Section */}
-        <section className="bg-[#1d1b1f] rounded-sm p-6">
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            GOALS
+        <section>
+          <h2 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Goals
           </h2>
-          <div className="space-y-4">
-            <VInput
-              label="Target Branch"
-              value={targetBranch}
-              onChangeText={setTargetBranch}
-              placeholder="Infantry"
-            />
-            <VInput
-              label="Goal OML Score"
-              value={goalOml}
-              onChangeText={setGoalOml}
-              placeholder="700"
-              type="number"
-            />
+          <div className="bg-[#1d1b1f] rounded-lg p-6 space-y-5">
+            <div>
+              <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Target Branch</label>
+              <input
+                value={targetBranch}
+                onChange={(e) => setTargetBranch(e.target.value)}
+                placeholder="Infantry"
+                className="w-full bg-[#151317] text-[#e7e1e6] px-4 py-3 rounded-sm outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 placeholder:text-[#968d9d]"
+                style={{ border: 'none' }}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Goal OML Score</label>
+              <input
+                value={goalOml}
+                onChange={(e) => setGoalOml(e.target.value)}
+                placeholder="700"
+                type="number"
+                className="w-full bg-[#151317] text-[#e7e1e6] px-4 py-3 rounded-sm outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 placeholder:text-[#968d9d]"
+                style={{ border: 'none' }}
+              />
+            </div>
             <button
               onClick={handleSaveProfile}
-              className="w-full py-2.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              className="w-full py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
+              style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
             >
               Save Goals
             </button>
@@ -132,13 +121,10 @@ export default function SettingsPage() {
 
         {/* AI Coach Section */}
         <section>
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            AI COACH
+          <h2 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            AI Coach
           </h2>
-          <div className="glass-card ghost-border rounded-sm p-5">
+          <div className="bg-[#211f23] rounded-lg p-6">
             <button
               className="flex items-center justify-between w-full cursor-pointer"
               onClick={() => setAiCoachEnabled(!aiCoachEnabled)}
@@ -146,14 +132,11 @@ export default function SettingsPage() {
               aria-checked={aiCoachEnabled}
               aria-label="Toggle AI Coach"
             >
-              <div className="flex-1 mr-3">
-                <span
-                  className="text-base font-black text-[#e7e1e6] block uppercase tracking-tight"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
+              <div className="flex-1 mr-4">
+                <span className="text-base font-black text-[#e7e1e6] block uppercase tracking-tight" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                   AI Coach
                 </span>
-                <span className="text-sm text-[#cdc3d4] mt-1 block" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <span className="text-sm text-[#968d9d] mt-1 block">
                   Vanguard AI will create and manage goals based on your profile
                 </span>
               </div>
@@ -170,19 +153,16 @@ export default function SettingsPage() {
         </section>
 
         {/* Account Section */}
-        <section className="bg-[#1d1b1f] rounded-sm p-6">
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            ACCOUNT
+        <section>
+          <h2 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Account
           </h2>
-          <div className="glass-card ghost-border rounded-sm p-5">
+          <div className="glass-panel-settings rounded-lg p-6">
             {isAuthenticated ? (
               <>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-11 h-11 rounded-sm bg-[#450084] flex items-center justify-center glow-shadow-purple">
-                    <MdPerson size={22} className="text-[#d9b9ff]" />
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-lg bg-[#450084] flex items-center justify-center" style={{ boxShadow: '0 0 15px rgba(69,0,132,0.3)' }}>
+                    <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
                   </div>
                   <div className="flex-1">
                     <span className="text-sm font-bold text-[#e7e1e6] block">{userEmail}</span>
@@ -195,21 +175,21 @@ export default function SettingsPage() {
                     localStorage.clear();
                     router.replace('/auth');
                   }}
-                  className="flex items-center gap-2 text-sm font-semibold text-[#ffb4ab] cursor-pointer hover:underline mt-2"
+                  className="flex items-center gap-2 text-sm font-semibold text-[#ffb4ab] cursor-pointer hover:text-[#ffb4ab]/80 transition-colors"
                 >
-                  <MdLogout size={16} />
+                  <span className="material-symbols-outlined text-sm">logout</span>
                   Sign Out
                 </button>
               </>
             ) : (
               <>
-                <p className="text-sm text-[#cdc3d4] mb-3" style={{ fontFamily: 'Inter, sans-serif' }}>
+                <p className="text-sm text-[#968d9d] mb-4">
                   You&apos;re using Duke Vanguard without an account. Sign in to save your data across devices.
                 </p>
                 <button
                   onClick={() => router.push('/auth')}
-                  className="w-full py-2.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                  className="w-full py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
                 >
                   Sign In
                 </button>
@@ -220,16 +200,13 @@ export default function SettingsPage() {
 
         {/* App Section */}
         <section>
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            APP
+          <h2 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            App
           </h2>
-          <div className="glass-card ghost-border rounded-sm p-5">
+          <div className="bg-[#211f23] rounded-lg p-6">
             <button
               onClick={handleResetOnboarding}
-              className="w-full py-2.5 rounded-sm glass-card ghost-border text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#450084]/10 transition-colors"
+              className="w-full py-3 rounded-sm bg-[#1d1b1f] text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#2c292d] transition-colors"
             >
               Restart Onboarding
             </button>
@@ -237,20 +214,15 @@ export default function SettingsPage() {
         </section>
 
         {/* About */}
-        <section className="glass-card ghost-border rounded-sm p-6 flex flex-col items-center glow-shadow-purple">
-          <span
-            className="text-lg font-black uppercase tracking-tighter text-[#d9b9ff]"
-            style={{ fontFamily: 'Public Sans, sans-serif' }}
-          >
+        <section className="glass-panel-settings rounded-lg p-8 flex flex-col items-center" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.2)' }}>
+          <span className="material-symbols-outlined text-3xl text-[#d9b9ff] mb-2" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+          <span className="text-lg font-black uppercase tracking-tighter text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
             DUKE VANGUARD
           </span>
-          <span
-            className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d] mt-1"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             Version 0.2.0
           </span>
-          <p className="text-sm text-[#cdc3d4] text-center mt-2 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <p className="text-sm text-[#968d9d] text-center mt-3 leading-relaxed max-w-sm">
             AI-powered OML optimizer for Army ROTC cadets. Built with care for every future officer.
           </p>
         </section>

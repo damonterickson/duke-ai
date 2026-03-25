@@ -2,20 +2,6 @@
 
 import React, { useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  MdSettings,
-  MdEdit,
-  MdFitnessCenter,
-  MdSchool,
-  MdMilitaryTech,
-  MdChevronRight,
-  MdAutoFixHigh,
-  MdLeaderboard,
-  MdLocalFireDepartment,
-  MdCloudUpload,
-  MdAnalytics,
-} from 'react-icons/md';
-import { VConicGauge, VProgressBar } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useSquadStore } from '@/stores/squad';
@@ -24,7 +10,6 @@ import type { OMLConfig, ACFTTables } from '@/engine/oml';
 import omlConfig from '@/data/oml-config.json';
 import acftTables from '@/data/acft-tables.json';
 
-// Inline editable field
 function EditableField({
   value,
   placeholder,
@@ -64,16 +49,17 @@ function EditableField({
         onKeyDown={(e) => e.key === 'Enter' && commit()}
         placeholder={placeholder}
         type={type}
-        className={`bg-[#211f23] text-[#e7e1e6] rounded-sm px-3 py-1.5 min-w-[80px] outline-none focus:ring-1 focus:ring-[#d9b9ff] ${className}`}
+        className={`bg-[#151317] text-[#e7e1e6] rounded-sm px-3 py-1.5 min-w-[80px] outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 ${className}`}
+        style={{ border: 'none' }}
         autoFocus
       />
     );
   }
 
   return (
-    <button onClick={startEditing} className={`flex items-center gap-1.5 cursor-pointer group ${className}`}>
+    <button onClick={startEditing} className={`flex items-center gap-2 cursor-pointer group ${className}`}>
       <span className="text-[#e7e1e6] truncate">{value || placeholder}</span>
-      <MdEdit size={14} className="text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors" />
+      <span className="material-symbols-outlined text-sm text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors">edit</span>
     </button>
   );
 }
@@ -88,7 +74,6 @@ export default function ProfilePage() {
   const gpa = ls?.gpa;
   const acftTotal = ls?.acft_total;
 
-  // Compute OML
   const omlResult = useMemo(() => {
     if (!profile.yearGroup || !profile.gender || !profile.ageBracket) return null;
     try {
@@ -136,316 +121,244 @@ export default function ProfilePage() {
   const streak = squad.weeklyRankHistory?.length ?? 0;
 
   const scoreCards = [
-    {
-      icon: MdFitnessCenter,
-      label: 'ACFT',
-      value: acftTotal != null ? String(Math.round(acftTotal)) : '--',
-      sublabel: 'Total Score',
-      accent: '#c3cc8c',
-    },
-    {
-      icon: MdSchool,
-      label: 'GPA',
-      value: gpa != null ? gpa.toFixed(2) : '--',
-      sublabel: 'Cumulative',
-      accent: '#f8e19e',
-    },
-    {
-      icon: MdMilitaryTech,
-      label: 'Leadership',
-      value: leadershipScore != null ? String(leadershipScore) : '--',
-      sublabel:
-        ls?.leadership_eval != null && ls?.cst_score != null
-          ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}`
-          : 'Eval + CST',
-      accent: '#d9b9ff',
-    },
+    { icon: 'fitness_center', label: 'ACFT', value: acftTotal != null ? String(Math.round(acftTotal)) : '--', sublabel: 'Total Score', accent: '#c3cc8c', bg: '#2c3303' },
+    { icon: 'school', label: 'GPA', value: gpa != null ? gpa.toFixed(2) : '--', sublabel: 'Cumulative', accent: '#f8e19e', bg: '#544511' },
+    { icon: 'military_tech', label: 'Leadership', value: leadershipScore != null ? String(leadershipScore) : '--', sublabel: ls?.leadership_eval != null && ls?.cst_score != null ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}` : 'Eval + CST', accent: '#d9b9ff', bg: '#450084' },
   ];
 
   const quickActions = [
-    { icon: MdCloudUpload, label: 'Upload & Sync', route: '/upload', desc: 'Import documents' },
-    { icon: MdFitnessCenter, label: 'ACFT Log', route: '/acft-log', desc: 'Log fitness tests' },
-    { icon: MdAnalytics, label: 'Intel Brief', route: '/intelligence-brief', desc: 'Full AI analysis' },
-    { icon: MdSchool, label: 'Canvas', route: '/canvas', desc: 'LMS integration' },
+    { icon: 'cloud_upload', label: 'Upload & Sync', route: '/upload', desc: 'Import documents' },
+    { icon: 'fitness_center', label: 'ACFT Log', route: '/acft-log', desc: 'Log fitness tests' },
+    { icon: 'query_stats', label: 'Intel Brief', route: '/intelligence-brief', desc: 'Full AI analysis' },
+    { icon: 'school', label: 'Canvas', route: '/canvas', desc: 'LMS integration' },
   ];
 
   return (
-    <div className="flex flex-col min-h-full bg-[#151317]">
-      <div className="overflow-y-auto pb-20">
-        {/* Glass Header with Profile Info */}
-        <div className="glass-card bg-[#151317]/60 backdrop-blur-2xl px-4 md:px-6 pt-4 pb-6 shadow-lg shadow-purple-900/20">
-          <div className="flex items-center justify-between mb-4">
-            <span
-              className="text-xs uppercase tracking-[0.3em] text-[#968d9d]"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
-              COMMAND PROFILE
-            </span>
-            <button
-              onClick={() => router.push('/settings')}
-              aria-label="Settings"
-              className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors"
-            >
-              <MdSettings size={22} />
-            </button>
-          </div>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-          <div className="flex items-start gap-4 max-w-lg mx-auto md:max-w-2xl">
-            {/* Avatar */}
-            <div className="w-[72px] h-[72px] rounded-sm bg-[#450084] flex items-center justify-center shrink-0 glow-shadow-purple">
-              <span
-                className="text-xl font-black text-[#d9b9ff]"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
-                {initials}
-              </span>
+      <style jsx global>{`
+        .glass-panel-profile { background: rgba(55, 52, 56, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+      `}</style>
+
+      <div className="pt-6 pb-8 px-6 max-w-7xl mx-auto space-y-12">
+
+        {/* Profile Header */}
+        <section className="relative">
+          <div className="glass-panel-profile p-10 md:p-12 rounded-lg relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-30 transition-opacity">
+              <span className="material-symbols-outlined text-[120px]">person</span>
             </div>
-
-            {/* Fields */}
-            <div className="flex-1 flex flex-col gap-1.5">
-              <EditableField
-                value={profile.name ?? ''}
-                placeholder="Cadet Name"
-                onSave={(v) => profile.updateProfile({ name: v })}
-                className="text-xl font-black [&_span]:text-[#e7e1e6] [&_svg]:text-[#968d9d]"
-              />
-              <span
-                className="text-xs uppercase tracking-[0.3em] text-[#968d9d]"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-              >
-                {profile.yearGroup ?? 'MSI'} Cadet
-              </span>
-              <div className="flex items-center gap-2 mt-1">
-                <span
-                  className="text-[10px] text-[#968d9d] min-w-[64px] uppercase tracking-[0.2em]"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
-                  Branch
+            <div className="relative z-10 flex items-start gap-6">
+              {/* Avatar */}
+              <div className="w-[80px] h-[80px] rounded-lg bg-[#450084] flex items-center justify-center shrink-0" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}>
+                <span className="text-2xl font-black text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                  {initials}
                 </span>
-                <EditableField
-                  value={profile.targetBranch ?? ''}
-                  placeholder="Target Branch"
-                  onSave={(v) => profile.updateProfile({ targetBranch: v })}
-                  className="text-sm [&_span]:text-[#cdc3d4] [&_svg]:text-[#968d9d]"
-                />
               </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className="text-[10px] text-[#968d9d] min-w-[64px] uppercase tracking-[0.2em]"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
-                  Goal OML
-                </span>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="px-3 py-1 bg-[#450084] text-[#d9b9ff] text-[10px] tracking-[0.2em] uppercase font-bold rounded-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    Command Profile
+                  </span>
+                  <button
+                    onClick={() => router.push('/settings')}
+                    className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-xl">settings</span>
+                  </button>
+                </div>
                 <EditableField
-                  value={profile.goalOml != null ? String(profile.goalOml) : ''}
-                  placeholder="0-1000"
-                  onSave={(v) => {
-                    const n = parseInt(v, 10);
-                    if (!isNaN(n) && n >= 0 && n <= 1000) {
-                      profile.updateProfile({ goalOml: n });
-                    }
-                  }}
-                  type="number"
-                  className="text-sm [&_span]:text-[#cdc3d4] [&_svg]:text-[#968d9d]"
+                  value={profile.name ?? ''}
+                  placeholder="Cadet Name"
+                  onSave={(v) => profile.updateProfile({ name: v })}
+                  className="text-2xl font-black [&_span]:text-[#e7e1e6]"
                 />
+                <span className="text-xs uppercase tracking-[0.3em] text-[#968d9d] block" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  {profile.yearGroup ?? 'MSI'} Cadet
+                </span>
+                <div className="flex items-center gap-4 mt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Branch</span>
+                    <EditableField
+                      value={profile.targetBranch ?? ''}
+                      placeholder="Target Branch"
+                      onSave={(v) => profile.updateProfile({ targetBranch: v })}
+                      className="text-sm [&_span]:text-[#cdc3d4]"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Goal OML</span>
+                    <EditableField
+                      value={profile.goalOml != null ? String(profile.goalOml) : ''}
+                      placeholder="0-1000"
+                      onSave={(v) => {
+                        const n = parseInt(v, 10);
+                        if (!isNaN(n) && n >= 0 && n <= 1000) {
+                          profile.updateProfile({ goalOml: n });
+                        }
+                      }}
+                      type="number"
+                      className="text-sm [&_span]:text-[#cdc3d4]"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Content */}
-        <div className="px-4 md:px-6 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-8 mt-6">
+        {/* OML Command Center + Score Cards Grid */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
           {/* OML Command Center */}
-          <section className="glass-card ghost-border rounded-sm p-6 glow-shadow-purple">
-            <h2
-              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
-              OML COMMAND CENTER
-            </h2>
-            <div className="flex justify-center mb-4">
-              <VConicGauge
-                progress={Math.min(oml / 1000, 1)}
-                size={240}
-                strokeWidth={14}
-                label={oml > 0 ? String(Math.round(oml)) : '--'}
-                sublabel="/ 1000"
-              />
-            </div>
-            <p className="text-sm italic text-center text-[#cdc3d4] mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>
-              {oml > 0
-                ? 'Performance trajectory: holding steady'
-                : 'Enter scores to compute your OML'}
-            </p>
-            <div className="flex gap-3 mb-4">
-              <div className="flex-1 flex flex-col items-center p-3 rounded-sm bg-[#1d1b1f]">
-                <span
-                  className="text-xl font-black text-[#f8e19e]"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
-                  {oml > 0 ? `${Math.round((oml / 1000) * 100)}%` : '--'}
-                </span>
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
-                  OML Percentile
-                </span>
+          <div className="lg:col-span-1">
+            <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              OML Command Center
+            </h3>
+            <div className="glass-panel-profile p-8 rounded-lg flex flex-col items-center">
+              <div className="relative w-[220px] h-[220px] mb-4">
+                <svg viewBox="0 0 220 220" className="w-full h-full -rotate-90">
+                  <circle cx="110" cy="110" r="95" fill="none" stroke="#373438" strokeWidth="14" />
+                  <circle
+                    cx="110" cy="110" r="95" fill="none"
+                    stroke="url(#omlGradProfile)" strokeWidth="14"
+                    strokeDasharray={`${Math.min(oml / 1000, 1) * 597} 597`}
+                    strokeLinecap="round"
+                    style={{ filter: 'drop-shadow(0 0 8px rgba(219,197,133,0.4))' }}
+                  />
+                  <defs>
+                    <linearGradient id="omlGradProfile" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#d9b9ff" />
+                      <stop offset="100%" stopColor="#dbc585" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl font-black text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif', filter: 'drop-shadow(0 0 10px rgba(219,197,133,0.3))' }}>
+                    {oml > 0 ? Math.round(oml) : '--'}
+                  </span>
+                  <span className="text-sm text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>/ 1000</span>
+                </div>
               </div>
-              <div className="flex-1 flex flex-col items-center p-3 rounded-sm bg-[#1d1b1f]">
-                <span
-                  className="text-xl font-black text-[#c3cc8c]"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
-                  {acftTotal != null ? 'GREEN' : '--'}
-                </span>
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
-                  Active Readiness
-                </span>
+              <p className="text-sm italic text-center text-[#968d9d] mb-4">
+                {oml > 0 ? 'Performance trajectory: holding steady' : 'Enter scores to compute your OML'}
+              </p>
+              <div className="grid grid-cols-2 gap-3 w-full">
+                <div className="bg-[#1d1b1f] rounded-sm p-3 flex flex-col items-center">
+                  <span className="text-xl font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                    {oml > 0 ? `${Math.round((oml / 1000) * 100)}%` : '--'}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    OML Percentile
+                  </span>
+                </div>
+                <div className="bg-[#1d1b1f] rounded-sm p-3 flex flex-col items-center">
+                  <span className="text-xl font-black text-[#c3cc8c]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                    {acftTotal != null ? 'GREEN' : '--'}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    Active Readiness
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex justify-center">
               <button
-                className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-[#544511] text-[#dbc585] text-sm font-bold cursor-pointer hover:bg-[#544511]/80 transition-all shadow-lg shadow-[#544511]/20"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                className="mt-5 flex items-center gap-2 px-5 py-2.5 rounded-sm bg-[#544511] text-[#dbc585] text-sm font-bold hover:scale-[1.02] transition-all"
+                style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 15px rgba(84,69,17,0.3)' }}
                 onClick={() => router.push('/what-if')}
-                aria-label="What-If scenario planner"
               >
-                <MdAutoFixHigh size={18} />
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>auto_fix_high</span>
                 What If?
               </button>
             </div>
-          </section>
+          </div>
 
-          {/* Score Cards */}
-          <section>
-            <h2
-              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
-              PERFORMANCE OVERVIEW
-            </h2>
-            <div className="space-y-3">
-              {scoreCards.map((card, i) => {
-                const Icon = card.icon;
-                return (
-                  <button
-                    key={i}
-                    className="w-full flex items-center gap-4 p-4 rounded-sm glass-card ghost-border cursor-pointer hover:bg-[#450084]/10 transition-all text-left group"
+          {/* Right: Score Cards + Quick Actions */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Score Cards */}
+            <div>
+              <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                Performance Overview
+              </h3>
+              <div className="space-y-4">
+                {scoreCards.map((card) => (
+                  <div
+                    key={card.label}
+                    className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 flex items-center gap-5 border-l-4 cursor-pointer group"
+                    style={{ borderLeftColor: card.bg }}
                     onClick={() => router.push('/profile')}
-                    aria-label={`View ${card.label} details`}
                   >
-                    <div className="w-11 h-11 rounded-sm bg-[#450084] flex items-center justify-center shrink-0">
-                      <Icon size={22} className="text-[#b27ff5]" />
+                    <div className="p-3 rounded-sm" style={{ backgroundColor: card.bg }}>
+                      <span className="material-symbols-outlined" style={{ color: card.accent, fontVariationSettings: "'FILL' 1" }}>{card.icon}</span>
                     </div>
                     <div className="flex-1">
-                      <span
-                        className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block"
-                        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                      >
-                        {card.label}
-                      </span>
-                      <span
-                        className="text-2xl font-black block mt-0.5"
-                        style={{ fontFamily: 'Public Sans, sans-serif', color: card.accent }}
-                      >
+                      <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>{card.label}</span>
+                      <span className="text-3xl font-black block mt-0.5" style={{ fontFamily: 'Public Sans, sans-serif', color: card.accent }}>
                         {card.value}
                       </span>
-                      <span className="text-xs text-[#968d9d] block mt-0.5 truncate">
-                        {card.sublabel}
-                      </span>
+                      <span className="text-xs text-[#968d9d] block mt-0.5 truncate">{card.sublabel}</span>
                     </div>
-                    <MdChevronRight size={24} className="text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors" />
-                  </button>
-                );
-              })}
+                    <span className="material-symbols-outlined text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors">chevron_right</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </section>
 
-          {/* Quick Actions */}
-          <section>
-            <h2
-              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
-              QUICK ACTIONS
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action, i) => {
-                const Icon = action.icon;
-                return (
+            {/* Quick Actions */}
+            <div>
+              <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {quickActions.map((action) => (
                   <button
-                    key={i}
-                    className="flex flex-col items-center py-5 px-3 rounded-sm glass-card ghost-border cursor-pointer hover:glow-shadow-purple transition-all gap-2"
+                    key={action.label}
                     onClick={() => router.push(action.route)}
-                    aria-label={action.label}
+                    className="bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-5 flex flex-col items-center gap-3 transition-all hover:scale-[1.02]"
+                    style={{ boxShadow: 'none' }}
                   >
-                    <div className="w-10 h-10 rounded-sm bg-[#450084] flex items-center justify-center">
-                      <Icon size={22} className="text-[#b27ff5]" />
-                    </div>
-                    <span
-                      className="text-sm font-black text-[#e7e1e6] uppercase tracking-tight"
-                      style={{ fontFamily: 'Public Sans, sans-serif' }}
-                    >
+                    <span className="material-symbols-outlined text-2xl text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>{action.icon}</span>
+                    <span className="text-sm font-black text-[#e7e1e6] uppercase tracking-tight" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                       {action.label}
                     </span>
-                    <span className="text-xs text-[#968d9d]" style={{ fontFamily: 'Inter, sans-serif' }}>{action.desc}</span>
+                    <span className="text-xs text-[#968d9d]">{action.desc}</span>
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </section>
+          </div>
+        </section>
 
-          {/* Vanguard Status */}
-          <section className="glass-card ghost-border rounded-sm p-5 glow-shadow-gold">
-            <span
-              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4 block"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
-              VANGUARD STATUS
-            </span>
-            <div className="flex items-center">
-              <div className="flex-1 flex flex-col items-center gap-1.5">
-                <MdLeaderboard size={22} className="text-[#d9b9ff]" />
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
+        {/* Vanguard Status */}
+        <section>
+          <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Vanguard Status
+          </h3>
+          <div className="glass-panel-profile p-8 rounded-lg" style={{ boxShadow: '0 0 30px rgba(219,197,133,0.1)' }}>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="flex flex-col items-center gap-2">
+                <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>leaderboard</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                   Battalion Rank
                 </span>
-                <span
-                  className="text-2xl font-black text-[#f8e19e]"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
+                <span className="text-3xl font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                   #{squad.individualRank}
-                  <span className="text-sm font-normal text-[#968d9d]">
-                    {' '}/ {squad.totalCadets}
-                  </span>
+                  <span className="text-sm font-normal text-[#968d9d]"> / {squad.totalCadets}</span>
                 </span>
               </div>
-              <div className="w-[1px] h-12 bg-[rgba(75,68,82,0.15)] mx-4" />
-              <div className="flex-1 flex flex-col items-center gap-1.5">
-                <MdLocalFireDepartment size={22} className="text-[#dbc585]" />
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
+              <div className="flex flex-col items-center gap-2">
+                <span className="material-symbols-outlined text-[#dbc585]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                   Streak
                 </span>
-                <span
-                  className="text-2xl font-black text-[#f8e19e]"
-                  style={{ fontFamily: 'Public Sans, sans-serif' }}
-                >
+                <span className="text-3xl font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                   {streak}
                   <span className="text-sm font-normal text-[#968d9d]"> weeks</span>
                 </span>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </div>
     </div>
   );

@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { VInput } from '@/components';
 
 export default function LeadershipPage() {
   const router = useRouter();
@@ -22,64 +21,76 @@ export default function LeadershipPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 bg-[#151317] min-h-screen max-w-lg mx-auto">
+    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 max-w-lg mx-auto w-full">
       <span
-        className="text-xs uppercase tracking-[0.3em] text-[#d9b9ff] mb-2"
+        className="text-[10px] uppercase tracking-[0.2em] text-[#dbc585] mb-3"
         style={{ fontFamily: 'Space Grotesk, sans-serif' }}
       >
-        STEP 4 OF 5
+        STEP 04 OF 05
       </span>
+
       <h1
         className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2"
         style={{ fontFamily: 'Public Sans, sans-serif' }}
       >
         LEADERSHIP EVALUATION
       </h1>
-      <p className="text-sm text-[#cdc3d4] mb-8 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      <p className="text-sm text-[#968d9d] mb-8 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
         Your commander&apos;s assessment score is a key OML pillar. Enter it below or skip for now.
       </p>
 
-      <div className="glass-card ghost-border rounded-sm p-5">
-        <VInput
-          label="Commander's Assessment Score (optional)"
-          value={leadershipEval}
-          onChangeText={(v) => {
-            setLeadershipEval(v);
-            setError('');
-          }}
-          placeholder="85"
-          type="number"
-          helperText="Your most recent commander's assessment (0-100). You can add this later if you don't have it handy."
-          error={!!error}
-          errorText={error}
-        />
+      {/* Glass panel for input */}
+      <div className="glass-panel-ob rounded-sm p-6">
+        <div className="flex flex-col gap-1.5">
+          <label
+            className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            Commander&apos;s Assessment Score (optional)
+          </label>
+          <input
+            type="number"
+            value={leadershipEval}
+            onChange={(e) => { setLeadershipEval(e.target.value); setError(''); }}
+            placeholder="85"
+            min="0"
+            max="100"
+            className="bg-[#151317] text-[#e7e1e6] px-4 py-3 rounded-sm outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 placeholder:text-[#968d9d]/50 text-base transition-all"
+            style={{ fontFamily: 'Inter, sans-serif', border: 'none' }}
+          />
+          <span className="text-xs text-[#968d9d]/70 mt-0.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+            Your most recent commander&apos;s assessment (0-100). You can add this later.
+          </span>
+          {error && (
+            <span className="text-xs text-[#ffb4ab] mt-1">{error}</span>
+          )}
+        </div>
       </div>
 
-      <div className="glass-card ghost-border rounded-sm p-4 mt-4">
-        <p className="text-sm text-[#cdc3d4] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-          Don&apos;t worry if you don&apos;t have this yet. You can log leadership
-          activities, command roles, and extracurriculars in detail after setup.
-        </p>
+      {/* Descriptive info panel */}
+      <div className="glass-surface-ob rounded-sm p-5 mt-4 flex gap-4 items-start">
+        <div className="p-3 rounded-sm bg-[#450084] flex-shrink-0">
+          <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>info</span>
+        </div>
+        <div>
+          <p className="text-sm text-[#968d9d] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+            Don&apos;t worry if you don&apos;t have this yet. You can log leadership
+            activities, command roles, and extracurriculars in detail after setup.
+            Leadership evaluation contributes to your overall OML ranking.
+          </p>
+        </div>
       </div>
 
-      <div className="mt-auto pb-8">
+      <div className="mt-auto pb-4">
         <button
           onClick={handleNext}
-          className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
+          className="w-full py-4 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:scale-[1.01] transition-all glow-purple-ob flex items-center justify-center gap-2"
           style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         >
+          <span className="material-symbols-outlined text-base">arrow_forward</span>
           Next
         </button>
-      </div>
-
-      {/* Progress dots */}
-      <div className="flex justify-center gap-2 pb-6">
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#d9b9ff]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
       </div>
     </div>
   );

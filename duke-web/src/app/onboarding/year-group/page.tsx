@@ -4,15 +4,14 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProfileStore } from '@/stores/profile';
 
-const YEAR_GROUPS = ['MSI', 'MSII', 'MSIII', 'MSIV'] as const;
-type YearGroup = (typeof YEAR_GROUPS)[number];
+const YEAR_GROUPS = [
+  { key: 'MSI', label: 'MSI', subtitle: 'Foundation', desc: 'Military Science I' },
+  { key: 'MSII', label: 'MSII', subtitle: 'Development', desc: 'Military Science II' },
+  { key: 'MSIII', label: 'MSIII', subtitle: 'Advancement', desc: 'Military Science III' },
+  { key: 'MSIV', label: 'MSIV', subtitle: 'Commissioning', desc: 'Military Science IV' },
+] as const;
 
-const yearDescriptions: Record<YearGroup, string> = {
-  MSI: 'Military Science I - Freshman',
-  MSII: 'Military Science II - Sophomore',
-  MSIII: 'Military Science III - Junior',
-  MSIV: 'Military Science IV - Senior',
-};
+type YearGroup = (typeof YEAR_GROUPS)[number]['key'];
 
 export default function YearGroupPage() {
   const router = useRouter();
@@ -30,66 +29,78 @@ export default function YearGroupPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 bg-[#151317] min-h-screen max-w-lg mx-auto">
+    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 max-w-lg mx-auto w-full">
       <span
-        className="text-xs uppercase tracking-[0.3em] text-[#d9b9ff] mb-2"
+        className="text-[10px] uppercase tracking-[0.2em] text-[#dbc585] mb-3"
         style={{ fontFamily: 'Space Grotesk, sans-serif' }}
       >
-        STEP 1 OF 5
+        STEP 01 OF 05
       </span>
+
       <h1
         className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2"
         style={{ fontFamily: 'Public Sans, sans-serif' }}
       >
         WHAT YEAR ARE YOU?
       </h1>
-      <p className="text-sm text-[#cdc3d4] mb-8 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      <p className="text-sm text-[#968d9d] mb-8 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
         This determines how your OML score is weighted and evaluated.
       </p>
 
-      <div className="flex flex-col gap-3 mb-8">
+      <div className="grid grid-cols-1 gap-3 mb-8">
         {YEAR_GROUPS.map((yg) => (
           <button
-            key={yg}
-            onClick={() => setSelected(yg)}
-            className={`min-h-[60px] px-5 rounded-sm text-left cursor-pointer transition-all ${
-              selected === yg
-                ? 'bg-[#450084] text-[#b27ff5] shadow-lg shadow-[#450084]/30 glow-shadow-purple'
-                : 'glass-card ghost-border text-[#e7e1e6] hover:bg-[#450084]/10'
-            } flex flex-col justify-center`}
+            key={yg.key}
+            onClick={() => setSelected(yg.key)}
+            className={`p-5 rounded-sm text-left cursor-pointer transition-all ${
+              selected === yg.key
+                ? 'bg-[#450084] glow-purple-ob'
+                : 'glass-surface-ob hover:bg-[#2c292d]'
+            }`}
           >
-            <span
-              className={`text-base font-black uppercase tracking-tight ${selected === yg ? 'text-[#b27ff5]' : 'text-[#e7e1e6]'}`}
-              style={{ fontFamily: 'Public Sans, sans-serif' }}
-            >
-              {yg}
-            </span>
-            <span className={`text-xs mt-0.5 ${selected === yg ? 'text-[#d9b9ff]/80' : 'text-[#968d9d]'}`}>
-              {yearDescriptions[yg]}
-            </span>
+            <div className="flex items-center justify-between">
+              <div>
+                <span
+                  className={`text-lg font-black uppercase tracking-tight block ${
+                    selected === yg.key ? 'text-[#b27ff5]' : 'text-[#e7e1e6]'
+                  }`}
+                  style={{ fontFamily: 'Public Sans, sans-serif' }}
+                >
+                  {yg.label}
+                </span>
+                <span
+                  className={`text-[10px] uppercase tracking-[0.2em] ${
+                    selected === yg.key ? 'text-[#d9b9ff]/70' : 'text-[#968d9d]'
+                  }`}
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  {yg.subtitle}
+                </span>
+              </div>
+              <span
+                className={`text-xs ${
+                  selected === yg.key ? 'text-[#d9b9ff]/60' : 'text-[#968d9d]/60'
+                }`}
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                {yg.desc}
+              </span>
+            </div>
           </button>
         ))}
       </div>
 
-      <div className="mt-auto pb-8">
+      <div className="mt-auto pb-4">
         <button
           onClick={handleNext}
           disabled={!selected}
-          className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer disabled:opacity-40 transition-all shadow-lg shadow-[#450084]/20"
+          className="w-full py-4 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer disabled:opacity-30 transition-all glow-purple-ob flex items-center justify-center gap-2"
           style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         >
+          <span className="material-symbols-outlined text-base">arrow_forward</span>
           Next
         </button>
-      </div>
-
-      {/* Progress dots */}
-      <div className="flex justify-center gap-2 pb-6">
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#d9b9ff]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
       </div>
     </div>
   );
