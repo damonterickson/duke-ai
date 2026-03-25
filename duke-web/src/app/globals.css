@@ -1,96 +1,16 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Duke Vanguard — Design Tokens as CSS Custom Properties
-   Light theme is default. Dark theme via [data-theme="dark"].
+   Duke Vanguard — Kinetic Command Design System
+   Creative North Star: The Tactical Vanguard
+
+   No-Line Rule: borders prohibited for sectioning.
+   Hierarchy through surface transitions, blur, and spacing.
+   Glow shadows, not black shadows. Light comes from within.
    ============================================================ */
 
 :root {
-  /* Primary (Army Olive) */
-  --color-primary: #343c0a;
-  --color-primary-container: #4b5320;
-  --color-on-primary: #ffffff;
-  --color-on-primary-container: #bdc787;
-  --color-primary-fixed: #dfe8a6;
-  --color-primary-fixed-dim: #c3cc8c;
-  --color-inverse-primary: #c3cc8c;
-
-  /* Secondary (Royal Purple) */
-  --color-secondary: #7643b6;
-  --color-secondary-container: #bc88ff;
-  --color-on-secondary: #ffffff;
-  --color-on-secondary-container: #4d118c;
-
-  /* Tertiary (Warm Gold) */
-  --color-tertiary: #6b5d2d;
-  --color-tertiary-container: #bcaa72;
-  --color-on-tertiary: #ffffff;
-  --color-on-tertiary-container: #4b3e11;
-
-  /* Surface Tiers */
-  --color-surface: #fbf9f8;
-  --color-surface-dim: #dbdad9;
-  --color-surface-bright: #fbf9f8;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f5f3f3;
-  --color-surface-container: #efeded;
-  --color-surface-container-high: #eae8e7;
-  --color-surface-container-highest: #e4e2e2;
-  --color-surface-variant: #e4e2e2;
-  --color-surface-tint: #5a632e;
-
-  /* On-colors */
-  --color-on-surface: #1b1c1c;
-  --color-on-surface-variant: #47483c;
-  --color-background: #fbf9f8;
-  --color-on-background: #1b1c1c;
-
-  /* Inverse */
-  --color-inverse-surface: #303030;
-  --color-inverse-on-surface: #f2f0f0;
-
-  /* Semantic */
-  --color-error: #ba1a1a;
-  --color-error-container: #ffdad6;
-  --color-on-error: #ffffff;
-  --color-on-error-container: #93000a;
-  --color-outline: #77786b;
-  --color-outline-variant: #c8c7b8;
-
-  /* Gradients */
-  --gradient-primary-start: #343c0a;
-  --gradient-primary-end: #4b5320;
-  --gradient-secondary-start: #7643b6;
-  --gradient-secondary-end: #9b6dd4;
-  --gradient-gold-start: #6b5d2d;
-  --gradient-gold-end: #bcaa72;
-
-  /* Glass */
-  --glass-overlay: rgba(245, 243, 243, 0.70);
-  --glass-blur: 20px;
-  --ghost-border: rgba(200, 199, 184, 0.20);
-
-  /* Shadows */
-  --shadow-color: rgba(52, 60, 10, 0.12);
-  --shadow-lg: 0 8px 24px var(--shadow-color);
-  --shadow-md: 0 4px 16px var(--shadow-color);
-  --shadow-sm: 0 2px 8px var(--shadow-color);
-
-  /* Typography */
-  --font-display: 'Public Sans', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
-  --font-label: 'Space Grotesk', system-ui, sans-serif;
-
-  /* Accent for highlights */
-  --color-accent: #7643b6;
-  --color-success: #2d6a2e;
-  --color-warning: #6b5d2d;
-}
-
-/* ============================================================
-   Dark Theme (Kinetic Command)
-   ============================================================ */
-[data-theme="dark"] {
+  /* Primary (Command Purple) */
   --color-primary: #d9b9ff;
   --color-primary-container: #450084;
   --color-on-primary: #460185;
@@ -99,16 +19,21 @@
   --color-primary-fixed-dim: #d9b9ff;
   --color-inverse-primary: #7643b6;
 
+  /* Secondary (Duke Gold) */
   --color-secondary: #dbc585;
   --color-secondary-container: #544511;
   --color-on-secondary: #3c2f00;
   --color-on-secondary-container: #c9b475;
+  --color-secondary-fixed: #f8e19e;
 
+  /* Tertiary (Tactical Olive) */
   --color-tertiary: #c3cc8c;
   --color-tertiary-container: #2c3303;
   --color-on-tertiary: #2d3404;
   --color-on-tertiary-container: #939d61;
+  --color-tertiary-fixed: #dfe8a6;
 
+  /* Surface Hierarchy (The Void → Tactical Layers) */
   --color-surface: #151317;
   --color-surface-dim: #151317;
   --color-surface-bright: #3b383d;
@@ -120,14 +45,17 @@
   --color-surface-variant: #373438;
   --color-surface-tint: #d9b9ff;
 
+  /* On-colors */
   --color-on-surface: #e7e1e6;
   --color-on-surface-variant: #cdc3d4;
   --color-background: #151317;
   --color-on-background: #e7e1e6;
 
+  /* Inverse */
   --color-inverse-surface: #e7e1e6;
   --color-inverse-on-surface: #322f34;
 
+  /* Semantic */
   --color-error: #ffb4ab;
   --color-error-container: #93000a;
   --color-on-error: #690005;
@@ -135,25 +63,40 @@
   --color-outline: #968d9d;
   --color-outline-variant: #4b4452;
 
+  /* Gradients (Signature Lithic Textures) */
   --gradient-primary-start: #450084;
   --gradient-primary-end: #d9b9ff;
   --gradient-secondary-start: #544511;
   --gradient-secondary-end: #dbc585;
   --gradient-gold-start: #544511;
-  --gradient-gold-end: #dbc585;
+  --gradient-gold-end: #f8e19e;
 
-  --glass-overlay: rgba(55, 52, 56, 0.50);
+  /* Glass (Atmospheric Depth) */
+  --glass-overlay: rgba(55, 52, 56, 0.60);
   --glass-blur: 24px;
-  --ghost-border: rgba(75, 68, 82, 0.20);
+  --ghost-border: rgba(75, 68, 82, 0.15);
 
-  --shadow-color: rgba(0, 0, 0, 0.3);
+  /* Glow Shadows (Light from within) */
+  --shadow-color: rgba(69, 0, 132, 0.15);
+  --shadow-lg: 0 8px 30px rgba(69, 0, 132, 0.2);
+  --shadow-md: 0 4px 20px rgba(69, 0, 132, 0.15);
+  --shadow-sm: 0 2px 12px rgba(69, 0, 132, 0.1);
+  --shadow-gold: 0 0 30px rgba(219, 197, 133, 0.15);
+  --shadow-purple: 0 0 50px rgba(69, 0, 132, 0.3);
+
+  /* Typography */
+  --font-display: 'Public Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-label: 'Space Grotesk', system-ui, sans-serif;
+
+  /* Accents */
   --color-accent: #d9b9ff;
-  --color-success: #a8d5a9;
+  --color-success: #c3cc8c;
   --color-warning: #dbc585;
 }
 
 /* ============================================================
-   Base Styles
+   Base Styles — The Void
    ============================================================ */
 html {
   font-family: var(--font-body);
@@ -168,20 +111,20 @@ body {
   background-color: var(--color-background);
 }
 
-/* Smooth theme transitions */
+/* Smooth transitions */
 *, *::before, *::after {
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
 /* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--color-outline-variant); border-radius: 2px; }
 
 /* Selection */
 ::selection {
-  background: var(--color-primary-fixed-dim);
-  color: var(--color-on-surface);
+  background: var(--color-primary-container);
+  color: var(--color-primary);
 }
 
 /* Focus ring */
@@ -191,15 +134,24 @@ body {
 }
 
 /* ============================================================
-   Utility Classes
+   Kinetic Command Utility Classes
    ============================================================ */
+
+/* Glassmorphism — Active Tactical Layer */
 .glass-panel {
   background: var(--glass-overlay);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  border: 1px solid var(--ghost-border);
 }
 
+/* Glass Card — from landing page */
+.glass-card {
+  background: rgba(69, 0, 132, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Gradients (Signature Lithic Textures) */
 .gradient-primary {
   background: linear-gradient(135deg, var(--gradient-primary-start), var(--gradient-primary-end));
 }
@@ -212,10 +164,20 @@ body {
   background: linear-gradient(135deg, var(--gradient-gold-start), var(--gradient-gold-end));
 }
 
+/* Glow Shadows */
 .shadow-glow {
   box-shadow: var(--shadow-lg);
 }
 
+.glow-shadow-gold {
+  box-shadow: var(--shadow-gold);
+}
+
+.glow-shadow-purple {
+  box-shadow: var(--shadow-purple);
+}
+
+/* Text gradient */
 .text-gradient {
   background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   -webkit-background-clip: text;
@@ -223,22 +185,26 @@ body {
   background-clip: text;
 }
 
-/* Kinetic Command visual effects */
+/* Kinetic Grid Background */
 .kinetic-grid {
   background-image: radial-gradient(circle at 2px 2px, rgba(217, 185, 255, 0.05) 1px, transparent 0);
   background-size: 40px 40px;
 }
 
-.glass-card {
-  background: rgba(69, 0, 132, 0.1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* Ghost Border — felt, not seen */
+.ghost-border {
+  border: 1px solid var(--ghost-border);
 }
 
-.glow-shadow-gold {
-  box-shadow: 0 0 30px rgba(219, 197, 133, 0.15);
-}
+/* Surface transitions for No-Line hierarchy */
+.surface-void { background-color: #151317; }
+.surface-muted { background-color: #211f23; }
+.surface-raised { background-color: #2c292d; }
+.surface-elevated { background-color: #373438; }
+.surface-action { background-color: #450084; }
 
-.glow-shadow-purple {
-  box-shadow: 0 0 50px rgba(69, 0, 132, 0.3);
+/* Shimmer animation for skeleton loaders */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

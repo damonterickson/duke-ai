@@ -75,27 +75,36 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--color-background)]">
+    <div className="flex flex-col min-h-screen bg-[#151317] kinetic-grid">
       <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto">
         {/* Brand */}
-        <span className="text-xs font-bold tracking-[4px] uppercase text-[var(--color-primary)] mb-6 font-[family-name:var(--font-label)]">
+        <span
+          className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-6"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
           DUKE VANGUARD
         </span>
-        <div className="w-20 h-20 rounded-md gradient-primary flex items-center justify-center mb-4 shadow-glow">
-          <MdShield size={48} className="text-white" />
+        <div className="w-20 h-20 rounded-sm bg-[#450084] flex items-center justify-center mb-4 glow-shadow-purple">
+          <MdShield size={48} className="text-[#d9b9ff]" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-[var(--color-on-surface)] text-center mb-1 font-[family-name:var(--font-display)]">
-          Your OML Mentor
+        <h1
+          className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-[#e7e1e6] text-center mb-1"
+          style={{ fontFamily: 'Public Sans, sans-serif' }}
+        >
+          YOUR OML MENTOR
         </h1>
-        <p className="text-sm md:text-base text-[var(--color-on-surface-variant)] text-center mb-8 leading-relaxed max-w-sm">
+        <p className="text-sm md:text-base text-[#cdc3d4] text-center mb-8 leading-relaxed max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
           AI-powered Order of Merit List optimizer for Army ROTC cadets.
           Sign in to save your progress across devices.
         </p>
 
         {state === 'input' ? (
-          <>
+          <div className="w-full glass-card ghost-border rounded-sm p-6 space-y-4">
             {/* Email input */}
-            <label className="text-xs font-bold text-[var(--color-on-surface-variant)] uppercase tracking-widest mb-2 self-start font-[family-name:var(--font-label)]">
+            <label
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-1 block"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
               Email Address
             </label>
             <input
@@ -106,20 +115,22 @@ export default function AuthPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              className="w-full border border-[var(--color-outline-variant)] bg-[var(--color-surface-container-low)] text-[var(--color-on-surface)] rounded-md px-4 py-3.5 text-sm mb-3 outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/30 transition-all placeholder:text-[var(--color-outline)]"
+              className="w-full bg-[#211f23] text-[#e7e1e6] rounded-sm px-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 transition-all placeholder:text-[#968d9d]"
+              style={{ border: 'none' }}
             />
             {error && (
-              <span className="text-xs font-semibold text-[var(--color-error)] mb-3 text-center">{error}</span>
+              <span className="text-xs font-semibold text-[#ffb4ab] text-center block">{error}</span>
             )}
 
             {/* Sign In button */}
             <button
-              className="w-full py-3.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 disabled:opacity-60 transition-opacity flex items-center justify-center gap-2 shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+              className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 disabled:opacity-60 transition-all flex items-center justify-center gap-2 shadow-lg shadow-[#450084]/20"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
               onClick={handleSend}
               disabled={loading}
             >
               {loading ? (
-                <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                <span className="animate-spin inline-block w-4 h-4 border-2 border-[#b27ff5]/30 border-t-[#b27ff5] rounded-full" />
               ) : (
                 <>
                   <MdRocketLaunch size={18} />
@@ -128,48 +139,55 @@ export default function AuthPage() {
               )}
             </button>
 
-            <p className="text-xs text-[var(--color-on-surface-variant)] text-center mt-3">
+            <p className="text-xs text-[#968d9d] text-center">
               No password needed -- we&apos;ll email you a secure sign-in link.
             </p>
 
-            {/* Divider */}
-            <div className="flex items-center w-full my-6">
-              <div className="flex-1 h-px bg-[var(--color-outline-variant)]" />
-              <span className="px-3 text-xs font-semibold text-[var(--color-outline)] uppercase font-[family-name:var(--font-label)]">or</span>
-              <div className="flex-1 h-px bg-[var(--color-outline-variant)]" />
+            {/* Divider — spacing only, no lines */}
+            <div className="py-2 flex items-center justify-center">
+              <span
+                className="text-xs uppercase tracking-[0.3em] text-[#968d9d]"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
+                or
+              </span>
             </div>
 
             {/* Skip / Try without account */}
             <button
               onClick={handleSkip}
-              className="w-full py-3 rounded-md border border-[var(--color-outline-variant)] text-[var(--color-on-surface)] text-sm font-semibold cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
+              className="w-full py-3 rounded-sm glass-card ghost-border text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#450084]/10 transition-colors"
             >
               Try without an account
             </button>
-            <p className="text-xs text-[var(--color-on-surface-variant)] text-center mt-2">
+            <p className="text-xs text-[#968d9d] text-center">
               Your data will only be saved on this device.
             </p>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="w-full glass-card ghost-border rounded-sm p-6 flex flex-col items-center">
             {/* Email sent state */}
-            <div className="w-16 h-16 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center mb-4">
-              <MdMarkEmailRead size={36} className="text-[var(--color-primary)]" />
+            <div className="w-16 h-16 rounded-sm bg-[#450084] flex items-center justify-center mb-4 glow-shadow-purple">
+              <MdMarkEmailRead size={36} className="text-[#d9b9ff]" />
             </div>
-            <h2 className="text-xl font-bold text-[var(--color-on-surface)] text-center mb-2 font-[family-name:var(--font-display)]">
-              Check your email
+            <h2
+              className="text-xl font-black uppercase tracking-tighter text-[#e7e1e6] text-center mb-2"
+              style={{ fontFamily: 'Public Sans, sans-serif' }}
+            >
+              CHECK YOUR EMAIL
             </h2>
-            <p className="text-sm text-[var(--color-on-surface-variant)] text-center mb-6 leading-relaxed">
-              We sent a magic link to <strong className="text-[var(--color-on-surface)]">{email}</strong>.
+            <p className="text-sm text-[#cdc3d4] text-center mb-6 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
+              We sent a magic link to <strong className="text-[#d9b9ff]">{email}</strong>.
               Click it to sign in -- no password needed.
             </p>
 
             {error && (
-              <span className="text-xs font-semibold text-[var(--color-error)] mb-3 text-center">{error}</span>
+              <span className="text-xs font-semibold text-[#ffb4ab] mb-3 text-center">{error}</span>
             )}
 
             <button
-              className="w-full py-3.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer disabled:opacity-40 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+              className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer disabled:opacity-40 transition-opacity shadow-lg shadow-[#450084]/20"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
               onClick={handleSend}
               disabled={cooldown > 0}
             >
@@ -178,11 +196,11 @@ export default function AuthPage() {
 
             <button
               onClick={() => { setState('input'); setEmail(''); }}
-              className="text-sm font-semibold text-[var(--color-primary)] mt-4 cursor-pointer hover:underline"
+              className="text-sm font-semibold text-[#d9b9ff] mt-4 cursor-pointer hover:underline"
             >
               Use a different email
             </button>
-          </>
+          </div>
         )}
       </div>
 
@@ -190,11 +208,14 @@ export default function AuthPage() {
       <div className="p-4 text-center flex flex-col items-center gap-2">
         <Link
           href="/landing"
-          className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
+          className="text-xs font-semibold text-[#d9b9ff] hover:underline"
         >
           &larr; Back to Home
         </Link>
-        <span className="text-xs text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">
+        <span
+          className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d]"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
           Duke Vanguard v0.2.0 -- AI-First OML Optimizer
         </span>
       </div>

@@ -67,9 +67,9 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
   return (
     <Wrapper
       onClick={onPress}
-      className={`${onPress ? 'cursor-pointer hover:opacity-90 active:scale-[0.98] w-full text-left transition-all' : ''} ${className}`}
+      className={`${onPress ? 'cursor-pointer hover:scale-[1.01] w-full text-left transition-all' : ''} ${className}`}
     >
-      <VCard tier="lowest">
+      <VCard>
         {/* Top row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -84,7 +84,7 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar — gold glow */}
         <div className="my-3">
           <VProgressBar progress={progress} height={6} />
         </div>
@@ -95,11 +95,11 @@ export const VGoalCard: React.FC<VGoalCardProps> = ({
             {currentDisplay}/{targetDisplay} — {formatDelta(currentValue, targetValue)}
           </span>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#968d9d] font-[family-name:var(--font-label)]">
               Due {formatDeadline(deadline)}
             </span>
             {omlImpact != null && omlImpact > 0 && (
-              <span className="text-xs font-bold text-[var(--color-primary)] font-[family-name:var(--font-label)]">
+              <span className="text-xs font-bold text-[#c3cc8c] font-[family-name:var(--font-label)]">
                 +{omlImpact} OML pts
               </span>
             )}

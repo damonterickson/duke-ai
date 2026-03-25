@@ -61,13 +61,21 @@ export default function BranchPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[var(--color-background)] min-h-screen max-w-lg mx-auto">
+    <div className="flex-1 flex flex-col bg-[#151317] min-h-screen max-w-lg mx-auto">
       <div className="flex-1 overflow-y-auto px-6 md:px-8 pt-10 pb-4">
-        <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-2 block font-[family-name:var(--font-label)]">STEP 5 OF 5</span>
-        <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-on-surface)] mb-2 font-[family-name:var(--font-display)]">
-          Target Branch
+        <span
+          className="text-xs uppercase tracking-[0.3em] text-[#d9b9ff] mb-2 block"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
+          STEP 5 OF 5
+        </span>
+        <h1
+          className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2"
+          style={{ fontFamily: 'Public Sans, sans-serif' }}
+        >
+          TARGET BRANCH
         </h1>
-        <p className="text-sm text-[var(--color-on-surface-variant)] mb-6 leading-relaxed">
+        <p className="text-sm text-[#cdc3d4] mb-6 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
           Which branch are you hoping for? This helps Vanguard AI tailor its advice.
         </p>
 
@@ -76,10 +84,10 @@ export default function BranchPage() {
             <button
               key={branch}
               onClick={() => setSelected(branch)}
-              className={`px-4 py-2 rounded-md text-sm font-semibold cursor-pointer transition-all border ${
+              className={`px-4 py-2 rounded-sm text-sm font-semibold cursor-pointer transition-all ${
                 selected === branch
-                  ? 'gradient-primary text-white border-transparent shadow-[var(--shadow-sm)]'
-                  : 'bg-[var(--color-surface-container-low)] border-[var(--ghost-border)] text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container)]'
+                  ? 'bg-[#450084] text-[#b27ff5] shadow-lg shadow-[#450084]/30 glow-shadow-purple'
+                  : 'glass-card ghost-border text-[#e7e1e6] hover:bg-[#450084]/10'
               }`}
             >
               {branch}
@@ -87,7 +95,7 @@ export default function BranchPage() {
           ))}
         </div>
 
-        <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-5">
+        <div className="glass-card ghost-border rounded-sm p-5">
           <VInput
             label="Target OML Score (optional)"
             value={goalOml}
@@ -102,7 +110,8 @@ export default function BranchPage() {
       <div className="px-6 md:px-8 pb-8">
         <button
           onClick={handleFinish}
-          className="w-full py-3.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-glow font-[family-name:var(--font-label)]"
+          className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20 glow-shadow-purple"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         >
           Finish Setup
         </button>
@@ -110,12 +119,12 @@ export default function BranchPage() {
 
       {/* Progress dots */}
       <div className="flex justify-center gap-2 pb-6">
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d9b9ff]" />
       </div>
     </div>
   );

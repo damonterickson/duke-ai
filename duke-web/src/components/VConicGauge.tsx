@@ -72,30 +72,31 @@ export const VConicGauge: React.FC<VConicGaugeProps> = ({
         {/* Track */}
         <path
           d={bgPath}
-          stroke="var(--color-surface-container-highest)"
+          stroke="#373438"
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"
         />
-        {/* Fill */}
+        {/* Fill — gold with glow */}
         {fillPath && (
           <path
             d={fillPath}
-            stroke="var(--color-primary)"
+            stroke="#dbc585"
             strokeWidth={strokeWidth}
             fill="none"
             strokeLinecap="round"
+            style={{ filter: 'drop-shadow(0 0 6px #dbc585)' }}
           />
         )}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {label != null && (
-          <span className="text-3xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+          <span className="text-3xl font-black uppercase tracking-tight text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
             {label}
           </span>
         )}
         {sublabel != null && (
-          <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#968d9d] mt-1 font-[family-name:var(--font-label)]">
             {sublabel}
           </span>
         )}

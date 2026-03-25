@@ -22,7 +22,7 @@ export default function OnboardingLayout({
   const showDots = currentStepIndex >= 0;
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface)]">
+    <div className="min-h-dvh flex flex-col bg-[#151317]">
       {showDots && (
         <div className="flex items-center justify-center gap-2 pt-8 pb-2">
           {STEPS.map((step, i) => (
@@ -32,8 +32,8 @@ export default function OnboardingLayout({
               aria-label={`Step ${i + 1} of ${STEPS.length}${i === currentStepIndex ? ', current' : ''}`}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === currentStepIndex
-                  ? 'w-6 bg-[var(--color-primary)]'
-                  : 'w-2 bg-[var(--color-outline-variant)]'
+                  ? 'w-6 bg-[#d9b9ff]'
+                  : 'w-2 bg-[#968d9d]'
               }`}
             />
           ))}

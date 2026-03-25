@@ -11,7 +11,7 @@ export const VGlassPanel: React.FC<VGlassPanelProps> = ({
 }) => {
   return (
     <div
-      className={`glass-panel rounded-md overflow-hidden p-4 ${className}`}
+      className={`glass-panel rounded-sm overflow-hidden p-4 ${className}`}
     >
       {children}
     </div>

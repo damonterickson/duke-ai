@@ -31,14 +31,14 @@ export const VMetricCard: React.FC<VMetricCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md p-4 shadow-[var(--shadow-sm)] ${className}`}
+      className={`glass-card ghost-border rounded-sm p-4 shadow-[var(--shadow-sm)] ${className}`}
       role="region"
       aria-label={`${label}: ${value}${trend ? `, trending ${trend}` : ''}`}
     >
-      <span className="block text-4xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+      <span className="block text-4xl font-black uppercase tracking-tight text-[#f8e19e] font-[family-name:var(--font-display)]">
         {value}
       </span>
-      <span className="block text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">
+      <span className="block text-xs font-bold uppercase tracking-widest text-[#968d9d] mt-1 font-[family-name:var(--font-label)]">
         {label}
       </span>
       {trend && (

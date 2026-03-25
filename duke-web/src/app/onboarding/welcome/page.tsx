@@ -8,22 +8,24 @@ export default function WelcomePage() {
   const router = useRouter();
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center px-8 bg-[var(--color-background)] min-h-screen">
+    <div className="flex-1 flex flex-col items-center justify-center px-8 bg-[#151317] min-h-screen kinetic-grid">
       <div className="text-center mb-10">
-        <div className="w-24 h-24 rounded-md gradient-primary flex items-center justify-center mx-auto mb-6 shadow-glow">
-          <MdShield size={56} className="text-white" />
+        <div className="w-24 h-24 rounded-sm bg-[#450084] flex items-center justify-center mx-auto mb-6 glow-shadow-purple">
+          <MdShield size={56} className="text-[#d9b9ff]" />
         </div>
         <h1
-          className="text-4xl md:text-5xl font-bold text-[var(--color-primary)] mb-3 font-[family-name:var(--font-display)]"
+          className="text-5xl md:text-6xl font-black uppercase tracking-tighter text-[#d9b9ff] mb-3"
+          style={{ fontFamily: 'Public Sans, sans-serif' }}
         >
-          Duke Vanguard
+          DUKE VANGUARD
         </h1>
         <p
-          className="text-xl md:text-2xl font-bold text-[var(--color-on-surface)] mb-4 font-[family-name:var(--font-display)]"
+          className="text-xl md:text-2xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-4"
+          style={{ fontFamily: 'Public Sans, sans-serif' }}
         >
-          Your OML Mentor
+          YOUR OML MENTOR
         </p>
-        <p className="text-sm md:text-base text-[var(--color-on-surface-variant)] max-w-md mx-auto leading-relaxed">
+        <p className="text-sm md:text-base text-[#cdc3d4] max-w-md mx-auto leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
           Understand your OML score, discover your biggest opportunities, and
           optimize your path to your branch of choice.
         </p>
@@ -31,7 +33,8 @@ export default function WelcomePage() {
 
       <button
         onClick={() => router.push('/onboarding/year-group')}
-        className="min-w-[240px] py-3.5 px-8 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-glow flex items-center justify-center gap-2 font-[family-name:var(--font-label)]"
+        className="min-w-[240px] py-3.5 px-8 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20 flex items-center justify-center gap-2"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
       >
         <MdRocketLaunch size={18} />
         Get Started
@@ -39,12 +42,12 @@ export default function WelcomePage() {
 
       {/* Progress dots */}
       <div className="flex gap-2 mt-8">
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d9b9ff]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
       </div>
     </div>
   );

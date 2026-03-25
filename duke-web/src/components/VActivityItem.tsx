@@ -25,7 +25,7 @@ export const VActivityItem: React.FC<VActivityItemProps> = ({
 
   return (
     <div
-      className={`flex items-center justify-between py-3 border-b border-[var(--ghost-border)] last:border-b-0 ${className}`}
+      className={`flex items-center justify-between py-3 rounded-sm hover:bg-[#1d1b1f] transition-colors ${className}`}
       aria-label={`${title}${pointDelta != null ? `, ${deltaSign}${pointDelta} points` : ''}`}
     >
       <div className="flex flex-col gap-0.5 flex-1">
@@ -43,7 +43,7 @@ export const VActivityItem: React.FC<VActivityItemProps> = ({
       </div>
       {pointDelta != null && (
         <span
-          className={`rounded px-2 py-1 ml-3 text-xs font-bold ${deltaColorClass} font-[family-name:var(--font-label)]`}
+          className={`rounded-sm px-2 py-1 ml-3 text-xs font-bold ${deltaColorClass} font-[family-name:var(--font-label)]`}
         >
           {deltaSign}{pointDelta}
         </span>

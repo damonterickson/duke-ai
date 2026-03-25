@@ -45,10 +45,13 @@ export default function MissionReadyPage() {
   ];
 
   return (
-    <div className="flex-1 flex flex-col bg-[var(--color-background)] min-h-screen">
-      {/* Top Bar */}
-      <header className="gradient-primary py-3.5 text-center shadow-[var(--shadow-md)]">
-        <span className="text-sm font-bold text-white tracking-[3px] uppercase font-[family-name:var(--font-label)]">
+    <div className="flex-1 flex flex-col bg-[#151317] min-h-screen kinetic-grid">
+      {/* Top Bar — glass */}
+      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl py-3.5 text-center shadow-lg shadow-purple-900/20">
+        <span
+          className="text-sm font-black text-[#d9b9ff] tracking-tighter uppercase italic"
+          style={{ fontFamily: 'Public Sans, sans-serif' }}
+        >
           DUKE VANGUARD
         </span>
       </header>
@@ -60,9 +63,9 @@ export default function MissionReadyPage() {
             visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
           }`}
         >
-          <div className="w-[120px] h-[120px] rounded-md gradient-primary flex items-center justify-center shadow-glow">
+          <div className="w-[120px] h-[120px] rounded-sm bg-[#450084] flex items-center justify-center glow-shadow-purple">
             <svg
-              className="w-16 h-16 text-white"
+              className="w-16 h-16 text-[#d9b9ff]"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
@@ -77,10 +80,13 @@ export default function MissionReadyPage() {
             visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
           }`}
         >
-          <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-on-surface)] tracking-[4px] mb-2 font-[family-name:var(--font-display)]">
+          <h1
+            className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2"
+            style={{ fontFamily: 'Public Sans, sans-serif' }}
+          >
             MISSION READY
           </h1>
-          <p className="text-sm text-[var(--color-on-surface-variant)] leading-relaxed max-w-md mx-auto">
+          <p className="text-sm text-[#cdc3d4] leading-relaxed max-w-md mx-auto" style={{ fontFamily: 'Inter, sans-serif' }}>
             Your Vanguard profile is configured. The AI advisor is now calibrated
             to your goals and will provide personalized optimization guidance.
           </p>
@@ -92,14 +98,17 @@ export default function MissionReadyPage() {
             visible ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <div className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)] mb-4">
-            <p className="text-xs font-bold text-[var(--color-on-surface-variant)] uppercase tracking-widest mb-4 font-[family-name:var(--font-label)]">
+          <div className="glass-card ghost-border rounded-sm p-5 mb-4 glow-shadow-purple">
+            <p
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
               MISSION PARAMETERS
             </p>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {summaryItems.map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <span className="text-[var(--color-primary)]">
+                  <span className="text-[#d9b9ff]">
                     {item.icon === 'person' && (
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -116,10 +125,13 @@ export default function MissionReadyPage() {
                       </svg>
                     )}
                   </span>
-                  <span className="text-sm text-[var(--color-on-surface-variant)] flex-1">
+                  <span className="text-sm text-[#cdc3d4] flex-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                     {item.label}
                   </span>
-                  <span className="text-sm font-bold text-[var(--color-on-surface)]">
+                  <span
+                    className="text-sm font-black text-[#f8e19e]"
+                    style={{ fontFamily: 'Public Sans, sans-serif' }}
+                  >
                     {item.value}
                   </span>
                 </div>
@@ -137,9 +149,9 @@ export default function MissionReadyPage() {
           <div className="space-y-3">
             {nextSteps.map((text, i) => (
               <div key={i} className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md gradient-primary flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-sm bg-[#450084] flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-4 h-4 text-white"
+                    className="w-4 h-4 text-[#d9b9ff]"
                     fill="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -154,7 +166,7 @@ export default function MissionReadyPage() {
                     )}
                   </svg>
                 </div>
-                <span className="text-sm font-semibold text-[var(--color-on-surface)] flex-1">
+                <span className="text-sm font-semibold text-[#e7e1e6] flex-1" style={{ fontFamily: 'Inter, sans-serif' }}>
                   {text}
                 </span>
               </div>
@@ -166,7 +178,8 @@ export default function MissionReadyPage() {
         <div className="mt-auto pb-8">
           <button
             onClick={handleLaunch}
-            className="w-full py-3.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-glow flex items-center justify-center gap-2 font-[family-name:var(--font-label)]"
+            className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20 glow-shadow-purple flex items-center justify-center gap-2"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           >
             <MdRocketLaunch size={18} />
             Launch Mission

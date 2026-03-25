@@ -20,15 +20,15 @@ export const VButton: React.FC<VButtonProps> = ({
   className = '',
 }) => {
   const base =
-    'inline-flex items-center justify-center min-h-[48px] py-3 px-6 rounded-md text-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2';
+    'inline-flex items-center justify-center min-h-[48px] py-3 px-6 rounded-sm text-sm uppercase tracking-wider font-bold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d9b9ff] focus-visible:ring-offset-2 focus-visible:ring-offset-[#151317] font-[family-name:var(--font-label)]';
 
   const variants: Record<string, string> = {
     primary:
-      'gradient-primary text-white uppercase tracking-wider font-bold shadow-[var(--shadow-sm)] hover:opacity-90 active:scale-[0.98] font-[family-name:var(--font-label)]',
+      'bg-[#450084] text-[#b27ff5] shadow-[var(--shadow-sm)] hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(69,0,132,0.4)] active:scale-[0.98]',
     secondary:
-      'bg-transparent border border-[var(--ghost-border)] text-[var(--color-primary)] uppercase tracking-wider font-bold hover:opacity-90 active:scale-[0.98] font-[family-name:var(--font-label)]',
+      'bg-transparent ghost-border text-[#b27ff5] hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(69,0,132,0.4)] active:scale-[0.98]',
     tertiary:
-      'bg-transparent text-[var(--color-primary)] font-semibold hover:opacity-90 active:scale-[0.98]',
+      'bg-transparent text-[#dbc585] hover:opacity-80 active:scale-[0.98]',
   };
 
   const disabledClass = disabled

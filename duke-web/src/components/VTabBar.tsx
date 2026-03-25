@@ -30,7 +30,7 @@ export const VTabBar: React.FC = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex gradient-primary"
+      className="fixed bottom-0 left-0 right-0 z-40 flex bg-[#1d1b1f]"
       style={{ height: 64 }}
       role="tablist"
       aria-label="Tab bar"
@@ -49,16 +49,16 @@ export const VTabBar: React.FC = () => {
             className="relative flex flex-1 flex-col items-center justify-center gap-0.5 no-underline transition-all"
           >
             {active && (
-              <span className="absolute top-0 w-8 h-[3px] rounded-b bg-white" />
+              <span className="absolute top-0 w-8 h-[3px] rounded-b bg-[#450084] shadow-[0_0_8px_rgba(69,0,132,0.6)]" />
             )}
             <Icon
               className={`text-2xl transition-opacity ${
-                active ? 'text-white opacity-100' : 'text-white opacity-50'
+                active ? 'text-[#d9b9ff] opacity-100' : 'text-[#968d9d] opacity-60'
               }`}
             />
             <span
               className={`text-xs font-bold uppercase tracking-wider transition-opacity font-[family-name:var(--font-label)] ${
-                active ? 'text-white opacity-100' : 'text-white opacity-50'
+                active ? 'text-[#d9b9ff] opacity-100' : 'text-[#968d9d] opacity-60'
               }`}
             >
               {tab.label}

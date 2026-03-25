@@ -13,8 +13,14 @@ export const VSkeletonLoader: React.FC<VSkeletonLoaderProps> = ({
 }) => {
   return (
     <div
-      className={`rounded animate-pulse bg-[var(--color-surface-container)] ${className}`}
-      style={{ width, height }}
+      className={`rounded-sm bg-[#211f23] ${className}`}
+      style={{
+        width,
+        height,
+        backgroundImage: 'linear-gradient(90deg, #211f23 0%, #2c292d 40%, #211f23 80%)',
+        backgroundSize: '200% 100%',
+        animation: 'shimmer 1.5s ease-in-out infinite',
+      }}
       role="progressbar"
       aria-label="Loading..."
     />

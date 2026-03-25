@@ -39,17 +39,21 @@ export default function SquadPage() {
 
   const renderUnauthenticated = () => (
     <div className="flex flex-col items-center pt-16">
-      <div className="w-20 h-20 rounded-md bg-[var(--color-surface-container)] flex items-center justify-center mb-5">
-        <MdShield size={40} className="text-[var(--color-outline)]" />
+      <div className="w-20 h-20 rounded-sm bg-[#211f23] flex items-center justify-center mb-5">
+        <MdShield size={40} className="text-[#968d9d]" />
       </div>
-      <h2 className="text-xl font-bold text-[var(--color-on-surface)] mb-2 text-center font-[family-name:var(--font-display)]">
-        Sign in to unlock Squads
+      <h2
+        className="text-xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2 text-center"
+        style={{ fontFamily: 'Public Sans, sans-serif' }}
+      >
+        SIGN IN TO UNLOCK SQUADS
       </h2>
-      <p className="text-sm text-[var(--color-on-surface-variant)] text-center mb-6 px-4 leading-relaxed max-w-sm">
+      <p className="text-sm text-[#cdc3d4] text-center mb-6 px-4 leading-relaxed max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
         Create squads, invite your battle buddies, and share achievements.
       </p>
       <button
-        className="px-8 py-3 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+        className="px-8 py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         onClick={() => router.push('/auth')}
       >
         Sign In
@@ -59,21 +63,25 @@ export default function SquadPage() {
 
   const renderEmpty = () => (
     <div className="flex flex-col items-center pt-16">
-      <div className="w-20 h-20 rounded-md bg-[var(--color-surface-container)] flex items-center justify-center mb-5">
-        <MdGroups size={40} className="text-[var(--color-outline)]" />
+      <div className="w-20 h-20 rounded-sm bg-[#211f23] flex items-center justify-center mb-5">
+        <MdGroups size={40} className="text-[#968d9d]" />
       </div>
-      <h2 className="text-xl font-bold text-[var(--color-on-surface)] mb-2 text-center font-[family-name:var(--font-display)]">
-        No squads yet
+      <h2
+        className="text-xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2 text-center"
+        style={{ fontFamily: 'Public Sans, sans-serif' }}
+      >
+        NO SQUADS YET
       </h2>
       <div className="flex gap-3 mt-4">
         <button
-          className="py-3 px-6 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+          className="py-3 px-6 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           onClick={() => router.push('/squad/create')}
         >
           Create Squad
         </button>
         <button
-          className="py-3 px-6 rounded-md border border-[var(--color-outline-variant)] text-[var(--color-on-surface)] text-sm font-semibold cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
+          className="py-3 px-6 rounded-sm glass-card ghost-border text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#450084]/10 transition-colors"
           onClick={() => router.push('/squad/join')}
         >
           Join Squad
@@ -89,27 +97,36 @@ export default function SquadPage() {
         return (
           <button
             key={sq.id}
-            className="w-full text-left rounded-md p-4 border border-[var(--ghost-border)] bg-[var(--color-surface-container-low)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
+            className="w-full text-left rounded-sm p-4 glass-card ghost-border cursor-pointer hover:bg-[#450084]/10 transition-all"
             onClick={() => router.push(`/squad/${sq.id}`)}
             aria-label={`Squad ${sq.name}`}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-lg font-bold text-[var(--color-on-surface)] truncate font-[family-name:var(--font-display)]">
+              <span
+                className="text-lg font-black uppercase tracking-tighter text-[#e7e1e6] truncate"
+                style={{ fontFamily: 'Public Sans, sans-serif' }}
+              >
                 {sq.name}
               </span>
               {isLeader && (
-                <span className="px-2 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wider bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] ml-2 font-[family-name:var(--font-label)]">
+                <span
+                  className="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-[0.2em] bg-[#450084] text-[#b27ff5] ml-2"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
                   Leader
                 </span>
               )}
             </div>
             <div className="flex items-center gap-1 mb-1">
-              <MdPeople size={16} className="text-[var(--color-on-surface-variant)]" />
-              <span className="text-xs text-[var(--color-on-surface-variant)]">
+              <MdPeople size={16} className="text-[#968d9d]" />
+              <span className="text-xs text-[#968d9d]">
                 {sq.memberCount} {sq.memberCount === 1 ? 'member' : 'members'}
               </span>
             </div>
-            <span className="text-xs font-semibold text-[var(--color-outline)] font-[family-name:var(--font-label)]">
+            <span
+              className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
               Code: {sq.invite_code}
             </span>
           </button>
@@ -117,13 +134,14 @@ export default function SquadPage() {
       })}
       <div className="flex gap-3 mt-4">
         <button
-          className="flex-1 py-3 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+          className="flex-1 py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
           onClick={() => router.push('/squad/create')}
         >
           Create Squad
         </button>
         <button
-          className="flex-1 py-3 rounded-md border border-[var(--color-outline-variant)] text-[var(--color-on-surface)] text-sm font-semibold cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors"
+          className="flex-1 py-3 rounded-sm glass-card ghost-border text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#450084]/10 transition-colors"
           onClick={() => router.push('/squad/join')}
         >
           Join Squad
@@ -136,7 +154,7 @@ export default function SquadPage() {
     if (!authChecked) {
       return (
         <div className="flex justify-center mt-12">
-          <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[#d9b9ff] border-t-transparent rounded-full animate-spin" />
         </div>
       );
     }
@@ -144,7 +162,7 @@ export default function SquadPage() {
     if (loading && squads.length === 0) {
       return (
         <div className="flex justify-center mt-12">
-          <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-[#d9b9ff] border-t-transparent rounded-full animate-spin" />
         </div>
       );
     }
@@ -153,17 +171,27 @@ export default function SquadPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
-      {/* Header */}
-      <header className="gradient-primary text-white px-4 py-4 flex items-center justify-between shadow-[var(--shadow-md)]">
+    <div className="flex flex-col min-h-full bg-[#151317]">
+      {/* Header — glass bar */}
+      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center justify-between shadow-lg shadow-purple-900/20 sticky top-0 z-40">
         <div>
-          <h1 className="text-sm font-bold uppercase tracking-[3px] text-white font-[family-name:var(--font-label)]">DUKE VANGUARD</h1>
-          <p className="text-xs text-white/60 mt-0.5 font-[family-name:var(--font-label)]">Squad Operations</p>
+          <h1
+            className="text-lg font-black uppercase tracking-tighter italic text-[#d9b9ff]"
+            style={{ fontFamily: 'Public Sans, sans-serif' }}
+          >
+            DUKE VANGUARD
+          </h1>
+          <p
+            className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d] mt-0.5"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            Squad Operations
+          </p>
         </div>
         <button
           onClick={() => router.push('/settings')}
           aria-label="Settings"
-          className="text-white/80 hover:text-white cursor-pointer transition-colors"
+          className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors"
         >
           <MdSettings size={22} />
         </button>

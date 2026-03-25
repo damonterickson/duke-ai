@@ -15,7 +15,7 @@ import {
   MdCloudUpload,
   MdAnalytics,
 } from 'react-icons/md';
-import { VConicGauge, VGlassPanel, VProgressBar } from '@/components';
+import { VConicGauge, VProgressBar } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useSquadStore } from '@/stores/squad';
@@ -64,7 +64,7 @@ function EditableField({
         onKeyDown={(e) => e.key === 'Enter' && commit()}
         placeholder={placeholder}
         type={type}
-        className={`bg-[var(--color-surface-container)] text-[var(--color-on-surface)] rounded-md px-3 py-1.5 min-w-[80px] outline-none border border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] ${className}`}
+        className={`bg-[#211f23] text-[#e7e1e6] rounded-sm px-3 py-1.5 min-w-[80px] outline-none focus:ring-1 focus:ring-[#d9b9ff] ${className}`}
         autoFocus
       />
     );
@@ -72,8 +72,8 @@ function EditableField({
 
   return (
     <button onClick={startEditing} className={`flex items-center gap-1.5 cursor-pointer group ${className}`}>
-      <span className="text-[var(--color-on-surface)] truncate">{value || placeholder}</span>
-      <MdEdit size={14} className="text-[var(--color-outline)] group-hover:text-[var(--color-primary)] transition-colors" />
+      <span className="text-[#e7e1e6] truncate">{value || placeholder}</span>
+      <MdEdit size={14} className="text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors" />
     </button>
   );
 }
@@ -141,12 +141,14 @@ export default function ProfilePage() {
       label: 'ACFT',
       value: acftTotal != null ? String(Math.round(acftTotal)) : '--',
       sublabel: 'Total Score',
+      accent: '#c3cc8c',
     },
     {
       icon: MdSchool,
       label: 'GPA',
       value: gpa != null ? gpa.toFixed(2) : '--',
       sublabel: 'Cumulative',
+      accent: '#f8e19e',
     },
     {
       icon: MdMilitaryTech,
@@ -156,6 +158,7 @@ export default function ProfilePage() {
         ls?.leadership_eval != null && ls?.cst_score != null
           ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}`
           : 'Eval + CST',
+      accent: '#d9b9ff',
     },
   ];
 
@@ -167,18 +170,21 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
+    <div className="flex flex-col min-h-full bg-[#151317]">
       <div className="overflow-y-auto pb-20">
-        {/* Personal Info Section */}
-        <div className="gradient-primary px-4 md:px-6 pt-4 pb-6 shadow-[var(--shadow-md)]">
+        {/* Glass Header with Profile Info */}
+        <div className="glass-card bg-[#151317]/60 backdrop-blur-2xl px-4 md:px-6 pt-4 pb-6 shadow-lg shadow-purple-900/20">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-white/70 font-[family-name:var(--font-label)]">
+            <span
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d]"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
               COMMAND PROFILE
             </span>
             <button
               onClick={() => router.push('/settings')}
               aria-label="Settings"
-              className="text-white/70 hover:text-white cursor-pointer transition-colors"
+              className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors"
             >
               <MdSettings size={22} />
             </button>
@@ -186,8 +192,11 @@ export default function ProfilePage() {
 
           <div className="flex items-start gap-4 max-w-lg mx-auto md:max-w-2xl">
             {/* Avatar */}
-            <div className="w-[72px] h-[72px] rounded-md bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-              <span className="text-xl font-bold text-white font-[family-name:var(--font-display)]">
+            <div className="w-[72px] h-[72px] rounded-sm bg-[#450084] flex items-center justify-center shrink-0 glow-shadow-purple">
+              <span
+                className="text-xl font-black text-[#d9b9ff]"
+                style={{ fontFamily: 'Public Sans, sans-serif' }}
+              >
                 {initials}
               </span>
             </div>
@@ -198,22 +207,35 @@ export default function ProfilePage() {
                 value={profile.name ?? ''}
                 placeholder="Cadet Name"
                 onSave={(v) => profile.updateProfile({ name: v })}
-                className="text-xl font-bold [&_span]:text-white [&_svg]:text-white/60"
+                className="text-xl font-black [&_span]:text-[#e7e1e6] [&_svg]:text-[#968d9d]"
               />
-              <span className="text-sm font-semibold uppercase tracking-[2px] text-white/70 font-[family-name:var(--font-label)]">
+              <span
+                className="text-xs uppercase tracking-[0.3em] text-[#968d9d]"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
                 {profile.yearGroup ?? 'MSI'} Cadet
               </span>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-xs text-white/50 min-w-[64px] font-[family-name:var(--font-label)]">Branch</span>
+                <span
+                  className="text-[10px] text-[#968d9d] min-w-[64px] uppercase tracking-[0.2em]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  Branch
+                </span>
                 <EditableField
                   value={profile.targetBranch ?? ''}
                   placeholder="Target Branch"
                   onSave={(v) => profile.updateProfile({ targetBranch: v })}
-                  className="text-sm [&_span]:text-white/90 [&_svg]:text-white/50"
+                  className="text-sm [&_span]:text-[#cdc3d4] [&_svg]:text-[#968d9d]"
                 />
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs text-white/50 min-w-[64px] font-[family-name:var(--font-label)]">Goal OML</span>
+                <span
+                  className="text-[10px] text-[#968d9d] min-w-[64px] uppercase tracking-[0.2em]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  Goal OML
+                </span>
                 <EditableField
                   value={profile.goalOml != null ? String(profile.goalOml) : ''}
                   placeholder="0-1000"
@@ -224,7 +246,7 @@ export default function ProfilePage() {
                     }
                   }}
                   type="number"
-                  className="text-sm [&_span]:text-white/90 [&_svg]:text-white/50"
+                  className="text-sm [&_span]:text-[#cdc3d4] [&_svg]:text-[#968d9d]"
                 />
               </div>
             </div>
@@ -232,11 +254,14 @@ export default function ProfilePage() {
         </div>
 
         {/* Content */}
-        <div className="px-4 md:px-6 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-6 -mt-2">
+        <div className="px-4 md:px-6 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-8 mt-6">
           {/* OML Command Center */}
-          <section className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-5 pt-8">
-            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-4 font-[family-name:var(--font-label)]">
-              OML Command Center
+          <section className="glass-card ghost-border rounded-sm p-6 glow-shadow-purple">
+            <h2
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
+              OML COMMAND CENTER
             </h2>
             <div className="flex justify-center mb-4">
               <VConicGauge
@@ -247,28 +272,45 @@ export default function ProfilePage() {
                 sublabel="/ 1000"
               />
             </div>
-            <p className="text-sm italic text-center text-[var(--color-on-surface-variant)] mb-4">
+            <p className="text-sm italic text-center text-[#cdc3d4] mb-4" style={{ fontFamily: 'Inter, sans-serif' }}>
               {oml > 0
                 ? 'Performance trajectory: holding steady'
                 : 'Enter scores to compute your OML'}
             </p>
             <div className="flex gap-3 mb-4">
-              <div className="flex-1 flex flex-col items-center p-3 rounded-md bg-[var(--color-surface-container)] border border-[var(--ghost-border)]">
-                <span className="text-xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+              <div className="flex-1 flex flex-col items-center p-3 rounded-sm bg-[#1d1b1f]">
+                <span
+                  className="text-xl font-black text-[#f8e19e]"
+                  style={{ fontFamily: 'Public Sans, sans-serif' }}
+                >
                   {oml > 0 ? `${Math.round((oml / 1000) * 100)}%` : '--'}
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">OML Percentile</span>
+                <span
+                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  OML Percentile
+                </span>
               </div>
-              <div className="flex-1 flex flex-col items-center p-3 rounded-md bg-[var(--color-surface-container)] border border-[var(--ghost-border)]">
-                <span className="text-xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+              <div className="flex-1 flex flex-col items-center p-3 rounded-sm bg-[#1d1b1f]">
+                <span
+                  className="text-xl font-black text-[#c3cc8c]"
+                  style={{ fontFamily: 'Public Sans, sans-serif' }}
+                >
                   {acftTotal != null ? 'GREEN' : '--'}
                 </span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">Active Readiness</span>
+                <span
+                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  Active Readiness
+                </span>
               </div>
             </div>
             <div className="flex justify-center">
               <button
-                className="flex items-center gap-2 px-5 py-2.5 rounded-md gradient-secondary text-white text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)]"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-sm bg-[#544511] text-[#dbc585] text-sm font-bold cursor-pointer hover:bg-[#544511]/80 transition-all shadow-lg shadow-[#544511]/20"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
                 onClick={() => router.push('/what-if')}
                 aria-label="What-If scenario planner"
               >
@@ -280,34 +322,43 @@ export default function ProfilePage() {
 
           {/* Score Cards */}
           <section>
-            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">
-              Performance Overview
+            <h2
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
+              PERFORMANCE OVERVIEW
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {scoreCards.map((card, i) => {
                 const Icon = card.icon;
                 return (
                   <button
                     key={i}
-                    className="w-full flex items-center gap-4 p-4 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] transition-colors text-left group"
+                    className="w-full flex items-center gap-4 p-4 rounded-sm glass-card ghost-border cursor-pointer hover:bg-[#450084]/10 transition-all text-left group"
                     onClick={() => router.push('/profile')}
                     aria-label={`View ${card.label} details`}
                   >
-                    <div className="w-11 h-11 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
-                      <Icon size={22} className="text-[var(--color-on-primary-container)]" />
+                    <div className="w-11 h-11 rounded-sm bg-[#450084] flex items-center justify-center shrink-0">
+                      <Icon size={22} className="text-[#b27ff5]" />
                     </div>
                     <div className="flex-1">
-                      <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] block font-[family-name:var(--font-label)]">
+                      <span
+                        className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block"
+                        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                      >
                         {card.label}
                       </span>
-                      <span className="text-2xl font-bold text-[var(--color-on-surface)] block mt-0.5 font-[family-name:var(--font-display)]">
+                      <span
+                        className="text-2xl font-black block mt-0.5"
+                        style={{ fontFamily: 'Public Sans, sans-serif', color: card.accent }}
+                      >
                         {card.value}
                       </span>
-                      <span className="text-xs text-[var(--color-on-surface-variant)] block mt-0.5 truncate">
+                      <span className="text-xs text-[#968d9d] block mt-0.5 truncate">
                         {card.sublabel}
                       </span>
                     </div>
-                    <MdChevronRight size={24} className="text-[var(--color-outline)] group-hover:text-[var(--color-primary)] transition-colors" />
+                    <MdChevronRight size={24} className="text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors" />
                   </button>
                 );
               })}
@@ -316,24 +367,32 @@ export default function ProfilePage() {
 
           {/* Quick Actions */}
           <section>
-            <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">Quick Actions</h2>
+            <h2
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
+              QUICK ACTIONS
+            </h2>
             <div className="grid grid-cols-2 gap-3">
               {quickActions.map((action, i) => {
                 const Icon = action.icon;
                 return (
                   <button
                     key={i}
-                    className="flex flex-col items-center py-4 px-3 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer hover:bg-[var(--color-surface-container)] hover:shadow-[var(--shadow-md)] transition-all gap-1.5"
+                    className="flex flex-col items-center py-5 px-3 rounded-sm glass-card ghost-border cursor-pointer hover:glow-shadow-purple transition-all gap-2"
                     onClick={() => router.push(action.route)}
                     aria-label={action.label}
                   >
-                    <div className="w-10 h-10 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center">
-                      <Icon size={22} className="text-[var(--color-on-primary-container)]" />
+                    <div className="w-10 h-10 rounded-sm bg-[#450084] flex items-center justify-center">
+                      <Icon size={22} className="text-[#b27ff5]" />
                     </div>
-                    <span className="text-sm font-bold text-[var(--color-on-surface)]">
+                    <span
+                      className="text-sm font-black text-[#e7e1e6] uppercase tracking-tight"
+                      style={{ fontFamily: 'Public Sans, sans-serif' }}
+                    >
                       {action.label}
                     </span>
-                    <span className="text-xs text-[var(--color-on-surface-variant)]">{action.desc}</span>
+                    <span className="text-xs text-[#968d9d]" style={{ fontFamily: 'Inter, sans-serif' }}>{action.desc}</span>
                   </button>
                 );
               })}
@@ -341,28 +400,47 @@ export default function ProfilePage() {
           </section>
 
           {/* Vanguard Status */}
-          <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
-            <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-4 block font-[family-name:var(--font-label)]">
+          <section className="glass-card ghost-border rounded-sm p-5 glow-shadow-gold">
+            <span
+              className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4 block"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
               VANGUARD STATUS
             </span>
             <div className="flex items-center">
               <div className="flex-1 flex flex-col items-center gap-1.5">
-                <MdLeaderboard size={22} className="text-[var(--color-primary)]" />
-                <span className="text-xs uppercase tracking-wider text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Battalion Rank</span>
-                <span className="text-2xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+                <MdLeaderboard size={22} className="text-[#d9b9ff]" />
+                <span
+                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  Battalion Rank
+                </span>
+                <span
+                  className="text-2xl font-black text-[#f8e19e]"
+                  style={{ fontFamily: 'Public Sans, sans-serif' }}
+                >
                   #{squad.individualRank}
-                  <span className="text-sm font-normal text-[var(--color-on-surface-variant)]">
+                  <span className="text-sm font-normal text-[#968d9d]">
                     {' '}/ {squad.totalCadets}
                   </span>
                 </span>
               </div>
-              <div className="w-[1px] h-12 bg-[var(--ghost-border)] mx-4" />
+              <div className="w-[1px] h-12 bg-[rgba(75,68,82,0.15)] mx-4" />
               <div className="flex-1 flex flex-col items-center gap-1.5">
-                <MdLocalFireDepartment size={22} className="text-[var(--color-primary)]" />
-                <span className="text-xs uppercase tracking-wider text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">Streak</span>
-                <span className="text-2xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+                <MdLocalFireDepartment size={22} className="text-[#dbc585]" />
+                <span
+                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  Streak
+                </span>
+                <span
+                  className="text-2xl font-black text-[#f8e19e]"
+                  style={{ fontFamily: 'Public Sans, sans-serif' }}
+                >
                   {streak}
-                  <span className="text-sm font-normal text-[var(--color-on-surface-variant)]"> weeks</span>
+                  <span className="text-sm font-normal text-[#968d9d]"> weeks</span>
                 </span>
               </div>
             </div>

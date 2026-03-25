@@ -60,24 +60,34 @@ export default function MissionPage() {
   const leadership = latestScore?.leadership_eval ? Math.min(latestScore.leadership_eval / 100, 1) : 0;
 
   return (
-    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
-      {/* Header */}
-      <header className="gradient-primary text-white px-4 py-4 flex items-center justify-between shadow-[var(--shadow-md)]">
-        <h1 className="text-sm font-bold uppercase tracking-[3px] font-[family-name:var(--font-label)]">DUKE VANGUARD</h1>
+    <div className="flex flex-col min-h-full bg-[#151317]">
+      {/* Header — glass bar */}
+      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center justify-between shadow-lg shadow-purple-900/20 sticky top-0 z-40">
+        <h1
+          className="text-lg font-black uppercase tracking-tighter italic text-[#d9b9ff]"
+          style={{ fontFamily: 'Public Sans, sans-serif' }}
+        >
+          DUKE VANGUARD
+        </h1>
         <button
           onClick={() => router.push('/profile')}
           aria-label="Settings"
-          className="text-white/80 hover:text-white cursor-pointer transition-colors"
+          className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors"
         >
           <MdSettings size={24} />
         </button>
       </header>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-8">
         {/* OML Performance Ring */}
-        <section className="flex flex-col items-center bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] py-8 px-4">
-          <span className="text-xs uppercase tracking-widest font-[family-name:var(--font-label)] text-[var(--color-on-surface-variant)] mb-4">COMMAND READINESS</span>
+        <section className="glass-card ghost-border rounded-sm py-8 px-4 flex flex-col items-center glow-shadow-purple">
+          <span
+            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            COMMAND READINESS
+          </span>
           <VConicGauge
             progress={omlProgress}
             size={180}
@@ -86,27 +96,41 @@ export default function MissionPage() {
             sublabel="OML Score"
           />
           <div className="flex flex-col items-center mt-3 gap-1">
-            <span className="text-xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+            <span
+              className="text-xl font-black text-[#f8e19e]"
+              style={{ fontFamily: 'Public Sans, sans-serif' }}
+            >
               {percentile > 0 ? `Top ${100 - percentile}%` : '--'}
             </span>
-            <span className="text-xs font-semibold uppercase tracking-[2px] text-[var(--color-primary)] font-[family-name:var(--font-label)]">
+            <span
+              className="text-xs uppercase tracking-[0.3em] text-[#d9b9ff]"
+              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            >
               {engagement.tier}
             </span>
           </div>
         </section>
 
-        {/* Static Mission Card (replaces AI-generated missions) */}
-        <section>
-          <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">Active Mission</h2>
-          <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md p-5 shadow-[var(--shadow-sm)] flex items-center gap-4">
-            <div className="w-12 h-12 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
-              <MdTrackChanges size={24} className="text-[var(--color-on-primary-container)]" />
+        {/* Active Mission Card */}
+        <section className="bg-[#1d1b1f] rounded-sm p-6 space-y-3">
+          <h2
+            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-3"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            ACTIVE MISSION
+          </h2>
+          <div className="glass-card ghost-border rounded-sm p-5 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-sm bg-[#450084] flex items-center justify-center shrink-0">
+              <MdTrackChanges size={24} className="text-[#b27ff5]" />
             </div>
             <div className="flex-1">
-              <h3 className="text-base font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
+              <h3
+                className="text-base font-black uppercase tracking-tight text-[#e7e1e6]"
+                style={{ fontFamily: 'Public Sans, sans-serif' }}
+              >
                 Track Your Scores
               </h3>
-              <p className="text-sm text-[var(--color-on-surface-variant)] mt-1 leading-relaxed font-[family-name:var(--font-body)]">
+              <p className="text-sm text-[#cdc3d4] mt-1 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
                 Track your scores to unlock daily missions. Update your GPA, ACFT, and leadership evaluations on the Profile tab.
               </p>
             </div>
@@ -115,28 +139,57 @@ export default function MissionPage() {
 
         {/* Achievement Grid */}
         <section>
-          <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">Achievements</h2>
+          <h2
+            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            ACHIEVEMENTS
+          </h2>
           <div className="grid grid-cols-3 gap-3">
-            <div className="flex flex-col items-center py-4 px-3 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)]">
-              <MdLocalFireDepartment size={28} className="text-[var(--color-primary)]" />
-              <span className="text-2xl font-bold text-[var(--color-on-surface)] mt-2 font-[family-name:var(--font-display)]">{engagement.streak}</span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">Streak</span>
+            <div className="glass-card ghost-border rounded-sm flex flex-col items-center py-5 px-3 hover:glow-shadow-purple transition-all">
+              <MdLocalFireDepartment size={28} className="text-[#d9b9ff]" />
+              <span
+                className="text-2xl font-black text-[#f8e19e] mt-2"
+                style={{ fontFamily: 'Public Sans, sans-serif' }}
+              >
+                {engagement.streak}
+              </span>
+              <span
+                className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
+                Streak
+              </span>
             </div>
-            <div className="flex flex-col items-center py-4 px-3 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)]">
-              <MdTrendingUp size={28} className="text-[var(--color-primary)]" />
-              <span className="text-2xl font-bold text-[var(--color-on-surface)] mt-2 font-[family-name:var(--font-display)]">
+            <div className="glass-card ghost-border rounded-sm flex flex-col items-center py-5 px-3 hover:glow-shadow-gold transition-all">
+              <MdTrendingUp size={28} className="text-[#dbc585]" />
+              <span
+                className="text-2xl font-black text-[#f8e19e] mt-2"
+                style={{ fontFamily: 'Public Sans, sans-serif' }}
+              >
                 {squad.totalCadets > 0
                   ? `Top ${Math.round((squad.individualRank / squad.totalCadets) * 100)}%`
                   : '--'}
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">Ranking</span>
+              <span
+                className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
+                Ranking
+              </span>
             </div>
-            <div className="flex flex-col items-center py-4 px-3 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)]">
-              <MdMyLocation size={28} className="text-[var(--color-primary)]" />
-              <span className="text-2xl font-bold text-[var(--color-on-surface)] mt-2 font-[family-name:var(--font-display)]">
+            <div className="glass-card ghost-border rounded-sm flex flex-col items-center py-5 px-3 hover:glow-shadow-purple transition-all">
+              <MdMyLocation size={28} className="text-[#c3cc8c]" />
+              <span
+                className="text-2xl font-black text-[#f8e19e] mt-2"
+                style={{ fontFamily: 'Public Sans, sans-serif' }}
+              >
                 {topBranch ? topBranch.branch : '--'}
               </span>
-              <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">
+              <span
+                className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1"
+                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+              >
                 {topBranch ? `${topBranch.percentage}% Fit` : 'Set up profile'}
               </span>
             </div>
@@ -144,27 +197,47 @@ export default function MissionPage() {
         </section>
 
         {/* Strategic Readiness */}
-        <section className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-5">
-          <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-4 font-[family-name:var(--font-label)]">Strategic Readiness</h2>
-          <div className="space-y-4">
+        <section className="bg-[#1d1b1f] rounded-sm p-6">
+          <h2
+            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-5"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            STRATEGIC READINESS
+          </h2>
+          <div className="space-y-5">
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-semibold text-[var(--color-on-surface)]">Physical</span>
-                <span className="text-xs font-bold text-[var(--color-primary)] font-[family-name:var(--font-label)]">{Math.round(physical * 100)}%</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-[#e7e1e6]" style={{ fontFamily: 'Inter, sans-serif' }}>Physical</span>
+                <span
+                  className="text-xs font-bold text-[#d9b9ff]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  {Math.round(physical * 100)}%
+                </span>
               </div>
               <VProgressBar progress={physical} />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-semibold text-[var(--color-on-surface)]">Academic</span>
-                <span className="text-xs font-bold text-[var(--color-primary)] font-[family-name:var(--font-label)]">{Math.round(academic * 100)}%</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-[#e7e1e6]" style={{ fontFamily: 'Inter, sans-serif' }}>Academic</span>
+                <span
+                  className="text-xs font-bold text-[#f8e19e]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  {Math.round(academic * 100)}%
+                </span>
               </div>
               <VProgressBar progress={academic} />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-semibold text-[var(--color-on-surface)]">Leadership</span>
-                <span className="text-xs font-bold text-[var(--color-primary)] font-[family-name:var(--font-label)]">{Math.round(leadership * 100)}%</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-[#e7e1e6]" style={{ fontFamily: 'Inter, sans-serif' }}>Leadership</span>
+                <span
+                  className="text-xs font-bold text-[#c3cc8c]"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                >
+                  {Math.round(leadership * 100)}%
+                </span>
               </div>
               <VProgressBar progress={leadership} />
             </div>

@@ -10,7 +10,7 @@ export interface VProgressBarProps {
 
 export const VProgressBar: React.FC<VProgressBarProps> = ({
   progress,
-  height = 8,
+  height = 6,
   className = '',
 }) => {
   const clamped = Math.min(1, Math.max(0, progress));
@@ -18,7 +18,7 @@ export const VProgressBar: React.FC<VProgressBarProps> = ({
 
   return (
     <div
-      className={`w-full rounded overflow-hidden bg-[var(--color-surface-container-highest)] ${className}`}
+      className={`w-full rounded-sm overflow-hidden bg-[#373438] ${className}`}
       style={{ height }}
       role="progressbar"
       aria-valuenow={pct}
@@ -27,8 +27,12 @@ export const VProgressBar: React.FC<VProgressBarProps> = ({
       aria-label={`Progress: ${pct}%`}
     >
       <div
-        className="h-full rounded gradient-primary transition-[width] duration-300 ease-out"
-        style={{ width: `${pct}%` }}
+        className="h-full rounded-sm transition-[width] duration-300 ease-out"
+        style={{
+          width: `${pct}%`,
+          background: 'linear-gradient(90deg, #dbc585, #f8e19e)',
+          boxShadow: '0 0 10px #dbc585',
+        }}
       />
     </div>
   );

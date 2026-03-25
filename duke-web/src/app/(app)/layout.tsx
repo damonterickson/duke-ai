@@ -22,7 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 inset-x-0 h-[64px] bg-[#1d1b1f] border-t border-[#4b4452]/30 flex items-center z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <nav className="fixed bottom-0 inset-x-0 h-[64px] bg-[#1d1b1f]/90 backdrop-blur-xl flex items-center z-50 shadow-[0_-4px_30px_rgba(69,0,132,0.15)]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const Icon = tab.icon;

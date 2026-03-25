@@ -22,16 +22,24 @@ export default function LeadershipPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 bg-[var(--color-background)] min-h-screen max-w-lg mx-auto">
-      <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-2 font-[family-name:var(--font-label)]">STEP 4 OF 5</span>
-      <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-on-surface)] mb-2 font-[family-name:var(--font-display)]">
-        Leadership Evaluation
+    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 bg-[#151317] min-h-screen max-w-lg mx-auto">
+      <span
+        className="text-xs uppercase tracking-[0.3em] text-[#d9b9ff] mb-2"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+      >
+        STEP 4 OF 5
+      </span>
+      <h1
+        className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-2"
+        style={{ fontFamily: 'Public Sans, sans-serif' }}
+      >
+        LEADERSHIP EVALUATION
       </h1>
-      <p className="text-sm text-[var(--color-on-surface-variant)] mb-8 leading-relaxed">
+      <p className="text-sm text-[#cdc3d4] mb-8 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
         Your commander&apos;s assessment score is a key OML pillar. Enter it below or skip for now.
       </p>
 
-      <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-5">
+      <div className="glass-card ghost-border rounded-sm p-5">
         <VInput
           label="Commander's Assessment Score (optional)"
           value={leadershipEval}
@@ -47,8 +55,8 @@ export default function LeadershipPage() {
         />
       </div>
 
-      <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-4 mt-4">
-        <p className="text-sm text-[var(--color-on-surface-variant)] leading-relaxed">
+      <div className="glass-card ghost-border rounded-sm p-4 mt-4">
+        <p className="text-sm text-[#cdc3d4] leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
           Don&apos;t worry if you don&apos;t have this yet. You can log leadership
           activities, command roles, and extracurriculars in detail after setup.
         </p>
@@ -57,7 +65,8 @@ export default function LeadershipPage() {
       <div className="mt-auto pb-8">
         <button
           onClick={handleNext}
-          className="w-full py-3.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+          className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
         >
           Next
         </button>
@@ -65,12 +74,12 @@ export default function LeadershipPage() {
 
       {/* Progress dots */}
       <div className="flex justify-center gap-2 pb-6">
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
-        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#d9b9ff]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[#968d9d]" />
       </div>
     </div>
   );

@@ -27,12 +27,12 @@ export const VEmptyState: React.FC<VEmptyStateProps> = ({
       aria-label={headline}
     >
       <div className="w-24 h-24 flex items-center justify-center mb-2">
-        <span className="text-6xl text-[var(--color-outline)]">{icon}</span>
+        <span className="text-6xl text-[#968d9d]">{icon}</span>
       </div>
-      <h2 className="text-xl font-bold text-[var(--color-on-surface)] text-center font-[family-name:var(--font-display)]">
+      <h2 className="text-xl font-bold text-[#e7e1e6] text-center font-[family-name:var(--font-display)]">
         {headline}
       </h2>
-      <p className="text-sm text-[var(--color-on-surface-variant)] text-center leading-relaxed font-[family-name:var(--font-body)]">
+      <p className="text-sm text-[#cdc3d4] text-center leading-relaxed font-[family-name:var(--font-body)]">
         {body}
       </p>
       <VButton
