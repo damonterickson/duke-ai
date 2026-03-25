@@ -1,326 +1,245 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { MdShield, MdPsychology, MdSchool, MdFitnessCenter } from 'react-icons/md';
-
-/* ─── Fade-in on scroll hook ─── */
-function useFadeIn() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add('landing-visible');
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.15 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  return ref;
-}
-
-function FadeSection({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  const ref = useFadeIn();
-  return (
-    <div ref={ref} className={`landing-fade ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-/* ─── Color tokens (Kinetic Command / dark) ─── */
-const C = {
-  bg: '#0f0d11',
-  surface: '#1d1b1f',
-  surfaceHigh: '#272329',
-  primary: '#d9b9ff',
-  gold: '#dbc585',
-  text: '#e7e1e6',
-  textSecondary: '#cdc3d4',
-  outline: '#4a4453',
-  gradientFrom: '#450084',
-  gradientTo: '#d9b9ff',
-} as const;
 
 export default function LandingPage() {
   return (
-    <div
-      style={{ backgroundColor: C.bg, color: C.text }}
-      className="min-h-screen font-[family-name:var(--font-body)]"
-    >
-      {/* ────────── Inline styles for animations ────────── */}
+    <div className="bg-[#151317] text-[#e7e1e6] min-h-screen selection:bg-[#450084] selection:text-[#d9b9ff]" style={{ fontFamily: 'Inter, sans-serif' }}>
+      {/* Material Symbols font */}
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
       <style jsx global>{`
-        .landing-fade {
-          opacity: 0;
-          transform: translateY(24px);
-          transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        .landing-visible {
-          opacity: 1;
-          transform: translateY(0);
+        .kinetic-grid {
+          background-image: radial-gradient(circle at 2px 2px, rgba(217, 185, 255, 0.05) 1px, transparent 0);
+          background-size: 40px 40px;
         }
-        .landing-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 8px 32px rgba(217, 185, 255, 0.12);
+        .glass-card {
+          background: rgba(69, 0, 132, 0.1);
+          backdrop-filter: blur(20px);
         }
-        .landing-cta:hover {
-          opacity: 0.9;
-          transform: scale(1.02);
+        .glow-shadow-gold {
+          box-shadow: 0 0 30px rgba(219, 197, 133, 0.15);
+        }
+        .glow-shadow-purple {
+          box-shadow: 0 0 50px rgba(69, 0, 132, 0.3);
         }
       `}</style>
 
-      {/* ════════════════ NAV ════════════════ */}
-      <nav
-        style={{ backgroundColor: `${C.bg}ee`, borderBottom: `1px solid ${C.outline}33` }}
-        className="sticky top-0 z-50 backdrop-blur-md"
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <MdShield size={28} style={{ color: C.primary }} />
-            <span
-              style={{ color: C.text }}
-              className="text-lg font-bold tracking-[3px] uppercase font-[family-name:var(--font-display)]"
-            >
-              VANGUARD
-            </span>
+      {/* Header */}
+      <header className="bg-[#151317]/60 backdrop-blur-2xl fixed top-0 w-full z-50 shadow-xl shadow-purple-900/20">
+        <nav className="flex justify-between items-center w-full px-8 py-4">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[#d9b9ff] text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+            <span className="text-2xl font-black text-[#d9b9ff] tracking-tighter italic uppercase" style={{ fontFamily: 'Public Sans, sans-serif' }}>VANGUARD</span>
           </div>
-
-          {/* Links */}
-          <div className="hidden sm:flex items-center gap-8">
-            <a href="#features" style={{ color: C.textSecondary }} className="text-sm font-medium hover:opacity-80 transition-opacity">
-              Mission
-            </a>
-            <a href="#stats" style={{ color: C.textSecondary }} className="text-sm font-medium hover:opacity-80 transition-opacity">
-              Academy
-            </a>
-            <a href="#cta" style={{ color: C.textSecondary }} className="text-sm font-medium hover:opacity-80 transition-opacity">
-              Tactical
-            </a>
+          <div className="hidden md:flex items-center gap-8">
+            <a className="font-black uppercase tracking-tighter text-[#dbc585] border-b-2 border-[#dbc585] pb-1 transition-all duration-300" href="#mission" style={{ fontFamily: 'Public Sans, sans-serif' }}>Mission</a>
+            <a className="font-black uppercase tracking-tighter text-[#968d9d] hover:text-[#dbc585] hover:bg-white/5 transition-all duration-300 pb-1" href="#features" style={{ fontFamily: 'Public Sans, sans-serif' }}>Academy</a>
+            <a className="font-black uppercase tracking-tighter text-[#968d9d] hover:text-[#dbc585] hover:bg-white/5 transition-all duration-300 pb-1" href="#cta" style={{ fontFamily: 'Public Sans, sans-serif' }}>Tactical</a>
           </div>
-
-          {/* Login */}
-          <Link
-            href="/auth"
-            style={{ border: `1px solid ${C.primary}`, color: C.primary }}
-            className="px-5 py-2 rounded-md text-sm font-bold uppercase tracking-wider hover:opacity-80 transition-opacity font-[family-name:var(--font-label)]"
-          >
+          <Link href="/auth" className="bg-[#450084] text-[#d9b9ff] px-6 py-2 rounded-sm text-xs font-bold uppercase tracking-widest active:scale-95 duration-200 hover:bg-[#450084]/80 transition-all shadow-lg shadow-[#450084]/20" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             Login
           </Link>
-        </div>
-      </nav>
+        </nav>
+      </header>
 
-      {/* ════════════════ HERO ════════════════ */}
-      <section className="max-w-5xl mx-auto px-6 pt-20 pb-24 text-center">
-        <FadeSection>
-          {/* Status badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-8" style={{ backgroundColor: C.surfaceHigh, border: `1px solid ${C.outline}` }}>
-            <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#4ade80' }} />
-            <span className="text-xs font-bold tracking-wider uppercase font-[family-name:var(--font-label)]" style={{ color: C.gold }}>
-              Operational Status: Combat Ready
-            </span>
-          </div>
-
-          <h1
-            className="text-5xl sm:text-6xl md:text-7xl font-black uppercase leading-none mb-6 font-[family-name:var(--font-display)]"
-            style={{ color: C.text }}
-          >
-            MAXIMIZE YOUR{' '}
-            <span style={{ color: C.primary }}>OML</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl md:text-2xl font-medium mb-3" style={{ color: C.textSecondary }}>
-            Elite-tier performance tracker and AI mentor for Army ROTC Cadets
-          </p>
-          <p className="text-sm sm:text-base mb-10" style={{ color: C.textSecondary }}>
-            Command your career path with data-driven precision
-          </p>
-
-          <Link
-            href="/auth"
-            className="landing-cta inline-block px-10 py-4 rounded-md text-sm font-bold uppercase tracking-widest transition-all font-[family-name:var(--font-label)]"
-            style={{
-              background: `linear-gradient(135deg, ${C.gradientFrom}, ${C.gradientTo})`,
-              color: '#ffffff',
-              boxShadow: '0 4px 24px rgba(69,0,132,0.4)',
-            }}
-          >
-            START MISSION BRIEFING
-          </Link>
-        </FadeSection>
-      </section>
-
-      {/* ════════════════ STATS ════════════════ */}
-      <section id="stats" className="py-20" style={{ backgroundColor: C.surface }}>
-        <div className="max-w-5xl mx-auto px-6">
-          <FadeSection>
-            <p
-              className="text-xs font-bold tracking-[4px] uppercase text-center mb-12 font-[family-name:var(--font-label)]"
-              style={{ color: C.gold }}
-            >
-              TRUSTED BY CADETS ACROSS THE BATTALION
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {[
-                { value: '800+', label: 'OML Points Average' },
-                { value: '100%', label: 'Canvas Sync' },
-                { value: 'Top 10%', label: 'National Rank' },
-              ].map((s) => (
-                <div
-                  key={s.label}
-                  className="landing-card rounded-xl p-8 text-center transition-all duration-300"
-                  style={{ backgroundColor: C.surfaceHigh, border: `1px solid ${C.outline}44` }}
-                >
-                  <span
-                    className="block text-4xl font-black mb-2 font-[family-name:var(--font-display)]"
-                    style={{ color: C.primary }}
-                  >
-                    {s.value}
-                  </span>
-                  <span className="text-sm font-medium" style={{ color: C.textSecondary }}>
-                    {s.label}
-                  </span>
-                </div>
-              ))}
+      <main className="pt-20">
+        {/* Hero Section */}
+        <section id="mission" className="relative min-h-[795px] flex items-center justify-center overflow-hidden kinetic-grid">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#151317]/50 to-[#151317] z-10"></div>
+          <div className="container mx-auto px-8 relative z-20 grid lg:grid-cols-2 gap-12 items-center">
+            <div className="text-left space-y-8">
+              <div className="inline-flex items-center gap-2 bg-[#2c292d] px-4 py-1 rounded-full border border-[#4b4452]/20">
+                <span className="w-2 h-2 rounded-full bg-[#dbc585] animate-pulse"></span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#dbc585]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Operational Status: Combat Ready</span>
+              </div>
+              <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                MAXIMIZE <br />
+                <span className="text-[#dbc585] italic">YOUR OML</span>
+              </h1>
+              <p className="text-xl md:text-2xl text-[#cdc3d4] max-w-xl font-light leading-relaxed">
+                The elite-tier performance tracker and AI mentor for <span className="text-[#d9b9ff] font-bold">JMU ROTC</span> Cadets. Command your career path with data-driven precision.
+              </p>
+              <div className="flex flex-wrap gap-4 pt-4">
+                <Link href="/auth" className="bg-gradient-to-br from-[#450084] to-[#343c0a] text-[#b27ff5] px-10 py-5 rounded-sm font-black text-lg uppercase tracking-tighter hover:scale-105 transition-transform duration-300 glow-shadow-purple active:scale-95" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                  START MISSION BRIEFING
+                </Link>
+              </div>
             </div>
-          </FadeSection>
-        </div>
-      </section>
+            <div className="hidden lg:flex justify-center items-center relative">
+              <div className="absolute w-[500px] h-[500px] bg-[#d9b9ff]/10 rounded-full blur-[120px] animate-pulse"></div>
+              <div className="relative z-10 p-12 glass-card rounded-full border border-[#d9b9ff]/20 glow-shadow-purple">
+                <span className="material-symbols-outlined text-[200px] text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1", fontWeight: 100 }}>shield_with_heart</span>
+                <div className="absolute top-0 right-0 p-4 border-t-2 border-r-2 border-[#dbc585]/50 w-12 h-12"></div>
+                <div className="absolute bottom-0 left-0 p-4 border-b-2 border-l-2 border-[#dbc585]/50 w-12 h-12"></div>
+              </div>
+              <div className="absolute bottom-10 right-0 glass-card p-6 rounded-xl border border-[#dbc585]/20 glow-shadow-gold translate-x-12 translate-y-12">
+                <div className="text-[#dbc585] text-[10px] tracking-[0.3em] uppercase mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Current Readiness</div>
+                <div className="text-3xl font-black text-[#e7e1e6]" style={{ fontFamily: 'Public Sans, sans-serif' }}>98.4%</div>
+                <div className="w-full bg-[#373438] h-1 mt-2">
+                  <div className="bg-[#dbc585] h-full w-[98%]" style={{ boxShadow: '0 0 10px #dbc585' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      {/* ════════════════ FEATURES ════════════════ */}
-      <section id="features" className="py-24">
-        <div className="max-w-5xl mx-auto px-6">
-          <FadeSection>
-            <p
-              className="text-xs font-bold tracking-[4px] uppercase text-center mb-2 font-[family-name:var(--font-label)]"
-              style={{ color: C.gold }}
-            >
-              System Module: 04-B / Vanguard Core
-            </p>
-            <h2
-              className="text-3xl sm:text-4xl font-black uppercase text-center mb-16 font-[family-name:var(--font-display)]"
-              style={{ color: C.text }}
-            >
-              TACTICAL ADVANTAGE THROUGH{' '}
-              <span style={{ color: C.primary }}>SUPERIOR DATA</span>
-            </h2>
-          </FadeSection>
+        {/* Stats Section */}
+        <section className="py-24 bg-[#1d1b1f] relative">
+          <div className="container mx-auto px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-xs uppercase tracking-[0.5em] text-[#968d9d] mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>TRUSTED BY JMU CADETS ACROSS THE BATTALION</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+              <div className="space-y-2 group">
+                <div className="text-5xl md:text-6xl font-black text-[#f8e19e] group-hover:scale-110 transition-transform" style={{ fontFamily: 'Public Sans, sans-serif' }}>800+</div>
+                <div className="text-sm uppercase tracking-widest text-[#cdc3d4]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OML Points Average</div>
+              </div>
+              <div className="space-y-2 group">
+                <div className="text-5xl md:text-6xl font-black text-[#d9b9ff] group-hover:scale-110 transition-transform" style={{ fontFamily: 'Public Sans, sans-serif' }}>100%</div>
+                <div className="text-sm uppercase tracking-widest text-[#cdc3d4]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Canvas Sync</div>
+              </div>
+              <div className="space-y-2 group">
+                <div className="text-5xl md:text-6xl font-black text-[#c3cc8c] group-hover:scale-110 transition-transform" style={{ fontFamily: 'Public Sans, sans-serif' }}>Top 10%</div>
+                <div className="text-sm uppercase tracking-widest text-[#cdc3d4]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>National Rank</div>
+              </div>
+            </div>
+          </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <MdPsychology size={32} style={{ color: C.primary }} />,
-                title: 'Strategic AI Mentor',
-                desc: 'Real-time tactical advice for ranking improvement. Personal AI advisor analyzing your OML trajectory.',
-              },
-              {
-                icon: <MdSchool size={32} style={{ color: C.primary }} />,
-                title: 'Canvas LMS Integration',
-                desc: 'Automated grade tracking from your university systems. Sync your academic performance effortlessly.',
-              },
-              {
-                icon: <MdFitnessCenter size={32} style={{ color: C.primary }} />,
-                title: 'ACFT Performance Log',
-                desc: 'Rep and mile tracking with trajectory analysis. Log every ACFT attempt and see OML impact.',
-              },
-            ].map((f) => (
-              <FadeSection key={f.title}>
-                <div
-                  className="landing-card rounded-xl p-8 h-full transition-all duration-300"
-                  style={{ backgroundColor: C.surface, border: `1px solid ${C.outline}44` }}
-                >
-                  <div
-                    className="w-14 h-14 rounded-lg flex items-center justify-center mb-6"
-                    style={{ backgroundColor: `${C.primary}15` }}
-                  >
-                    {f.icon}
+        {/* Features Section */}
+        <section id="features" className="py-32 bg-[#151317] overflow-hidden">
+          <div className="container mx-auto px-8">
+            <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-16">
+              <div className="max-w-2xl">
+                <h3 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-[#e7e1e6] leading-tight" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                  TACTICAL <span className="text-[#dbc585]">ADVANTAGE</span> THROUGH SUPERIOR DATA
+                </h3>
+              </div>
+              <div className="text-xs text-[#968d9d] text-right uppercase tracking-widest" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                System Module: 04-B / Vanguard Core
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Feature 1 - AI Mentor */}
+              <div className="glass-card p-10 rounded-xl relative overflow-hidden group hover:bg-[#450084]/20 transition-all duration-500">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                  <span className="material-symbols-outlined text-8xl" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                </div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-[#450084] flex items-center justify-center mb-8 border border-[#d9b9ff]/30">
+                    <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>smart_toy</span>
                   </div>
-                  <h3
-                    className="text-lg font-bold mb-3 font-[family-name:var(--font-display)]"
-                    style={{ color: C.text }}
-                  >
-                    {f.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed" style={{ color: C.textSecondary }}>
-                    {f.desc}
+                  <h4 className="text-2xl font-black uppercase tracking-tight text-[#eedcff] mb-4" style={{ fontFamily: 'Public Sans, sans-serif' }}>Strategic AI Mentor</h4>
+                  <p className="text-[#cdc3d4] leading-relaxed">
+                    Real-time tactical advice engineered to analyze your current standing and provide actionable maneuvers to boost your national ranking.
                   </p>
                 </div>
-              </FadeSection>
-            ))}
-          </div>
-        </div>
-      </section>
+                <div className="mt-8 pt-8 border-t border-[#4b4452]/10">
+                  <span className="text-xs uppercase tracking-widest text-[#dbc585] flex items-center gap-2 group-hover:gap-4 transition-all cursor-pointer" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    Protocol Details <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </span>
+                </div>
+              </div>
 
-      {/* ════════════════ FINAL CTA ════════════════ */}
-      <section id="cta" className="py-24" style={{ backgroundColor: C.surface }}>
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <FadeSection>
-            <h2
-              className="text-4xl sm:text-5xl font-black uppercase mb-4 font-[family-name:var(--font-display)]"
-              style={{ color: C.text }}
-            >
-              READY TO <span style={{ color: C.primary }}>LEAD</span>?
-            </h2>
-            <p className="text-base sm:text-lg mb-10" style={{ color: C.textSecondary }}>
-              The mission starts now. Join the ranks of the high-performers.
-            </p>
-            <Link
-              href="/auth"
-              className="landing-cta inline-block px-10 py-4 rounded-md text-sm font-bold uppercase tracking-widest transition-all font-[family-name:var(--font-label)]"
-              style={{
-                background: `linear-gradient(135deg, ${C.gradientFrom}, ${C.gradientTo})`,
-                color: '#ffffff',
-                boxShadow: '0 4px 24px rgba(69,0,132,0.4)',
-              }}
-            >
-              JOIN THE VANGUARD
-            </Link>
-          </FadeSection>
-        </div>
-      </section>
+              {/* Feature 2 - Canvas */}
+              <div className="glass-card p-10 rounded-xl relative overflow-hidden group hover:bg-[#544511]/20 transition-all duration-500">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                  <span className="material-symbols-outlined text-8xl" style={{ fontVariationSettings: "'FILL' 1" }}>sync</span>
+                </div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-[#544511] flex items-center justify-center mb-8 border border-[#dbc585]/30">
+                    <span className="material-symbols-outlined text-[#dbc585]" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_sync</span>
+                  </div>
+                  <h4 className="text-2xl font-black uppercase tracking-tight text-[#f8e19e] mb-4" style={{ fontFamily: 'Public Sans, sans-serif' }}>Canvas LMS Integration</h4>
+                  <p className="text-[#cdc3d4] leading-relaxed">
+                    Seamless automated grade tracking directly from JMU&apos;s systems for high-precision OML projections without manual data entry.
+                  </p>
+                </div>
+                <div className="mt-8 pt-8 border-t border-[#4b4452]/10">
+                  <span className="text-xs uppercase tracking-widest text-[#dbc585] flex items-center gap-2 group-hover:gap-4 transition-all cursor-pointer" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    Protocol Details <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </span>
+                </div>
+              </div>
 
-      {/* ════════════════ FOOTER ════════════════ */}
-      <footer style={{ borderTop: `1px solid ${C.outline}33` }} className="py-12">
-        <div className="max-w-5xl mx-auto px-6">
-          {/* Values bar */}
-          <p
-            className="text-xs font-bold tracking-[3px] uppercase text-center mb-10 font-[family-name:var(--font-label)]"
-            style={{ color: C.gold }}
-          >
-            Integrity &middot; Excellence &middot; Service &middot; Leadership
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <MdShield size={22} style={{ color: C.primary }} />
-              <span className="text-sm font-bold tracking-[3px] uppercase font-[family-name:var(--font-display)]" style={{ color: C.text }}>
-                VANGUARD
-              </span>
-            </div>
-
-            {/* Links */}
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              {['Mission Briefing', 'Privacy Protocol', 'Tactical Support', 'Command Center'].map((l) => (
-                <span key={l} className="text-xs font-medium cursor-pointer hover:opacity-80 transition-opacity" style={{ color: C.textSecondary }}>
-                  {l}
-                </span>
-              ))}
+              {/* Feature 3 - AFT */}
+              <div className="glass-card p-10 rounded-xl relative overflow-hidden group hover:bg-[#2c3303]/20 transition-all duration-500">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                  <span className="material-symbols-outlined text-8xl" style={{ fontVariationSettings: "'FILL' 1" }}>monitoring</span>
+                </div>
+                <div className="relative z-10">
+                  <div className="w-12 h-12 rounded-full bg-[#2c3303] flex items-center justify-center mb-8 border border-[#c3cc8c]/30">
+                    <span className="material-symbols-outlined text-[#c3cc8c]" style={{ fontVariationSettings: "'FILL' 1" }}>fitness_center</span>
+                  </div>
+                  <h4 className="text-2xl font-black uppercase tracking-tight text-[#dfe8a6] mb-4" style={{ fontFamily: 'Public Sans, sans-serif' }}>AFT Performance Log</h4>
+                  <p className="text-[#cdc3d4] leading-relaxed">
+                    Track every rep and mile with historic trajectory analysis. Visualize your growth from MS1 to Commissioning.
+                  </p>
+                </div>
+                <div className="mt-8 pt-8 border-t border-[#4b4452]/10">
+                  <span className="text-xs uppercase tracking-widest text-[#dbc585] flex items-center gap-2 group-hover:gap-4 transition-all cursor-pointer" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                    Protocol Details <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
+        </section>
 
-          <p className="text-xs text-center mt-10" style={{ color: C.outline }}>
-            &copy; 2024 Duke Vanguard. All missions secured.
-          </p>
+        {/* Final CTA */}
+        <section id="cta" className="relative py-32 overflow-hidden">
+          <div className="absolute inset-0 z-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt="Military training"
+              className="w-full h-full object-cover opacity-10 grayscale mix-blend-luminosity"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnjrC3WFhs_BqduJLJoRxG99Kfxy5qCna5H37Vu02G5kA0nXCsrRCReYdMe9KBOuTljuVxwUCFqoGqbbjAGDcJvSbyUHIRcpuYWF3PO5iiEksfi5xgtS4bsanubwkgP3p0WV_VjzMlo9AVERYAVxAQEH-7wtMNwo5GpCgWNi0qhd91Y5sGQhg56WNQ3r9Vlf4-ISHiuVxBVtzIIDusjmQPEavLQRjOFFpxwRVYl2d_vaB8kJ6jVpcNTO5RAK2omEODkdz2-GS6yAMb"
+            />
+          </div>
+          <div className="container mx-auto px-8 relative z-10 text-center space-y-12">
+            <div className="max-w-3xl mx-auto">
+              <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-6" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                READY TO <span className="text-[#d9b9ff] italic">LEAD?</span>
+              </h2>
+              <p className="text-xl text-[#cdc3d4] uppercase tracking-[0.2em] mb-12">
+                The mission starts now. Join the ranks of the high-performers.
+              </p>
+              <Link href="/auth" className="inline-block bg-[#d9b9ff] text-[#460185] px-12 py-6 rounded-sm font-black text-xl uppercase tracking-tighter hover:bg-[#dbc585] hover:text-[#3c2f00] transition-all duration-300 shadow-2xl shadow-[#d9b9ff]/20 active:scale-95" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                JOIN THE VANGUARD
+              </Link>
+            </div>
+            <div className="pt-20">
+              <div className="flex flex-wrap justify-center gap-12 opacity-30">
+                <span className="text-xs uppercase tracking-[0.5em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Integrity</span>
+                <span className="text-xs uppercase tracking-[0.5em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Excellence</span>
+                <span className="text-xs uppercase tracking-[0.5em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Service</span>
+                <span className="text-xs uppercase tracking-[0.5em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Leadership</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-[#1d1b1f] w-full py-12 px-8">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-3">
+            <span className="material-symbols-outlined text-[#d9b9ff] text-xl">shield</span>
+            <span className="text-[#d9b9ff] font-bold uppercase tracking-tighter" style={{ fontFamily: 'Public Sans, sans-serif' }}>VANGUARD</span>
+          </div>
+          <div className="flex flex-wrap justify-center gap-8">
+            <a className="text-[10px] uppercase tracking-widest text-[#968d9d] hover:text-white transition-colors" href="#" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Mission Briefing</a>
+            <a className="text-[10px] uppercase tracking-widest text-[#968d9d] hover:text-white transition-colors" href="#" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Privacy Protocol</a>
+            <a className="text-[10px] uppercase tracking-widest text-[#968d9d] hover:text-white transition-colors" href="#" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Tactical Support</a>
+            <a className="text-[10px] uppercase tracking-widest text-[#968d9d] hover:text-white transition-colors" href="#" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Command Center</a>
+          </div>
+          <div className="text-[10px] uppercase tracking-widest text-[#dbc585]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            © 2024 JMU ROTC COMMAND. ALL MISSIONS SECURED.
+          </div>
         </div>
       </footer>
     </div>
