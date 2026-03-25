@@ -22,7 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 inset-x-0 h-[64px] bg-[var(--color-primary)] flex items-center z-50 shadow-[0_-2px_12px_rgba(0,0,0,0.15)]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+      <nav className="fixed bottom-0 inset-x-0 h-[64px] bg-[#1d1b1f] border-t border-[#4b4452]/30 flex items-center z-50" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const Icon = tab.icon;
@@ -34,15 +34,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             >
               <Icon
                 size={22}
-                className="text-white"
+                className={isActive ? 'text-[#d9b9ff]' : 'text-[#968d9d]'}
               />
               <span
-                className={`text-[10px] uppercase tracking-[1.5px] text-white font-[family-name:var(--font-label)] ${isActive ? 'font-bold' : 'font-medium'}`}
+                className={`text-[10px] uppercase tracking-[1.5px] font-[family-name:var(--font-label)] ${isActive ? 'text-[#d9b9ff] font-bold' : 'text-[#968d9d] font-medium'}`}
               >
                 {tab.label}
               </span>
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-white" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-[#d9b9ff]" />
               )}
             </Link>
           );
