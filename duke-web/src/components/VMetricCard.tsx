@@ -17,7 +17,7 @@ const trendArrows: Record<TrendDirection, string> = {
 };
 
 const trendColorMap: Record<TrendDirection, string> = {
-  up: 'text-[var(--color-tertiary)]',
+  up: 'text-[var(--color-success)]',
   down: 'text-[var(--color-error)]',
   flat: 'text-[var(--color-outline)]',
 };
@@ -31,14 +31,14 @@ export const VMetricCard: React.FC<VMetricCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-[var(--color-surface-container-low)] rounded-xl p-4 ${className}`}
+      className={`bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md p-4 shadow-[var(--shadow-sm)] ${className}`}
       role="region"
       aria-label={`${label}: ${value}${trend ? `, trending ${trend}` : ''}`}
     >
-      <span className="block text-4xl font-bold text-[var(--color-on-surface)]">
+      <span className="block text-4xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">
         {value}
       </span>
-      <span className="block text-sm font-medium text-[var(--color-outline)] mt-1">
+      <span className="block text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mt-1 font-[family-name:var(--font-label)]">
         {label}
       </span>
       {trend && (
@@ -47,7 +47,7 @@ export const VMetricCard: React.FC<VMetricCardProps> = ({
             {trendArrows[trend]}
           </span>
           {trendLabel && (
-            <span className={`text-xs font-medium ${trendColorMap[trend]}`}>
+            <span className={`text-xs font-semibold ${trendColorMap[trend]}`}>
               {trendLabel}
             </span>
           )}

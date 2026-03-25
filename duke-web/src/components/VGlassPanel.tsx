@@ -11,7 +11,7 @@ export const VGlassPanel: React.FC<VGlassPanelProps> = ({
 }) => {
   return (
     <div
-      className={`rounded-2xl overflow-hidden p-4 backdrop-blur-xl bg-[var(--glass-overlay)] border border-[var(--ghost-border-color)] ${className}`}
+      className={`glass-panel rounded-md overflow-hidden p-4 ${className}`}
     >
       {children}
     </div>

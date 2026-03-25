@@ -30,13 +30,13 @@ export const VInput: React.FC<VInputProps> = ({
   const borderClass = error
     ? 'border-[var(--color-error)]'
     : focused
-      ? 'border-[var(--color-outline-variant)]'
-      : 'border-transparent';
+      ? 'border-[var(--color-primary)]'
+      : 'border-[var(--ghost-border)]';
 
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
       {label && (
-        <label className="text-sm font-medium text-[var(--color-on-surface)] mb-1">
+        <label className="text-xs uppercase tracking-widest font-[family-name:var(--font-label)] text-[var(--color-on-surface-variant)] mb-1">
           {label}
         </label>
       )}
@@ -49,12 +49,12 @@ export const VInput: React.FC<VInputProps> = ({
         onBlur={() => setFocused(false)}
         aria-label={label}
         aria-invalid={error}
-        className={`bg-[var(--color-surface-container-low)] rounded-xl py-3 px-4 text-base text-[var(--color-on-surface)] placeholder:text-[var(--color-outline)] border ${borderClass} outline-none transition-colors`}
+        className={`bg-[var(--color-surface-container-low)] rounded-md py-3 px-4 text-base text-[var(--color-on-surface)] placeholder:text-[var(--color-outline)] border ${borderClass} outline-none transition-all font-[family-name:var(--font-body)]`}
       />
       {error && errorText ? (
-        <span className="text-sm text-[var(--color-error)]">{errorText}</span>
+        <span className="text-xs text-[var(--color-error)] mt-0.5">{errorText}</span>
       ) : helperText ? (
-        <span className="text-sm text-[var(--color-outline)]">{helperText}</span>
+        <span className="text-xs text-[var(--color-outline)] mt-0.5">{helperText}</span>
       ) : null}
     </div>
   );
