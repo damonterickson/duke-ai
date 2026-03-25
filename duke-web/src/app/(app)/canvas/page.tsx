@@ -10,7 +10,7 @@ import {
   MdCalculate,
   MdMilitaryTech,
 } from 'react-icons/md';
-import { VGlassPanel, VButton } from '@/components';
+import { VButton } from '@/components';
 
 type ConnectionStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
 
@@ -75,33 +75,36 @@ export default function CanvasPage() {
     : null;
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col min-h-full bg-[var(--color-background)]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-[var(--color-primary)]">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-white cursor-pointer">
+      <header className="gradient-primary text-white px-4 py-4 flex items-center gap-3 shadow-[var(--shadow-md)]">
+        <button onClick={() => router.back()} aria-label="Go back" className="text-white/80 hover:text-white cursor-pointer transition-colors">
           <MdArrowBack size={24} />
         </button>
-        <h1 className="text-base font-bold tracking-[2px] text-white">CANVAS INTEGRATION</h1>
-        <div className="w-6" />
-      </div>
+        <h1 className="text-sm font-bold uppercase tracking-[3px] font-[family-name:var(--font-label)]">CANVAS INTEGRATION</h1>
+      </header>
 
-      <div className="flex-1 overflow-y-auto bg-[var(--color-surface)] p-4 pb-16">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-6">
         {/* Connection Status */}
-        <VGlassPanel className="mb-4">
+        <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
           <div className="flex items-center gap-3">
             <div
-              className="w-3 h-3 rounded-full"
+              className="w-3.5 h-3.5 rounded-full border-2"
               style={{
                 backgroundColor:
                   status === 'connected' ? '#4caf50'
                     : status === 'connecting' ? 'var(--color-tertiary)'
                     : status === 'error' ? 'var(--color-error)'
                     : 'var(--color-outline)',
+                borderColor:
+                  status === 'connected' ? '#4caf5040'
+                    : status === 'connecting' ? 'var(--color-tertiary)'
+                    : 'transparent',
               }}
             />
             <div className="flex-1">
-              <span className="text-base font-semibold text-[var(--color-on-surface)] block">Canvas LMS</span>
-              <span className="text-sm text-[var(--color-outline)] mt-0.5 block">
+              <span className="text-base font-bold text-[var(--color-on-surface)] block">Canvas LMS</span>
+              <span className="text-sm text-[var(--color-on-surface-variant)] mt-0.5 block">
                 {status === 'connected' ? 'Connected - Duke University'
                   : status === 'connecting' ? 'Connecting...'
                   : status === 'error' ? 'Connection failed'
@@ -113,7 +116,7 @@ export default function CanvasPage() {
             ) : status === 'connected' ? (
               <button
                 onClick={handleDisconnect}
-                className="py-2 px-3 rounded-lg border border-[var(--color-error)] text-[var(--color-error)] text-sm font-semibold cursor-pointer"
+                className="py-2 px-4 rounded-md border border-[var(--color-error)] text-[var(--color-error)] text-sm font-bold cursor-pointer hover:bg-[var(--color-error-container)] transition-colors"
                 aria-label="Disconnect Canvas"
               >
                 Disconnect
@@ -121,57 +124,63 @@ export default function CanvasPage() {
             ) : (
               <button
                 onClick={handleConnect}
-                className="py-2 px-3 rounded-lg bg-[var(--color-primary)] text-[var(--color-on-primary)] text-sm font-semibold cursor-pointer"
+                className="py-2 px-4 rounded-md gradient-primary text-white text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)]"
                 aria-label="Connect to Canvas"
               >
                 Connect
               </button>
             )}
           </div>
-        </VGlassPanel>
+        </section>
 
         {/* Not Connected - Features & Setup */}
         {status === 'disconnected' && (
           <>
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3">What Canvas Integration Does</h2>
-              {[
-                { icon: MdSchool, title: 'Auto-Import Grades', desc: 'Pulls your current semester grades directly into your GPA tracker.' },
-                { icon: MdSync, title: 'Real-Time Sync', desc: 'Grades update automatically as instructors post them.' },
-                { icon: MdAnalytics, title: 'MSL Course Detection', desc: 'Automatically identifies Military Science courses for MSL GPA calculation.' },
-                { icon: MdCalculate, title: 'OML Impact', desc: 'See how grade changes affect your OML score in real time.' },
-              ].map((feature, i) => {
-                const Icon = feature.icon;
-                return (
-                  <div key={i} className="flex items-start gap-3 py-3 border-b border-[var(--color-outline-variant)]/50">
-                    <Icon size={24} className="text-[var(--color-primary)] shrink-0" />
-                    <div className="flex-1">
-                      <span className="text-base font-semibold text-[var(--color-on-surface)] block mb-0.5">{feature.title}</span>
-                      <span className="text-sm text-[var(--color-outline)]">{feature.desc}</span>
+            <section>
+              <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">What Canvas Integration Does</h2>
+              <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] divide-y divide-[var(--ghost-border)]">
+                {[
+                  { icon: MdSchool, title: 'Auto-Import Grades', desc: 'Pulls your current semester grades directly into your GPA tracker.' },
+                  { icon: MdSync, title: 'Real-Time Sync', desc: 'Grades update automatically as instructors post them.' },
+                  { icon: MdAnalytics, title: 'MSL Course Detection', desc: 'Automatically identifies Military Science courses for MSL GPA calculation.' },
+                  { icon: MdCalculate, title: 'OML Impact', desc: 'See how grade changes affect your OML score in real time.' },
+                ].map((feature, i) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-3 p-4">
+                      <div className="w-9 h-9 rounded-md bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
+                        <Icon size={20} className="text-[var(--color-on-primary-container)]" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-sm font-bold text-[var(--color-on-surface)] block mb-0.5">{feature.title}</span>
+                        <span className="text-sm text-[var(--color-on-surface-variant)]">{feature.desc}</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            </section>
 
-            <VGlassPanel className="mb-4">
-              <h3 className="text-base font-semibold text-[var(--color-on-surface)] mb-3">Setup Instructions</h3>
-              {[
-                'Log into your university Canvas portal',
-                'Go to Account > Settings',
-                'Scroll to "Approved Integrations"',
-                'Click "+ New Access Token"',
-                'Name it "Duke Vanguard" and generate',
-                'Copy the token and paste it here',
-              ].map((step, i) => (
-                <div key={i} className="flex items-center gap-3 mb-2">
-                  <div className="w-6 h-6 rounded-full bg-[var(--color-primary-container)] flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-[var(--color-on-primary-container)]">{i + 1}</span>
+            <section className="glass-panel rounded-md p-5 shadow-[var(--shadow-sm)]">
+              <h3 className="text-base font-bold text-[var(--color-on-surface)] mb-4 font-[family-name:var(--font-display)]">Setup Instructions</h3>
+              <div className="space-y-3">
+                {[
+                  'Log into your university Canvas portal',
+                  'Go to Account > Settings',
+                  'Scroll to "Approved Integrations"',
+                  'Click "+ New Access Token"',
+                  'Name it "Duke Vanguard" and generate',
+                  'Copy the token and paste it here',
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full gradient-primary flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-white">{i + 1}</span>
+                    </div>
+                    <span className="text-sm text-[var(--color-on-surface)] flex-1">{step}</span>
                   </div>
-                  <span className="text-sm text-[var(--color-on-surface)] flex-1">{step}</span>
-                </div>
-              ))}
-            </VGlassPanel>
+                ))}
+              </div>
+            </section>
           </>
         )}
 
@@ -179,72 +188,77 @@ export default function CanvasPage() {
         {status === 'connected' && courses.length > 0 && (
           <>
             {/* GPA Summary */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="flex flex-col items-center py-3 rounded-xl bg-[var(--color-surface-container)]">
-                <span className="text-xs font-medium uppercase tracking-[1px] text-[var(--color-outline)] mb-1">CUMULATIVE GPA</span>
-                <span className="text-xl font-semibold text-[var(--color-on-surface)]">{computedGPA}</span>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col items-center py-4 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)]">
+                <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-1.5 font-[family-name:var(--font-label)]">CUMULATIVE GPA</span>
+                <span className="text-2xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">{computedGPA}</span>
               </div>
-              <div className="flex flex-col items-center py-3 rounded-xl bg-[var(--color-surface-container)]">
-                <span className="text-xs font-medium uppercase tracking-[1px] text-[var(--color-outline)] mb-1">MSL GPA</span>
-                <span className="text-xl font-semibold text-[var(--color-on-surface)]">{mslGPA ?? '--'}</span>
+              <div className="flex flex-col items-center py-4 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)]">
+                <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-1.5 font-[family-name:var(--font-label)]">MSL GPA</span>
+                <span className="text-2xl font-bold text-[var(--color-on-surface)] font-[family-name:var(--font-display)]">{mslGPA ?? '--'}</span>
               </div>
             </div>
 
             {/* Courses */}
-            <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3">
-              Current Courses ({courses.length})
-            </h2>
-            {courses.map((course) => (
-              <div
-                key={course.id}
-                className="p-3 rounded-xl mb-2 bg-[var(--glass-overlay)] border"
-                style={{
-                  borderColor: course.isMilScience ? 'var(--color-primary)' : 'var(--ghost-border-color)',
-                  borderWidth: course.isMilScience ? 1.5 : 1,
-                }}
-              >
-                <div className="flex justify-between items-center">
-                  <div className="flex-1 mr-3">
-                    <span className="text-xs font-medium uppercase tracking-[1px] text-[var(--color-primary)] block">{course.code}</span>
-                    <span className="text-sm text-[var(--color-on-surface)] block mt-0.5 truncate">{course.name}</span>
+            <section>
+              <h2 className="text-lg font-semibold uppercase tracking-wider text-[var(--color-on-surface)] mb-3 font-[family-name:var(--font-label)]">
+                Current Courses ({courses.length})
+              </h2>
+              <div className="space-y-2">
+                {courses.map((course) => (
+                  <div
+                    key={course.id}
+                    className="p-4 rounded-md bg-[var(--color-surface-container-low)] shadow-[var(--shadow-sm)] border"
+                    style={{
+                      borderColor: course.isMilScience ? 'var(--color-primary)' : 'var(--ghost-border)',
+                      borderWidth: course.isMilScience ? 2 : 1,
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1 mr-3">
+                        <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] block font-[family-name:var(--font-label)]">{course.code}</span>
+                        <span className="text-sm text-[var(--color-on-surface)] block mt-0.5 truncate">{course.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xl font-bold text-[var(--color-on-surface)] block font-[family-name:var(--font-display)]">{course.grade ?? '--'}</span>
+                        <span className="text-xs text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">{course.credits} cr</span>
+                      </div>
+                    </div>
+                    {course.isMilScience && (
+                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-[var(--color-primary-container)] mt-2">
+                        <MdMilitaryTech size={12} className="text-[var(--color-on-primary-container)]" />
+                        <span className="text-xs font-bold text-[var(--color-on-primary-container)] font-[family-name:var(--font-label)]">Military Science</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-right">
-                    <span className="text-lg font-semibold text-[var(--color-on-surface)] block">{course.grade ?? '--'}</span>
-                    <span className="text-xs text-[var(--color-outline)]">{course.credits} cr</span>
-                  </div>
-                </div>
-                {course.isMilScience && (
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--color-primary-container)] mt-2">
-                    <MdMilitaryTech size={12} className="text-[var(--color-on-primary-container)]" />
-                    <span className="text-xs font-medium text-[var(--color-on-primary-container)]">Military Science</span>
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+            </section>
 
             {/* Auto-sync toggle */}
             <button
-              className="w-full flex items-center p-4 rounded-xl mt-3 mb-3 bg-[var(--color-surface-container)] cursor-pointer text-left"
+              className="w-full flex items-center p-4 rounded-md bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] shadow-[var(--shadow-sm)] cursor-pointer text-left hover:bg-[var(--color-surface-container)] transition-colors"
               onClick={() => setAutoSync(!autoSync)}
               aria-label={`Auto-sync is ${autoSync ? 'on' : 'off'}`}
               role="switch"
               aria-checked={autoSync}
             >
               <div className="flex-1 mr-3">
-                <span className="text-base font-semibold text-[var(--color-on-surface)] block">Auto-Sync Grades</span>
-                <span className="text-sm text-[var(--color-outline)] block mt-0.5">Automatically update grades when you open the app</span>
+                <span className="text-base font-bold text-[var(--color-on-surface)] block">Auto-Sync Grades</span>
+                <span className="text-sm text-[var(--color-on-surface-variant)] block mt-0.5">Automatically update grades when you open the app</span>
               </div>
-              <div className={`w-11 h-6 rounded-full relative transition-colors ${autoSync ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-outline-variant)]'}`}>
-                <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform ${autoSync ? 'translate-x-[22px]' : 'translate-x-[2px]'}`} />
+              <div className={`w-12 h-7 rounded-full relative transition-colors ${autoSync ? 'bg-[var(--color-primary)]' : 'bg-[var(--color-surface-container-high)]'}`}>
+                <div className={`w-5 h-5 rounded-full bg-white absolute top-1 transition-transform shadow-sm ${autoSync ? 'translate-x-[24px]' : 'translate-x-[3px]'}`} />
               </div>
             </button>
 
             {/* Import Button */}
-            <VButton
-              label="Import Grades to OML Engine"
-              onPress={handleImportGrades}
-              className="w-full mt-2"
-            />
+            <button
+              onClick={handleImportGrades}
+              className="w-full py-3 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer hover:opacity-90 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+            >
+              Import Grades to OML Engine
+            </button>
           </>
         )}
       </div>

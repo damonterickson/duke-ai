@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { VButton, VInput } from '@/components';
+import { VInput } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 
 const AGE_BRACKETS = ['17-21', '22-26', '27-31'] as const;
@@ -42,81 +42,90 @@ export default function AftPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col px-6 md:px-8 pt-8">
-      <h1
-        className="text-3xl md:text-4xl font-bold text-[var(--color-on-surface)] mb-6"
-        style={{ fontFamily: 'var(--font-display)' }}
-      >
+    <div className="flex-1 flex flex-col px-6 md:px-8 pt-10 bg-[var(--color-background)] min-h-screen max-w-lg mx-auto">
+      <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-primary)] mb-2 font-[family-name:var(--font-label)]">STEP 3 OF 5</span>
+      <h1 className="text-3xl md:text-4xl font-bold text-[var(--color-on-surface)] mb-2 font-[family-name:var(--font-display)]">
         Fitness Profile
       </h1>
+      <p className="text-sm text-[var(--color-on-surface-variant)] mb-6 leading-relaxed">
+        Gender and age bracket are used for ACFT scoring normalization.
+      </p>
 
       {/* Gender Selection */}
-      <label className="text-sm font-semibold text-[var(--color-on-surface)] mb-2 mt-2">
+      <label className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-2 font-[family-name:var(--font-label)]">
         Gender (for ACFT scoring)
       </label>
-      <div className="grid grid-cols-2 gap-3">
-        <VButton
-          label="Male"
-          onPress={() => {
-            setGender('M');
-            setError('');
-          }}
-          variant={gender === 'M' ? 'primary' : 'secondary'}
-          className="min-h-[48px]"
-        />
-        <VButton
-          label="Female"
-          onPress={() => {
-            setGender('F');
-            setError('');
-          }}
-          variant={gender === 'F' ? 'primary' : 'secondary'}
-          className="min-h-[48px]"
-        />
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        {(['M', 'F'] as const).map((g) => (
+          <button
+            key={g}
+            onClick={() => { setGender(g); setError(''); }}
+            className={`min-h-[52px] rounded-md font-bold text-sm cursor-pointer transition-all border ${
+              gender === g
+                ? 'gradient-primary text-white border-transparent shadow-[var(--shadow-sm)]'
+                : 'bg-[var(--color-surface-container-low)] border-[var(--ghost-border)] text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container)]'
+            }`}
+          >
+            {g === 'M' ? 'Male' : 'Female'}
+          </button>
+        ))}
       </div>
 
       {/* Age Bracket */}
-      <label className="text-sm font-semibold text-[var(--color-on-surface)] mb-2 mt-4">
+      <label className="text-xs font-bold uppercase tracking-widest text-[var(--color-on-surface-variant)] mb-2 font-[family-name:var(--font-label)]">
         Age Bracket
       </label>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3 mb-5">
         {AGE_BRACKETS.map((bracket) => (
-          <VButton
+          <button
             key={bracket}
-            label={bracket}
-            onPress={() => {
-              setAgeBracket(bracket);
-              setError('');
-            }}
-            variant={ageBracket === bracket ? 'primary' : 'secondary'}
-            className="min-h-[48px]"
-          />
+            onClick={() => { setAgeBracket(bracket); setError(''); }}
+            className={`min-h-[52px] rounded-md font-bold text-sm cursor-pointer transition-all border ${
+              ageBracket === bracket
+                ? 'gradient-primary text-white border-transparent shadow-[var(--shadow-sm)]'
+                : 'bg-[var(--color-surface-container-low)] border-[var(--ghost-border)] text-[var(--color-on-surface)] hover:bg-[var(--color-surface-container)]'
+            }`}
+          >
+            {bracket}
+          </button>
         ))}
       </div>
 
       {/* ACFT Total */}
-      <VInput
-        label="ACFT Total Score (optional)"
-        value={acftTotal}
-        onChangeText={(v) => {
-          setAcftTotal(v);
-          setError('');
-        }}
-        placeholder="480"
-        type="number"
-        helperText="Enter your most recent ACFT total (0-600). You can add details later."
-        error={!!error}
-        errorText={error}
-        className="mt-4"
-      />
+      <div className="bg-[var(--color-surface-container-low)] border border-[var(--ghost-border)] rounded-md shadow-[var(--shadow-sm)] p-5">
+        <VInput
+          label="ACFT Total Score (optional)"
+          value={acftTotal}
+          onChangeText={(v) => {
+            setAcftTotal(v);
+            setError('');
+          }}
+          placeholder="480"
+          type="number"
+          helperText="Enter your most recent ACFT total (0-600). You can add details later."
+          error={!!error}
+          errorText={error}
+        />
+      </div>
 
       <div className="mt-auto pb-8">
-        <VButton
-          label="Next"
-          onPress={handleNext}
+        <button
+          onClick={handleNext}
           disabled={!gender || !ageBracket}
-          className="w-full"
-        />
+          className="w-full py-3.5 rounded-md gradient-primary text-white text-sm font-bold uppercase tracking-wider cursor-pointer disabled:opacity-40 transition-opacity shadow-[var(--shadow-sm)] font-[family-name:var(--font-label)]"
+        >
+          Next
+        </button>
+      </div>
+
+      {/* Progress dots */}
+      <div className="flex justify-center gap-2 pb-6">
+        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-primary)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
+        <div className="w-2.5 h-2.5 rounded-full bg-[var(--color-outline-variant)]" />
       </div>
     </div>
   );

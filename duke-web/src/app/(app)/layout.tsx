@@ -15,14 +15,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[var(--color-background)]">
       {/* Main content area */}
-      <main className="flex-1 pb-[72px] overflow-y-auto">
+      <main className="flex-1 pb-[64px] overflow-y-auto">
         {children}
       </main>
 
       {/* Bottom tab bar */}
-      <nav className="fixed bottom-0 inset-x-0 h-[72px] bg-[var(--color-inverse-surface)] flex items-start pt-2 z-50">
+      <nav className="fixed bottom-0 inset-x-0 h-[64px] bg-[var(--color-primary)] flex items-center z-50 shadow-[0_-2px_12px_rgba(0,0,0,0.15)]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
           const Icon = tab.icon;
@@ -30,19 +30,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex-1 flex flex-col items-center gap-0.5 pt-1"
+              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-opacity ${isActive ? 'opacity-100' : 'opacity-50 hover:opacity-70'}`}
             >
               <Icon
-                size={24}
-                className={isActive ? 'text-white' : 'text-white/50'}
+                size={22}
+                className="text-white"
               />
               <span
-                className={`text-[10px] font-[var(--font-label)] uppercase tracking-[1.5px] ${
-                  isActive ? 'text-white' : 'text-white/50'
-                }`}
+                className={`text-[10px] uppercase tracking-[1.5px] text-white font-[family-name:var(--font-label)] ${isActive ? 'font-bold' : 'font-medium'}`}
               >
                 {tab.label}
               </span>
+              {isActive && (
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[3px] rounded-b-full bg-white" />
+              )}
             </Link>
           );
         })}
