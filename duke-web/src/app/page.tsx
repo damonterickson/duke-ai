@@ -53,12 +53,12 @@ export default function RootPage() {
           if (onboardingComplete === 'true') {
             router.replace('/mission');
           } else {
-            router.replace('/auth');
+            router.replace('/landing');
           }
         }
       } catch (err) {
         console.error('Auth check failed:', err);
-        router.replace('/auth');
+        router.replace('/landing');
       } finally {
         setChecking(false);
       }

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { MdShield, MdMarkEmailRead, MdRocketLaunch } from 'react-icons/md';
 import { signInWithMagicLink, getSession, getSupabase } from '@/services/supabase';
 
@@ -186,7 +187,13 @@ export default function AuthPage() {
       </div>
 
       {/* Footer */}
-      <div className="p-4 text-center">
+      <div className="p-4 text-center flex flex-col items-center gap-2">
+        <Link
+          href="/landing"
+          className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
+        >
+          &larr; Back to Home
+        </Link>
         <span className="text-xs text-[var(--color-on-surface-variant)] font-[family-name:var(--font-label)]">
           Duke Vanguard v0.2.0 -- AI-First OML Optimizer
         </span>
