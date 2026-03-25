@@ -92,6 +92,18 @@ export async function signInWithMagicLink(email: string): Promise<{ error: strin
   return { error: error?.message ?? null };
 }
 
+export async function signInWithOAuth(provider: 'google' | 'github' | 'apple'): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const { error } = await sb.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: `${baseUrl}/auth/callback`,
+    },
+  });
+  return { error: error?.message ?? null };
+}
+
 export async function signOut(): Promise<void> {
   const sb = getSupabase();
   await sb.auth.signOut();
