@@ -1,139 +1,169 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { MdMenuBook, MdDirectionsRun, MdBalance, MdLock } from 'react-icons/md';
+import { useScoresStore } from '@/stores/scores';
 
 export default function IntelPage() {
-  const router = useRouter();
-
-  const pathCards = [
-    {
-      icon: MdMenuBook,
-      title: 'Academic Optimization',
-      desc: 'Maximize GPA impact on your OML',
-      accent: '#d9b9ff',
-      accentBg: '#450084',
-      highlighted: false,
-    },
-    {
-      icon: MdDirectionsRun,
-      title: 'Physical Optimization',
-      desc: 'Push your ACFT score higher',
-      accent: '#dbc585',
-      accentBg: '#544511',
-      highlighted: false,
-    },
-    {
-      icon: MdBalance,
-      title: 'Balanced Approach',
-      desc: 'Optimize all pillars equally',
-      accent: '#c3cc8c',
-      accentBg: '#2c3303',
-      highlighted: true,
-    },
-  ];
+  const scores = useScoresStore();
+  const latest = scores.scoreHistory[scores.scoreHistory.length - 1];
+  const omlScore = latest?.total_oml ? String(Math.round(latest.total_oml)) : '350';
 
   return (
-    <div className="flex flex-col min-h-full bg-[#151317]">
-      {/* Header — glass bar */}
-      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center justify-between shadow-lg shadow-purple-900/20 sticky top-0 z-40">
-        <h1
-          className="text-lg font-black uppercase tracking-tighter italic text-[#d9b9ff]"
-          style={{ fontFamily: 'Public Sans, sans-serif' }}
-        >
-          DUKE VANGUARD
-        </h1>
-        <span
-          className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d]"
-          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-        >
-          INTEL
-        </span>
-      </header>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      {/* Material Symbols */}
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl lg:max-w-4xl w-full space-y-8">
-        {/* Coming Soon Card */}
-        <section className="glass-card ghost-border rounded-sm p-8 flex flex-col items-center text-center gap-4 glow-shadow-purple">
-          <div className="w-14 h-14 rounded-sm bg-[#450084] flex items-center justify-center">
-            <MdLock size={28} className="text-[#b27ff5]" />
-          </div>
-          <h2
-            className="text-2xl font-black uppercase tracking-tighter text-[#e7e1e6]"
-            style={{ fontFamily: 'Public Sans, sans-serif' }}
-          >
-            INTELLIGENCE BRIEFINGS COMING SOON
-          </h2>
-          <p className="text-sm text-[#cdc3d4] leading-relaxed max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            AI-powered strategic analysis and personalized intelligence briefs are on the way. In the meantime, explore the optimization paths below.
-          </p>
-        </section>
+      <style jsx global>{`
+        .glass-panel-intel {
+          background: rgba(55, 52, 56, 0.5);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+        }
+        .kinetic-gradient {
+          background: linear-gradient(135deg, #d9b9ff 0%, #450084 100%);
+        }
+        .neon-glow {
+          box-shadow: 0 0 20px rgba(219, 197, 133, 0.4);
+        }
+      `}</style>
 
-        {/* Optimization Paths */}
-        <section className="bg-[#1d1b1f] rounded-sm p-6">
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-5"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            OPTIMIZATION PATHS
-          </h2>
-          <div className="space-y-3">
-            {pathCards.map((card, i) => {
-              const Icon = card.icon;
-              return (
-                <button
-                  key={i}
-                  className={`w-full flex items-center gap-4 p-4 rounded-sm text-left cursor-pointer hover:scale-[1.01] active:scale-[0.99] transition-all ${
-                    card.highlighted
-                      ? 'bg-[#450084] shadow-lg shadow-[#450084]/30'
-                      : 'glass-card ghost-border'
-                  }`}
-                  aria-label={card.title}
-                  onClick={() => router.push('/profile')}
-                >
-                  <div
-                    className="w-12 h-12 rounded-sm flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: card.highlighted ? 'rgba(255,255,255,0.15)' : card.accentBg }}
-                  >
-                    <Icon
-                      size={24}
-                      style={{ color: card.highlighted ? '#e7e1e6' : card.accent }}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={`text-base font-black uppercase tracking-tight ${
-                          card.highlighted ? 'text-[#e7e1e6]' : 'text-[#e7e1e6]'
-                        }`}
-                        style={{ fontFamily: 'Public Sans, sans-serif' }}
-                      >
-                        {card.title}
-                      </span>
-                      {card.highlighted && (
-                        <span
-                          className="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-[0.2em] bg-[#544511] text-[#dbc585]"
-                          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                        >
-                          Recommended
-                        </span>
-                      )}
-                    </div>
-                    <span
-                      className={`text-sm mt-1 block ${
-                        card.highlighted ? 'text-[#cdc3d4]' : 'text-[#cdc3d4]'
-                      }`}
-                      style={{ fontFamily: 'Inter, sans-serif' }}
-                    >
-                      {card.desc}
-                    </span>
-                  </div>
-                </button>
-              );
-            })}
+      <div className="pt-6 pb-8 px-6 max-w-7xl mx-auto space-y-12">
+
+        {/* AI Briefing Section */}
+        <section className="relative">
+          <div className="glass-panel-intel p-10 md:p-16 rounded-lg relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+              <span className="material-symbols-outlined text-[144px]">shield_with_heart</span>
+            </div>
+            <div className="relative z-10 space-y-6">
+              <div className="flex items-center gap-4">
+                <span className="px-3 py-1 bg-[#450084] text-[#d9b9ff] text-[10px] tracking-[0.2em] uppercase font-bold rounded-sm" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Status: Operational</span>
+                <div className="w-2 h-2 rounded-full bg-[#dbc585] animate-pulse" style={{ boxShadow: '0 0 10px #f8e19e' }}></div>
+              </div>
+              <h2 className="text-5xl md:text-7xl leading-tight tracking-tighter uppercase font-black" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                Good morning, Duke. <br />
+                Your JMU OML is <span className="text-[#dbc585]" style={{ filter: 'drop-shadow(0 0 15px rgba(219,197,133,0.3))' }}>{omlScore}</span>.
+              </h2>
+              <p className="text-[#968d9d] max-w-2xl text-lg leading-relaxed">
+                Command analytics suggest a 4.2% increase in competitive ranking since your last PT evaluation. Current trajectory places you in the top 15% of the Vanguard Squad.
+              </p>
+            </div>
           </div>
         </section>
+
+        {/* Optimization Paths & Data Viz Grid */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Optimization Paths */}
+          <div className="lg:col-span-1 space-y-6">
+            <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Optimization Paths</h3>
+            <div className="space-y-4">
+              {/* Path 1 - Active */}
+              <div className="group cursor-pointer p-6 bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg border-l-4 border-[#450084]">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>fitness_center</span>
+                  <span className="text-[10px] text-[#dbc585]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>ACTIVE</span>
+                </div>
+                <h4 className="text-xl uppercase font-black mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>AFT Maxing Plan</h4>
+                <p className="text-sm text-[#968d9d]">Intensive cardio and resistance metrics to exceed 2-mile run benchmarks.</p>
+              </div>
+
+              {/* Path 2 */}
+              <div className="group cursor-pointer p-6 bg-[#1d1b1f] hover:bg-[#211f23] transition-all rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="material-symbols-outlined text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors">school</span>
+                  <span className="text-[10px] text-[#968d9d] opacity-50" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>AVAILABLE</span>
+                </div>
+                <h4 className="text-xl uppercase font-black mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>GPA Retention Strategy</h4>
+                <p className="text-sm text-[#968d9d]">Targeted study hours for core engineering and tactical science requirements.</p>
+              </div>
+
+              {/* Path 3 */}
+              <div className="group cursor-pointer p-6 bg-[#1d1b1f] hover:bg-[#211f23] transition-all rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <span className="material-symbols-outlined text-[#968d9d] group-hover:text-[#d9b9ff] transition-colors">diversity_3</span>
+                  <span className="text-[10px] text-[#968d9d] opacity-50" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>AVAILABLE</span>
+                </div>
+                <h4 className="text-xl uppercase font-black mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>Balanced Leader Path</h4>
+                <p className="text-sm text-[#968d9d]">A hybrid model focusing on volunteer leadership and squad cohesion scores.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* OML Trajectory Analytics */}
+          <div className="lg:col-span-2 space-y-6">
+            <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OML Trajectory Analytics</h3>
+            <div className="glass-panel-intel p-8 rounded-lg h-[450px] flex flex-col relative">
+              {/* Chart */}
+              <div className="flex-1 flex items-end gap-2 px-2 relative">
+                {/* Grid guides */}
+                <div className="absolute inset-0 flex flex-col justify-between py-12 pointer-events-none opacity-10">
+                  <div className="w-full h-px bg-[#968d9d]"></div>
+                  <div className="w-full h-px bg-[#968d9d]"></div>
+                  <div className="w-full h-px bg-[#968d9d]"></div>
+                  <div className="w-full h-px bg-[#968d9d]"></div>
+                </div>
+                {/* Bars */}
+                <div className="flex-1 bg-[#450084]/30 h-[40%] rounded-t-sm relative group overflow-hidden">
+                  <div className="absolute inset-x-0 bottom-0 bg-[#d9b9ff] h-full opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </div>
+                <div className="flex-1 bg-[#450084]/40 h-[55%] rounded-t-sm relative group overflow-hidden">
+                  <div className="absolute inset-x-0 bottom-0 bg-[#d9b9ff] h-full opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </div>
+                <div className="flex-1 bg-[#450084]/50 h-[48%] rounded-t-sm relative group overflow-hidden">
+                  <div className="absolute inset-x-0 bottom-0 bg-[#d9b9ff] h-full opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </div>
+                <div className="flex-1 bg-[#450084]/60 h-[72%] rounded-t-sm relative group overflow-hidden">
+                  <div className="absolute inset-x-0 bottom-0 bg-[#d9b9ff] h-full opacity-0 group-hover:opacity-20 transition-opacity"></div>
+                </div>
+                <div className="flex-1 kinetic-gradient h-[88%] rounded-t-sm relative" style={{ boxShadow: '0 0 30px rgba(217,185,255,0.3)' }}>
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#dbc585] text-[#3c2f00] px-2 py-1 rounded text-[10px] font-black whitespace-nowrap" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>CURRENT: {omlScore}</div>
+                </div>
+              </div>
+              {/* X-axis labels */}
+              <div className="mt-6 flex justify-between text-[10px] text-[#968d9d] uppercase font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                <span>WK 01</span>
+                <span>WK 02</span>
+                <span>WK 03</span>
+                <span>WK 04</span>
+                <span>WK 05 (NOW)</span>
+              </div>
+              {/* Legend */}
+              <div className="absolute top-8 right-8 flex gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-[#d9b9ff] rounded-full"></div>
+                  <span className="text-[10px] text-[#e7e1e6]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>National Avg</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-[#dbc585] rounded-full" style={{ boxShadow: '0 0 10px #dbc585' }}></div>
+                  <span className="text-[10px] text-[#e7e1e6]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Your Path</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Dynamic Insights Block */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="p-8 bg-[#373438]/40 backdrop-blur rounded-lg flex gap-6 items-start">
+            <div className="p-4 bg-[#2c3303] rounded-sm">
+              <span className="material-symbols-outlined text-[#c3cc8c]" style={{ fontVariationSettings: "'FILL' 1" }}>psychology</span>
+            </div>
+            <div>
+              <h5 className="text-lg uppercase font-black mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>Cognitive Load Check</h5>
+              <p className="text-sm text-[#968d9d]">Mid-term exam cycle approaching. Recommend adjusting Physical Training intensity to &apos;Sustain&apos; mode for 72 hours.</p>
+            </div>
+          </div>
+          <div className="p-8 bg-[#373438]/40 backdrop-blur rounded-lg flex gap-6 items-start">
+            <div className="p-4 bg-[#544511] rounded-sm">
+              <span className="material-symbols-outlined text-[#dbc585]" style={{ fontVariationSettings: "'FILL' 1" }}>military_tech</span>
+            </div>
+            <div>
+              <h5 className="text-lg uppercase font-black mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>Squad Leadership Opportunity</h5>
+              <p className="text-sm text-[#968d9d]">Next week&apos;s field exercise has an open Lead Scout slot. This would boost Leadership OML by +12 points.</p>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );
