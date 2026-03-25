@@ -69,7 +69,7 @@ function ThemeContextProvider({ children }: { children: React.ReactNode }) {
 
 export function DukeThemeProvider({ children }: { children: React.ReactNode }) {
   return (
-    <NextThemesProvider attribute="data-theme" defaultTheme="light" enableSystem>
+    <NextThemesProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
       <ThemeContextProvider>{children}</ThemeContextProvider>
     </NextThemesProvider>
   );
