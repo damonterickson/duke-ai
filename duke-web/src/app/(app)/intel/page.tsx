@@ -80,16 +80,16 @@ function getInsights(gpa: number | null, acft: number | null, activeGoals: numbe
 
   if (activeGoals === 0) {
     insights.push({
-      title: 'Set Your First Goal',
-      body: 'Goals help you track progress and stay focused. Create one below or accept a suggested goal.',
+      title: 'Set Your First Path',
+      body: 'Optimization paths help you track progress and stay focused. Create one below or accept a suggested goal.',
       icon: 'flag',
       iconColor: '#d9b9ff',
       bgColor: '#450084',
     });
   } else if (activeGoals >= 3) {
     insights.push({
-      title: 'Goal Load Check',
-      body: `You have ${activeGoals} active goals. Consider completing or retiring one before adding more.`,
+      title: 'Path Load Check',
+      body: `You have ${activeGoals} active paths. Consider completing or retiring one before adding more.`,
       icon: 'psychology',
       iconColor: '#c3cc8c',
       bgColor: '#2c3303',
@@ -107,7 +107,7 @@ function getInsights(gpa: number | null, acft: number | null, activeGoals: numbe
   return insights;
 }
 
-// ─── Create Goal Modal ──────────────────────────────────────
+// ─── Create Path Modal ──────────────────────────────────────
 function CreateGoalModal({ onClose, onSave }: { onClose: () => void; onSave: (goal: { title: string; category: string; metric: string; target_value: number }) => void }) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('physical');
@@ -120,11 +120,11 @@ function CreateGoalModal({ onClose, onSave }: { onClose: () => void; onSave: (go
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div className="relative bg-[#211f23] rounded-lg p-8 w-full max-w-md space-y-6" onClick={(e) => e.stopPropagation()}>
         <h3 className="text-2xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Public Sans, sans-serif' }}>
-          CREATE GOAL
+          NEW PATH
         </h3>
 
         <div>
-          <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Goal Title</label>
+          <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Path Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -284,8 +284,8 @@ export default function IntelPage() {
                 {gpa ? `Academic pillar: ${gpa.toFixed(2)} GPA. ` : 'Enter your GPA to unlock academic insights. '}
                 {acft ? `Physical pillar: ${acft} ACFT. ` : ''}
                 {activeGoals.length > 0
-                  ? `You have ${activeGoals.length} active goal${activeGoals.length > 1 ? 's' : ''} in progress.`
-                  : 'Set goals below to start tracking your optimization path.'}
+                  ? `You have ${activeGoals.length} active path${activeGoals.length > 1 ? 's' : ''} in progress.`
+                  : 'Set paths below to start tracking your optimization path.'}
               </p>
             </div>
           </div>
@@ -298,7 +298,7 @@ export default function IntelPage() {
           <div className="lg:col-span-1 space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                Active Goals ({activeGoals.length}/5)
+                Optimization Paths ({activeGoals.length}/5)
               </h3>
               <button
                 onClick={() => setShowCreateGoal(true)}
@@ -310,7 +310,7 @@ export default function IntelPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Active Goals */}
+              {/* Optimization Paths */}
               {activeGoals.map((goal) => {
                 const cat = CATEGORIES.find((c) => c.key === goal.category) ?? CATEGORIES[0];
                 const progress = goal.target_value > 0 ? Math.min((goal.current_value ?? 0) / goal.target_value, 1) : 0;
@@ -368,7 +368,7 @@ export default function IntelPage() {
 
               {activeGoals.length === 0 && suggestions.length === 0 && (
                 <div className="p-6 bg-[#1d1b1f] rounded-lg text-center">
-                  <p className="text-sm text-[#968d9d]">All goals are on track. Create new goals to keep pushing.</p>
+                  <p className="text-sm text-[#968d9d]">All goals are on track. Create new paths to keep pushing.</p>
                 </div>
               )}
             </div>
@@ -448,7 +448,7 @@ export default function IntelPage() {
         </section>
       </div>
 
-      {/* Create Goal Modal */}
+      {/* Create Path Modal */}
       {showCreateGoal && (
         <CreateGoalModal onClose={() => setShowCreateGoal(false)} onSave={handleCreateGoal} />
       )}
