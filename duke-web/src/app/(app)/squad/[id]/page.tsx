@@ -2,13 +2,6 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import {
-  MdArrowBack,
-  MdStar,
-  MdPersonRemove,
-  MdEmojiEvents,
-  MdLogout,
-} from 'react-icons/md';
 
 interface Member {
   id: string;
@@ -82,7 +75,7 @@ export default function SquadDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-full bg-[#151317]">
+      <div className="flex flex-col min-h-screen bg-[#151317]">
         <div className="flex justify-center mt-16">
           <div className="w-8 h-8 border-4 border-[#d9b9ff] border-t-transparent rounded-full animate-spin" />
         </div>
@@ -91,55 +84,45 @@ export default function SquadDetailPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full bg-[#151317]">
-      {/* Header — glass bar */}
-      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center gap-3 shadow-lg shadow-purple-900/20 sticky top-0 z-40">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors">
-          <MdArrowBack size={24} />
-        </button>
-        <h1
-          className="text-lg font-black uppercase tracking-tighter text-[#d9b9ff] flex-1 truncate"
-          style={{ fontFamily: 'Public Sans, sans-serif' }}
-        >
-          {squad?.name ?? 'SQUAD'}
-        </h1>
-      </header>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-8">
+      <style jsx global>{`
+        .glass-panel-squad-detail { background: rgba(55, 52, 56, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+      `}</style>
+
+      <div className="pt-6 pb-8 px-6 max-w-4xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-tighter text-[#d9b9ff] truncate" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+            {squad?.name ?? 'SQUAD'}
+          </h1>
+        </div>
+
         {/* Squad Info */}
-        <section className="glass-card ghost-border rounded-sm p-5 glow-shadow-purple">
-          <h2
-            className="text-xl font-black uppercase tracking-tighter text-[#e7e1e6] mb-4"
-            style={{ fontFamily: 'Public Sans, sans-serif' }}
-          >
+        <section className="glass-panel-squad-detail rounded-lg p-8" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.2)' }}>
+          <h2 className="text-2xl font-black uppercase tracking-tighter mb-6" style={{ fontFamily: 'Public Sans, sans-serif' }}>
             {squad?.name}
           </h2>
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>Members</span>
-              <span
-                className="text-sm font-black text-[#f8e19e]"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
-                {members.length}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>Created</span>
-              <span
-                className="text-sm font-black text-[#f8e19e]"
-                style={{ fontFamily: 'Public Sans, sans-serif' }}
-              >
-                {squad ? new Date(squad.created_at).toLocaleDateString() : '--'}
-              </span>
-            </div>
+            {[
+              { label: 'Members', value: String(members.length) },
+              { label: 'Created', value: squad ? new Date(squad.created_at).toLocaleDateString() : '--' },
+            ].map((item) => (
+              <div key={item.label} className="flex justify-between items-center">
+                <span className="text-sm text-[#968d9d]">{item.label}</span>
+                <span className="text-sm font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                  {item.value}
+                </span>
+              </div>
+            ))}
             {isLeader && (
               <div className="flex justify-between items-center">
-                <span className="text-sm text-[#cdc3d4]" style={{ fontFamily: 'Inter, sans-serif' }}>Invite Code</span>
-                <span
-                  className="text-base font-black tracking-[4px] text-[#d9b9ff]"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
+                <span className="text-sm text-[#968d9d]">Invite Code</span>
+                <span className="text-lg font-black tracking-[6px] text-[#dbc585]" style={{ fontFamily: 'Space Grotesk, sans-serif', filter: 'drop-shadow(0 0 8px rgba(219,197,133,0.3))' }}>
                   {squad?.invite_code}
                 </span>
               </div>
@@ -149,41 +132,32 @@ export default function SquadDetailPage() {
 
         {/* Members */}
         <section>
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            MEMBERS
-          </h2>
+          <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Members
+          </h3>
           <div className="space-y-3">
             {members.map((member) => (
-              <div key={member.id} className="flex items-center rounded-sm p-3 glass-card ghost-border">
-                <div className="w-10 h-10 rounded-sm bg-[#450084] flex items-center justify-center">
-                  <span
-                    className="text-sm font-black text-[#d9b9ff]"
-                    style={{ fontFamily: 'Public Sans, sans-serif' }}
-                  >
+              <div key={member.id} className="bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-5 flex items-center transition-all border-l-4 border-[#450084]">
+                <div className="w-11 h-11 rounded-lg bg-[#450084] flex items-center justify-center">
+                  <span className="text-sm font-black text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                     {member.display_name?.charAt(0)?.toUpperCase() ?? '?'}
                   </span>
                 </div>
-                <div className="flex-1 ml-3">
-                  <span className="text-sm font-bold text-[#e7e1e6] block" style={{ fontFamily: 'Inter, sans-serif' }}>{member.display_name}</span>
-                  <span
-                    className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]"
-                    style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                  >
+                <div className="flex-1 ml-4">
+                  <span className="text-sm font-bold text-[#e7e1e6] block">{member.display_name}</span>
+                  <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                     YG {member.year_group}
                   </span>
                 </div>
                 {member.id === squad?.leader_id && (
-                  <MdStar size={18} className="text-[#dbc585]" />
+                  <span className="material-symbols-outlined text-[#dbc585]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                 )}
                 {isLeader && member.id !== squad?.leader_id && (
                   <button
                     onClick={() => handleRemoveMember(member.id, member.display_name)}
-                    className="cursor-pointer hover:opacity-70 transition-opacity"
+                    className="text-[#ffb4ab] hover:text-[#ffb4ab]/80 transition-opacity"
                   >
-                    <MdPersonRemove size={20} className="text-[#ffb4ab]" />
+                    <span className="material-symbols-outlined">person_remove</span>
                   </button>
                 )}
               </div>
@@ -193,27 +167,21 @@ export default function SquadDetailPage() {
 
         {/* Achievement Feed */}
         <section>
-          <h2
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-4"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            ACHIEVEMENT FEED
-          </h2>
+          <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Achievement Feed
+          </h3>
           {achievements.length === 0 ? (
-            <div className="glass-card ghost-border rounded-sm p-5">
-              <p className="text-sm text-[#cdc3d4] text-center" style={{ fontFamily: 'Inter, sans-serif' }}>
+            <div className="bg-[#211f23] rounded-lg p-8 text-center">
+              <p className="text-sm text-[#968d9d]">
                 No achievements yet. Complete missions to share with your squad!
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {achievements.map((ach) => (
-                <div key={ach.id} className="flex rounded-sm p-3 glass-card ghost-border">
-                  <div className="mr-3 pt-0.5">
-                    <MdEmojiEvents
-                      size={24}
-                      className={ach.type === 'mission_complete' ? 'text-[#dbc585]' : 'text-[#d9b9ff]'}
-                    />
+                <div key={ach.id} className="bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-5 flex transition-all border-l-4 border-[#544511]">
+                  <div className="mr-4 pt-0.5">
+                    <span className="material-symbols-outlined" style={{ color: ach.type === 'mission_complete' ? '#dbc585' : '#d9b9ff', fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex justify-between items-center">
@@ -223,16 +191,13 @@ export default function SquadDetailPage() {
                       <span className="text-xs text-[#968d9d]">{timeAgo(ach.achieved_at)}</span>
                     </div>
                     {ach.profiles?.year_group && (
-                      <span
-                        className="text-[10px] text-[#968d9d] block mb-1 uppercase tracking-[0.2em]"
-                        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                      >
+                      <span className="text-[10px] text-[#968d9d] block mb-1 uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                         YG {ach.profiles.year_group}
                       </span>
                     )}
-                    <p className="text-sm text-[#e7e1e6] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{ach.title}</p>
+                    <p className="text-sm text-[#e7e1e6] mt-1">{ach.title}</p>
                     {ach.description && (
-                      <p className="text-sm text-[#cdc3d4] mt-1" style={{ fontFamily: 'Inter, sans-serif' }}>{ach.description}</p>
+                      <p className="text-sm text-[#968d9d] mt-1">{ach.description}</p>
                     )}
                   </div>
                 </div>
@@ -243,11 +208,11 @@ export default function SquadDetailPage() {
 
         {/* Leave Squad */}
         <button
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-sm glass-card ghost-border cursor-pointer hover:bg-[#93000a]/20 transition-colors"
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-sm bg-[#211f23] text-[#ffb4ab] text-sm font-semibold hover:bg-[#93000a]/20 transition-colors"
           onClick={handleLeave}
         >
-          <MdLogout size={18} className="text-[#ffb4ab]" />
-          <span className="text-sm font-bold text-[#ffb4ab]">Leave Squad</span>
+          <span className="material-symbols-outlined text-sm">logout</span>
+          Leave Squad
         </button>
       </div>
     </div>

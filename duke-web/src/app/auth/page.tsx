@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MdShield, MdMarkEmailRead, MdRocketLaunch } from 'react-icons/md';
 import { signInWithMagicLink, signInWithOAuth, getSession, getSupabase } from '@/services/supabase';
 
 function GoogleIcon({ size = 20 }: { size?: number }) {
@@ -35,10 +34,8 @@ function AuthPageInner() {
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [cooldown, setCooldown] = useState(0);
 
-  // Check if already authenticated
   useEffect(() => {
     async function check() {
-      // Show error from callback if present
       const callbackError = searchParams.get('error');
       if (callbackError) {
         setError('Sign-in failed. Please try again.');
@@ -63,7 +60,6 @@ function AuthPageInner() {
     check();
   }, [router, searchParams]);
 
-  // Cooldown timer
   useEffect(() => {
     if (cooldown <= 0) return;
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
@@ -79,7 +75,6 @@ function AuthPageInner() {
         setError(authError);
         setOauthLoading(null);
       }
-      // If successful, the browser redirects — no need to handle here
     } catch {
       setError('Failed to start sign-in. Please try again.');
       setOauthLoading(null);
@@ -118,155 +113,167 @@ function AuthPageInner() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#151317] kinetic-grid">
-      <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto">
-        {/* Brand */}
-        <span className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-          DUKE VANGUARD
-        </span>
-        <div className="w-20 h-20 rounded-sm bg-[#450084] flex items-center justify-center mb-4 glow-shadow-purple">
-          <MdShield size={48} className="text-[#d9b9ff]" />
-        </div>
-        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-[#e7e1e6] text-center mb-1" style={{ fontFamily: 'Public Sans, sans-serif' }}>
-          YOUR OML MENTOR
-        </h1>
-        <p className="text-sm md:text-base text-[#cdc3d4] text-center mb-8 leading-relaxed max-w-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-          AI-powered Order of Merit List optimizer for Army ROTC cadets.
-          Sign in to save your progress across devices.
-        </p>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-        {error && (
-          <div className="w-full mb-4 text-center">
-            <span className="text-xs font-semibold text-[#ffb4ab]">{error}</span>
+      <style jsx global>{`
+        .glass-panel-auth { background: rgba(55, 52, 56, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .kinetic-grid-auth {
+          background-image: radial-gradient(circle at 2px 2px, rgba(217, 185, 255, 0.05) 1px, transparent 0);
+          background-size: 40px 40px;
+        }
+      `}</style>
+
+      <div className="flex flex-col min-h-screen kinetic-grid-auth">
+        <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-md mx-auto">
+          {/* Brand */}
+          <span className="text-[12px] uppercase tracking-[0.3em] text-[#968d9d] mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            DUKE VANGUARD
+          </span>
+          <div className="w-24 h-24 rounded-lg bg-[#450084] flex items-center justify-center mb-6" style={{ boxShadow: '0 0 30px rgba(69,0,132,0.3)' }}>
+            <span className="material-symbols-outlined text-5xl text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>shield</span>
           </div>
-        )}
+          <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-center mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+            YOUR OML MENTOR
+          </h1>
+          <p className="text-sm md:text-base text-[#968d9d] text-center mb-10 leading-relaxed max-w-sm">
+            AI-powered Order of Merit List optimizer for Army ROTC cadets.
+            Sign in to save your progress across devices.
+          </p>
 
-        {state === 'input' ? (
-          <div className="w-full space-y-4">
-            {/* OAuth Buttons */}
-            <div className="space-y-3">
-              <button
-                onClick={() => handleOAuth('google')}
-                disabled={oauthLoading !== null}
-                className="w-full py-3.5 rounded-sm bg-white text-[#1b1c1c] text-sm font-semibold cursor-pointer hover:bg-gray-100 disabled:opacity-60 transition-all flex items-center justify-center gap-3 shadow-lg shadow-white/5"
-              >
-                {oauthLoading === 'google' ? (
-                  <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-400/30 border-t-gray-600 rounded-full" />
-                ) : (
-                  <GoogleIcon size={20} />
-                )}
-                Continue with Google
-              </button>
-
-              <button
-                onClick={() => handleOAuth('github')}
-                disabled={oauthLoading !== null}
-                className="w-full py-3.5 rounded-sm bg-[#211f23] text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#2c292d] disabled:opacity-60 transition-all flex items-center justify-center gap-3 ghost-border"
-              >
-                {oauthLoading === 'github' ? (
-                  <span className="animate-spin inline-block w-4 h-4 border-2 border-[#968d9d]/30 border-t-[#e7e1e6] rounded-full" />
-                ) : (
-                  <GitHubIcon size={20} />
-                )}
-                Continue with GitHub
-              </button>
+          {error && (
+            <div className="w-full mb-4 text-center">
+              <span className="text-xs font-semibold text-[#ffb4ab]">{error}</span>
             </div>
+          )}
 
-            {/* Divider */}
-            <div className="py-2 flex items-center justify-center gap-4">
-              <div className="flex-1 h-px bg-[#4b4452]/20"></div>
-              <span className="text-xs uppercase tracking-[0.3em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                or
-              </span>
-              <div className="flex-1 h-px bg-[#4b4452]/20"></div>
+          {state === 'input' ? (
+            <div className="w-full space-y-4">
+              {/* OAuth Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleOAuth('google')}
+                  disabled={oauthLoading !== null}
+                  className="w-full py-4 rounded-sm bg-white text-[#1b1c1c] text-sm font-semibold cursor-pointer hover:bg-gray-100 disabled:opacity-60 transition-all flex items-center justify-center gap-3 shadow-lg shadow-white/5"
+                >
+                  {oauthLoading === 'google' ? (
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-gray-400/30 border-t-gray-600 rounded-full" />
+                  ) : (
+                    <GoogleIcon size={20} />
+                  )}
+                  Continue with Google
+                </button>
+
+                <button
+                  onClick={() => handleOAuth('github')}
+                  disabled={oauthLoading !== null}
+                  className="w-full py-4 rounded-sm bg-[#211f23] text-[#e7e1e6] text-sm font-semibold cursor-pointer hover:bg-[#2c292d] disabled:opacity-60 transition-all flex items-center justify-center gap-3"
+                >
+                  {oauthLoading === 'github' ? (
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-[#968d9d]/30 border-t-[#e7e1e6] rounded-full" />
+                  ) : (
+                    <GitHubIcon size={20} />
+                  )}
+                  Continue with GitHub
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="py-3 flex items-center justify-center gap-4">
+                <div className="flex-1 h-px bg-[#373438]" />
+                <span className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  or
+                </span>
+                <div className="flex-1 h-px bg-[#373438]" />
+              </div>
+
+              {/* Magic Link */}
+              <div className="glass-panel-auth rounded-lg p-6 space-y-4">
+                <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="cadet@university.edu"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  className="w-full bg-[#151317] text-[#e7e1e6] rounded-sm px-4 py-3.5 text-sm outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 transition-all placeholder:text-[#968d9d]"
+                  style={{ border: 'none' }}
+                />
+                <button
+                  className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider disabled:opacity-60 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                  style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
+                  onClick={handleSend}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-[#b27ff5]/30 border-t-[#b27ff5] rounded-full" />
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
+                      Send Magic Link
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-[#968d9d] text-center">
+                  No password needed — we&apos;ll email you a secure sign-in link.
+                </p>
+              </div>
+
+              {/* Skip */}
+              <div className="pt-2 space-y-2">
+                <button
+                  onClick={handleSkip}
+                  className="w-full py-3 rounded-sm text-[#968d9d] text-sm cursor-pointer hover:text-[#e7e1e6] transition-colors"
+                >
+                  Try without an account
+                </button>
+                <p className="text-xs text-[#968d9d]/60 text-center">
+                  Your data will only be saved on this device.
+                </p>
+              </div>
             </div>
-
-            {/* Magic Link */}
-            <div className="glass-card ghost-border rounded-sm p-5 space-y-4">
-              <label className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-1 block" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                Email Address
-              </label>
-              <input
-                type="email"
-                placeholder="cadet@university.edu"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                className="w-full bg-[#211f23] text-[#e7e1e6] rounded-sm px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 transition-all placeholder:text-[#968d9d]"
-                style={{ border: 'none' }}
-              />
+          ) : (
+            <div className="w-full glass-panel-auth rounded-lg p-8 flex flex-col items-center" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.2)' }}>
+              <div className="w-20 h-20 rounded-lg bg-[#450084] flex items-center justify-center mb-6" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}>
+                <span className="material-symbols-outlined text-4xl text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>mark_email_read</span>
+              </div>
+              <h2 className="text-2xl font-black uppercase tracking-tighter text-center mb-3" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                CHECK YOUR EMAIL
+              </h2>
+              <p className="text-sm text-[#968d9d] text-center mb-8 leading-relaxed">
+                We sent a magic link to <strong className="text-[#d9b9ff]">{email}</strong>.
+                Click it to sign in — no password needed.
+              </p>
               <button
-                className="w-full py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(69,0,132,0.4)] disabled:opacity-60 transition-all flex items-center justify-center gap-2"
-                style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+                className="w-full py-4 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider disabled:opacity-40 hover:scale-[1.02] transition-all"
+                style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
                 onClick={handleSend}
-                disabled={loading}
+                disabled={cooldown > 0}
               >
-                {loading ? (
-                  <span className="animate-spin inline-block w-4 h-4 border-2 border-[#b27ff5]/30 border-t-[#b27ff5] rounded-full" />
-                ) : (
-                  <>
-                    <MdRocketLaunch size={16} />
-                    Send Magic Link
-                  </>
-                )}
+                {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Magic Link'}
               </button>
-              <p className="text-xs text-[#968d9d] text-center">
-                No password needed — we&apos;ll email you a secure sign-in link.
-              </p>
-            </div>
-
-            {/* Skip */}
-            <div className="pt-2 space-y-2">
               <button
-                onClick={handleSkip}
-                className="w-full py-3 rounded-sm text-[#968d9d] text-sm cursor-pointer hover:text-[#e7e1e6] transition-colors"
+                onClick={() => { setState('input'); setEmail(''); }}
+                className="text-sm font-semibold text-[#d9b9ff] mt-4 cursor-pointer hover:underline"
               >
-                Try without an account
+                Use a different email
               </button>
-              <p className="text-xs text-[#968d9d]/60 text-center">
-                Your data will only be saved on this device.
-              </p>
             </div>
-          </div>
-        ) : (
-          <div className="w-full glass-card ghost-border rounded-sm p-6 flex flex-col items-center">
-            <div className="w-16 h-16 rounded-sm bg-[#450084] flex items-center justify-center mb-4 glow-shadow-purple">
-              <MdMarkEmailRead size={36} className="text-[#d9b9ff]" />
-            </div>
-            <h2 className="text-xl font-black uppercase tracking-tighter text-[#e7e1e6] text-center mb-2" style={{ fontFamily: 'Public Sans, sans-serif' }}>
-              CHECK YOUR EMAIL
-            </h2>
-            <p className="text-sm text-[#cdc3d4] text-center mb-6 leading-relaxed" style={{ fontFamily: 'Inter, sans-serif' }}>
-              We sent a magic link to <strong className="text-[#d9b9ff]">{email}</strong>.
-              Click it to sign in — no password needed.
-            </p>
-            <button
-              className="w-full py-3.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer disabled:opacity-40 transition-opacity"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-              onClick={handleSend}
-              disabled={cooldown > 0}
-            >
-              {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Magic Link'}
-            </button>
-            <button
-              onClick={() => { setState('input'); setEmail(''); }}
-              className="text-sm font-semibold text-[#d9b9ff] mt-4 cursor-pointer hover:underline"
-            >
-              Use a different email
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* Footer */}
-      <div className="p-4 text-center flex flex-col items-center gap-2">
-        <Link href="/landing" className="text-xs font-semibold text-[#d9b9ff] hover:underline">
-          &larr; Back to Home
-        </Link>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-          Duke Vanguard v0.2.0 — AI-First OML Optimizer
-        </span>
+        {/* Footer */}
+        <div className="p-6 text-center flex flex-col items-center gap-2">
+          <Link href="/landing" className="text-xs font-semibold text-[#d9b9ff] hover:underline">
+            &larr; Back to Home
+          </Link>
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Duke Vanguard v0.2.0 — AI-First OML Optimizer
+          </span>
+        </div>
       </div>
     </div>
   );

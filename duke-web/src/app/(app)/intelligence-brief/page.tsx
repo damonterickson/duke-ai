@@ -2,8 +2,6 @@
 
 import React, { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { MdArrowBack, MdLock } from 'react-icons/md';
-import { VProgressBar } from '@/components';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { calculateOML } from '@/engine/oml';
@@ -43,92 +41,104 @@ export default function IntelligenceBriefPage() {
   const oml = omlResult?.totalScore ?? latestScore?.total_oml ?? 0;
 
   const pillars = [
-    { label: 'Academic', value: latestScore?.gpa ? Math.min(latestScore.gpa / 4.0, 1) : 0, display: latestScore?.gpa?.toFixed(2) ?? '--', accent: '#f8e19e' },
-    { label: 'Physical', value: latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0, display: latestScore?.acft_total ? `${Math.round(latestScore.acft_total)}` : '--', accent: '#c3cc8c' },
-    { label: 'Leadership', value: latestScore?.leadership_eval ? Math.min(latestScore.leadership_eval / 100, 1) : 0, display: latestScore?.leadership_eval?.toString() ?? '--', accent: '#d9b9ff' },
+    { label: 'Academic', value: latestScore?.gpa ? Math.min(latestScore.gpa / 4.0, 1) : 0, display: latestScore?.gpa?.toFixed(2) ?? '--', accent: '#f8e19e', bg: '#544511', icon: 'school' },
+    { label: 'Physical', value: latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0, display: latestScore?.acft_total ? `${Math.round(latestScore.acft_total)}` : '--', accent: '#c3cc8c', bg: '#2c3303', icon: 'fitness_center' },
+    { label: 'Leadership', value: latestScore?.leadership_eval ? Math.min(latestScore.leadership_eval / 100, 1) : 0, display: latestScore?.leadership_eval?.toString() ?? '--', accent: '#d9b9ff', bg: '#450084', icon: 'military_tech' },
   ];
 
   return (
-    <div className="flex flex-col min-h-full bg-[#151317]">
-      {/* Header — glass bar */}
-      <header className="glass-card ghost-border bg-[#151317]/60 backdrop-blur-2xl px-4 py-4 flex items-center justify-between shadow-lg shadow-purple-900/20 sticky top-0 z-40">
-        <button onClick={() => router.back()} aria-label="Go back" className="text-[#968d9d] hover:text-[#d9b9ff] cursor-pointer transition-colors">
-          <MdArrowBack size={24} />
-        </button>
-        <h1
-          className="text-lg font-black uppercase tracking-tighter text-[#d9b9ff]"
-          style={{ fontFamily: 'Public Sans, sans-serif' }}
-        >
-          INTELLIGENCE BRIEF
-        </h1>
-        <div className="w-6" />
-      </header>
+    <div className="min-h-screen bg-[#151317] text-[#e7e1e6] selection:bg-[#450084] selection:text-[#d9b9ff]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-6 pb-20 max-w-lg mx-auto md:max-w-2xl w-full space-y-8">
+      <style jsx global>{`
+        .glass-panel-brief { background: rgba(55, 52, 56, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+      `}</style>
+
+      <div className="pt-6 pb-8 px-6 max-w-4xl mx-auto space-y-10">
+        {/* Header */}
+        <div className="flex items-center gap-4">
+          <button onClick={() => router.back()} className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors">
+            <span className="material-symbols-outlined">arrow_back</span>
+          </button>
+          <h1 className="text-3xl font-black uppercase tracking-tighter text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+            INTELLIGENCE BRIEF
+          </h1>
+        </div>
+
         {/* OML Summary */}
-        <section className="glass-card ghost-border rounded-sm p-6 glow-shadow-purple">
-          <span
-            className="text-xs uppercase tracking-[0.3em] text-[#968d9d] mb-3 block"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-          >
-            COMPOSITE OML SCORE
-          </span>
-          <div className="flex items-baseline mb-3">
-            <span
-              className="text-5xl font-black text-[#f8e19e]"
-              style={{ fontFamily: 'Public Sans, sans-serif' }}
-            >
-              {oml > 0 ? Math.round(oml) : '--'}
-            </span>
-            <span className="text-xl font-semibold text-[#968d9d] ml-1"> / 1000</span>
+        <section className="glass-panel-brief rounded-lg p-10 relative overflow-hidden" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.2)' }}>
+          <div className="absolute top-0 right-0 p-6 opacity-10">
+            <span className="material-symbols-outlined text-[120px]">query_stats</span>
           </div>
-          <VProgressBar progress={Math.min(oml / 1000, 1)} />
-          {profile.goalOml != null && (
-            <p
-              className="text-sm font-bold text-[#d9b9ff] mt-3"
-              style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-            >
-              Target: {profile.goalOml} ({oml > 0 ? `${Math.round(profile.goalOml - oml)} points to go` : 'Set scores to track'})
-            </p>
-          )}
-          <div className="flex gap-3 mt-5">
-            {pillars.map((pillar, i) => (
-              <div key={i} className="flex-1 bg-[#1d1b1f] rounded-sm p-3">
-                <span
-                  className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block mb-1"
-                  style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-                >
-                  {pillar.label}
-                </span>
-                <span
-                  className="text-lg font-black block mb-2"
-                  style={{ fontFamily: 'Public Sans, sans-serif', color: pillar.accent }}
-                >
-                  {pillar.display}
-                </span>
-                <VProgressBar progress={pillar.value} />
-              </div>
-            ))}
+          <div className="relative z-10">
+            <span className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold block mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              Composite OML Score
+            </span>
+            <div className="flex items-baseline mb-4">
+              <span className="text-7xl font-black text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif', filter: 'drop-shadow(0 0 15px rgba(219,197,133,0.3))' }}>
+                {oml > 0 ? Math.round(oml) : '--'}
+              </span>
+              <span className="text-2xl font-semibold text-[#968d9d] ml-2"> / 1000</span>
+            </div>
+            <div className="w-full h-2 bg-[#373438] rounded-full mb-4">
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(oml / 1000, 1) * 100}%`,
+                  background: 'linear-gradient(90deg, #d9b9ff, #dbc585)',
+                  boxShadow: '0 0 10px rgba(219,197,133,0.3)',
+                }}
+              />
+            </div>
+            {profile.goalOml != null && (
+              <p className="text-sm font-bold text-[#d9b9ff]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                Target: {profile.goalOml} ({oml > 0 ? `${Math.round(profile.goalOml - oml)} points to go` : 'Set scores to track'})
+              </p>
+            )}
+
+            {/* Pillar Cards */}
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              {pillars.map((pillar) => (
+                <div key={pillar.label} className="bg-[#1d1b1f] rounded-lg p-4 border-l-4" style={{ borderLeftColor: pillar.bg }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="material-symbols-outlined text-sm" style={{ color: pillar.accent, fontVariationSettings: "'FILL' 1" }}>{pillar.icon}</span>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+                      {pillar.label}
+                    </span>
+                  </div>
+                  <span className="text-2xl font-black block mb-2" style={{ fontFamily: 'Public Sans, sans-serif', color: pillar.accent }}>
+                    {pillar.display}
+                  </span>
+                  <div className="w-full h-1.5 bg-[#373438] rounded-full">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${pillar.value * 100}%`,
+                        backgroundColor: pillar.accent,
+                        boxShadow: `0 0 8px ${pillar.accent}40`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* Coming Soon */}
-        <section className="bg-[#1d1b1f] rounded-sm p-8 flex flex-col items-center text-center gap-4">
-          <div className="w-16 h-16 rounded-sm bg-[#450084] flex items-center justify-center glow-shadow-purple">
-            <MdLock size={32} className="text-[#b27ff5]" />
+        <section className="bg-[#1d1b1f] rounded-lg p-12 flex flex-col items-center text-center gap-5">
+          <div className="w-20 h-20 rounded-lg bg-[#450084] flex items-center justify-center" style={{ boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}>
+            <span className="material-symbols-outlined text-4xl text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
           </div>
-          <h2
-            className="text-xl font-black uppercase tracking-tighter text-[#e7e1e6]"
-            style={{ fontFamily: 'Public Sans, sans-serif' }}
-          >
+          <h2 className="text-2xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Public Sans, sans-serif' }}>
             AI INTELLIGENCE BRIEFINGS COMING SOON
           </h2>
-          <p className="text-sm text-[#cdc3d4] leading-relaxed max-w-md" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <p className="text-sm text-[#968d9d] leading-relaxed max-w-md">
             AI Intelligence Briefings are coming soon. In the meantime, track your scores and check your OML on the dashboard.
           </p>
           <button
-            className="mt-2 px-6 py-2.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider cursor-pointer hover:bg-[#450084]/80 active:scale-[0.98] transition-all shadow-lg shadow-[#450084]/20"
-            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            className="mt-2 px-8 py-3 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
             onClick={() => router.push('/mission')}
           >
             Go to Dashboard
