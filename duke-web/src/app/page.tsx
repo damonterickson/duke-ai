@@ -48,7 +48,13 @@ export default function RootPage() {
             router.replace('/onboarding/welcome');
           }
         } else {
-          router.replace('/auth');
+          // No Supabase session — check localStorage for anonymous users
+          const onboardingComplete = localStorage.getItem('duke_onboarding_complete');
+          if (onboardingComplete === 'true') {
+            router.replace('/mission');
+          } else {
+            router.replace('/auth');
+          }
         }
       } catch (err) {
         console.error('Auth check failed:', err);
