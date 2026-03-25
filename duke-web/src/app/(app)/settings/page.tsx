@@ -1,13 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { MdLogout, MdPerson } from 'react-icons/md';
 import { VButton, VCard, VInput } from '@/components';
 import { useProfileStore } from '@/stores/profile';
+import { getSession, signOut } from '@/services/supabase';
 
 export default function SettingsPage() {
   const router = useRouter();
   const profile = useProfileStore();
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      const session = await getSession();
+      if (session) {
+        setUserEmail(session.user.email ?? null);
+        setIsAuthenticated(true);
+      }
+    }
+    checkAuth();
+  }, []);
 
   const [targetBranch, setTargetBranch] = useState(profile.targetBranch ?? '');
   const [goalOml, setGoalOml] = useState(profile.goalOml != null ? String(profile.goalOml) : '');
@@ -101,6 +116,46 @@ export default function SettingsPage() {
           )}
         </VCard>
 
+        {/* Account Section */}
+        <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3 mt-4">Account</h2>
+        <VCard tier="low" className="flex flex-col gap-3">
+          {isAuthenticated ? (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
+                  <MdPerson size={20} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-[var(--color-on-surface)] block">{userEmail}</span>
+                  <span className="text-xs text-[var(--color-outline)]">Signed in — data syncs across devices</span>
+                </div>
+              </div>
+              <button
+                onClick={async () => {
+                  await signOut();
+                  localStorage.clear();
+                  router.replace('/auth');
+                }}
+                className="flex items-center gap-2 text-sm text-[var(--color-error)] cursor-pointer hover:underline mt-1"
+              >
+                <MdLogout size={16} />
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-[var(--color-outline)]">
+                You&apos;re using Duke Vanguard without an account. Sign in to save your data across devices.
+              </p>
+              <VButton
+                label="Sign In"
+                onPress={() => router.push('/auth')}
+                variant="primary"
+              />
+            </>
+          )}
+        </VCard>
+
         {/* App Section */}
         <h2 className="text-lg font-semibold text-[var(--color-on-surface)] mb-3 mt-4">App</h2>
         <VCard tier="low">
@@ -110,7 +165,7 @@ export default function SettingsPage() {
         {/* About */}
         <VCard tier="low" className="mt-8 flex flex-col items-center">
           <span className="text-lg font-semibold text-[var(--color-primary)]">Duke Vanguard</span>
-          <span className="text-xs text-[var(--color-outline)] mt-1">Version 1.0.0</span>
+          <span className="text-xs text-[var(--color-outline)] mt-1">Version 0.2.0</span>
           <p className="text-sm text-[var(--color-outline)] text-center mt-2">
             AI-powered OML optimizer for Army ROTC cadets. Built with care for every future officer.
           </p>

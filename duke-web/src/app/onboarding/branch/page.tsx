@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { VButton, VInput } from '@/components';
 import { useProfileStore } from '@/stores/profile';
+import { getSession, getSupabase } from '@/services/supabase';
 
 const POPULAR_BRANCHES = [
   'Infantry',
@@ -34,11 +35,28 @@ export default function BranchPage() {
       console.warn('Failed to save branch info:', err);
     }
 
-    // Mark onboarding complete
+    // Mark onboarding complete — both Supabase and localStorage
     try {
       localStorage.setItem('duke_onboarding_complete', 'true');
     } catch {
       // localStorage may not be available
+    }
+
+    // If authenticated, mark complete in Supabase profiles table
+    try {
+      const session = await getSession();
+      if (session) {
+        const sb = getSupabase();
+        await sb.from('profiles').upsert({
+          id: session.user.id,
+          onboarding_complete: true,
+          year_group: useProfileStore.getState().yearGroup,
+          target_branch: selected,
+          goal_oml: goalOml ? parseFloat(goalOml) : null,
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to sync onboarding to Supabase:', err);
     }
 
     router.push('/onboarding/mission-ready');
