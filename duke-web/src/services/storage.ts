@@ -1,12 +1,29 @@
 /**
- * Storage Layer — localStorage-backed CRUD helpers + KV cache
+ * Storage Layer — Supabase Postgres + localStorage fallback
  *
- * Web migration: replaces SQLite with localStorage JSON arrays,
- * replaces AsyncStorage with localStorage for KV cache.
- * Same exports / function signatures as the React Native version.
+ * Dual-mode: if the user is authenticated via Supabase, all CRUD goes to
+ * Postgres (with RLS). If not authenticated, falls back to localStorage
+ * JSON arrays so the app still works for anonymous / pilot users.
+ *
+ * KV cache functions always use localStorage (client-side only).
  */
 
-// ─── localStorage Helpers ───────────────────────────────────────────
+import { getSupabase, isSupabaseConfigured } from './supabase';
+
+// ─── Auth Helper ────────────────────────────────────────────────────
+
+async function getUserId(): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  try {
+    const sb = getSupabase();
+    const { data } = await sb.auth.getUser();
+    return data.user?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── localStorage Helpers (fallback for unauthenticated users) ──────
 
 const KEYS = {
   profile: 'duke_profile',
@@ -42,15 +59,26 @@ function nowISO(): string {
   return new Date().toISOString();
 }
 
-// ─── Database Init (no-op for localStorage) ─────────────────────────
-
-let dbInitialized = false;
+// ─── Database Init ──────────────────────────────────────────────────
 
 export async function initDatabase(): Promise<void> {
-  dbInitialized = true;
+  // No-op — Supabase tables are pre-created via migrations.
+  // localStorage needs no init.
 }
 
 export async function healthCheck(): Promise<boolean> {
+  const userId = await getUserId();
+  if (userId) {
+    try {
+      const sb = getSupabase();
+      const { error } = await sb.from('profiles').select('id').eq('id', userId).single();
+      // PGRST116 = no rows — that's fine, user just hasn't set up profile yet
+      return !error || error.code === 'PGRST116';
+    } catch {
+      return false;
+    }
+  }
+  // Fallback: localStorage check
   try {
     localStorage.setItem('duke_health', '1');
     localStorage.removeItem('duke_health');
@@ -60,7 +88,7 @@ export async function healthCheck(): Promise<boolean> {
   }
 }
 
-// ─── Cadet Profile CRUD ──────────────────────────────────────────────
+// ─── Cadet Profile CRUD ─────────────────────────────────────────────
 
 export interface CadetProfileRow {
   id?: number;
@@ -76,6 +104,30 @@ export interface CadetProfileRow {
 }
 
 export async function getProfile(): Promise<CadetProfileRow | null> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (error || !data) return null;
+    // Map DB columns to CadetProfileRow shape
+    return {
+      id: undefined, // Supabase profiles use uuid, but callers don't depend on numeric id
+      name: data.name ?? null,
+      photo_uri: data.photo_uri ?? null,
+      year_group: data.year_group ?? '',
+      gender: data.gender ?? '',
+      age_bracket: data.age_bracket ?? '',
+      target_branch: data.target_branch ?? null,
+      goal_oml: data.goal_oml ?? null,
+      created_at: data.created_at ?? undefined,
+      updated_at: data.updated_at ?? undefined,
+    };
+  }
+  // Fallback: localStorage
   const rows = getTable<CadetProfileRow>(KEYS.profile);
   return rows.length > 0 ? rows[rows.length - 1] : null;
 }
@@ -83,6 +135,27 @@ export async function getProfile(): Promise<CadetProfileRow | null> {
 export async function upsertProfile(
   profile: Omit<CadetProfileRow, 'id' | 'created_at' | 'updated_at'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { error } = await sb.from('profiles').upsert({
+      id: userId,
+      name: profile.name ?? null,
+      photo_uri: profile.photo_uri ?? null,
+      year_group: profile.year_group,
+      gender: profile.gender,
+      age_bracket: profile.age_bracket,
+      target_branch: profile.target_branch ?? null,
+      goal_oml: profile.goal_oml ?? null,
+    });
+    if (error) {
+      console.error('[storage] upsertProfile failed:', error);
+      throw error;
+    }
+    // Return a stable numeric id for callers that track it (hash of uuid)
+    return hashUuid(userId);
+  }
+  // Fallback: localStorage
   const rows = getTable<CadetProfileRow>(KEYS.profile);
   const existing = rows.length > 0 ? rows[rows.length - 1] : null;
 
@@ -108,7 +181,16 @@ export async function upsertProfile(
   }
 }
 
-// ─── Score History CRUD ──────────────────────────────────────────────
+/** Simple hash of a UUID string to a stable positive integer. */
+function hashUuid(uuid: string): number {
+  let hash = 0;
+  for (let i = 0; i < uuid.length; i++) {
+    hash = ((hash << 5) - hash + uuid.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+// ─── Score History CRUD ─────────────────────────────────────────────
 
 export interface ScoreHistoryRow {
   id?: number;
@@ -125,6 +207,29 @@ export interface ScoreHistoryRow {
 export async function insertScoreHistory(
   row: Omit<ScoreHistoryRow, 'id' | 'recorded_at'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('score_history')
+      .insert({
+        user_id: userId,
+        gpa: row.gpa,
+        msl_gpa: row.msl_gpa,
+        acft_total: row.acft_total,
+        commander_assessment: row.leadership_eval,
+        cst_score: row.cst_score,
+        clc_score: row.clc_score,
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertScoreHistory failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<ScoreHistoryRow>(KEYS.scores);
   const id = nextId();
   const newRow: ScoreHistoryRow = { ...row, id, recorded_at: nowISO() };
@@ -135,8 +240,49 @@ export async function insertScoreHistory(
 export async function updateLatestScoreHistory(
   fields: Partial<Omit<ScoreHistoryRow, 'id' | 'recorded_at'>>
 ): Promise<void> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    // Find the latest row
+    const { data: latest } = await sb
+      .from('score_history')
+      .select('id')
+      .eq('user_id', userId)
+      .order('recorded_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const dbFields: Record<string, unknown> = {};
+    if (fields.gpa !== undefined) dbFields.gpa = fields.gpa;
+    if (fields.msl_gpa !== undefined) dbFields.msl_gpa = fields.msl_gpa;
+    if (fields.acft_total !== undefined) dbFields.acft_total = fields.acft_total;
+    if (fields.leadership_eval !== undefined) dbFields.commander_assessment = fields.leadership_eval;
+    if (fields.cst_score !== undefined) dbFields.cst_score = fields.cst_score;
+    if (fields.clc_score !== undefined) dbFields.clc_score = fields.clc_score;
+    // total_oml is computed client-side, not stored in DB
+
+    if (latest?.id && Object.keys(dbFields).length > 0) {
+      const { error } = await sb
+        .from('score_history')
+        .update(dbFields)
+        .eq('id', latest.id);
+      if (error) console.error('[storage] updateLatestScoreHistory failed:', error);
+    } else if (!latest) {
+      // No existing row — insert one
+      await insertScoreHistory({
+        gpa: fields.gpa ?? null,
+        msl_gpa: fields.msl_gpa ?? null,
+        acft_total: fields.acft_total ?? null,
+        leadership_eval: fields.leadership_eval ?? null,
+        cst_score: fields.cst_score ?? null,
+        clc_score: fields.clc_score ?? null,
+        total_oml: fields.total_oml ?? null,
+      });
+    }
+    return;
+  }
+  // Fallback: localStorage
   const rows = getTable<ScoreHistoryRow>(KEYS.scores);
-  // Sort descending by recorded_at to find latest
   const sorted = [...rows].sort(
     (a, b) => (b.recorded_at ?? '').localeCompare(a.recorded_at ?? '')
   );
@@ -168,14 +314,45 @@ export async function updateLatestScoreHistory(
   }
 }
 
+/** Map a Supabase score_history row to the app's ScoreHistoryRow shape. */
+function mapScoreRow(row: Record<string, unknown>): ScoreHistoryRow {
+  return {
+    id: row.id as number | undefined,
+    gpa: (row.gpa as number) ?? null,
+    msl_gpa: (row.msl_gpa as number) ?? null,
+    acft_total: (row.acft_total as number) ?? null,
+    leadership_eval: (row.commander_assessment as number) ?? null,
+    cst_score: (row.cst_score as number) ?? null,
+    clc_score: (row.clc_score as number) ?? null,
+    total_oml: null, // computed client-side
+    recorded_at: (row.recorded_at as string) ?? undefined,
+  };
+}
+
 export async function getScoreHistory(limit = 50): Promise<ScoreHistoryRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('score_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('recorded_at', { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.error('[storage] getScoreHistory failed:', error);
+      return [];
+    }
+    return (data ?? []).map(mapScoreRow);
+  }
+  // Fallback: localStorage
   const rows = getTable<ScoreHistoryRow>(KEYS.scores);
   return [...rows]
     .sort((a, b) => (b.recorded_at ?? '').localeCompare(a.recorded_at ?? ''))
     .slice(0, limit);
 }
 
-// ─── ACFT Assessments CRUD ───────────────────────────────────────────
+// ─── ACFT Assessments CRUD ──────────────────────────────────────────
 
 export interface ACFTAssessmentRow {
   id?: number;
@@ -194,6 +371,32 @@ export interface ACFTAssessmentRow {
 export async function insertACFTAssessment(
   row: Omit<ACFTAssessmentRow, 'id' | 'recorded_at'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('acft_assessments')
+      .insert({
+        user_id: userId,
+        deadlift: row.deadlift,
+        power_throw: row.power_throw,
+        push_ups: row.push_ups,
+        sprint_drag_carry: row.sprint_drag_carry,
+        plank: row.plank,
+        two_mile_run: row.two_mile_run,
+        alt_event_name: row.alt_event_name,
+        alt_event_score: row.alt_event_score,
+        total: row.total,
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertACFTAssessment failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<ACFTAssessmentRow>(KEYS.acft);
   const id = nextId();
   const newRow: ACFTAssessmentRow = { ...row, id, recorded_at: nowISO() };
@@ -202,13 +405,41 @@ export async function insertACFTAssessment(
 }
 
 export async function getACFTAssessments(limit = 20): Promise<ACFTAssessmentRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('acft_assessments')
+      .select('*')
+      .eq('user_id', userId)
+      .order('recorded_at', { ascending: false })
+      .limit(limit);
+    if (error) {
+      console.error('[storage] getACFTAssessments failed:', error);
+      return [];
+    }
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      deadlift: r.deadlift ?? null,
+      power_throw: r.power_throw ?? null,
+      push_ups: r.push_ups ?? null,
+      sprint_drag_carry: r.sprint_drag_carry ?? null,
+      plank: r.plank ?? null,
+      two_mile_run: r.two_mile_run ?? null,
+      alt_event_name: r.alt_event_name ?? null,
+      alt_event_score: r.alt_event_score ?? null,
+      total: r.total ?? null,
+      recorded_at: r.recorded_at ?? undefined,
+    }));
+  }
+  // Fallback: localStorage
   const rows = getTable<ACFTAssessmentRow>(KEYS.acft);
   return [...rows]
     .sort((a, b) => (b.recorded_at ?? '').localeCompare(a.recorded_at ?? ''))
     .slice(0, limit);
 }
 
-// ─── Courses CRUD ────────────────────────────────────────────────────
+// ─── Courses CRUD ───────────────────────────────────────────────────
 
 export interface CourseRow {
   id?: number;
@@ -224,6 +455,29 @@ export interface CourseRow {
 export async function insertCourse(
   row: Omit<CourseRow, 'id' | 'created_at'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('courses')
+      .insert({
+        user_id: userId,
+        code: row.code,
+        name: row.name,
+        credits: row.credits,
+        grade: row.grade,
+        is_msl: !!row.is_msl,
+        semester: row.semester,
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertCourse failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<CourseRow>(KEYS.courses);
   const id = nextId();
   const newRow: CourseRow = { ...row, id, created_at: nowISO() };
@@ -232,6 +486,31 @@ export async function insertCourse(
 }
 
 export async function getCourses(): Promise<CourseRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('courses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('semester', { ascending: false })
+      .order('code', { ascending: true });
+    if (error) {
+      console.error('[storage] getCourses failed:', error);
+      return [];
+    }
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      code: r.code ?? '',
+      name: r.name ?? '',
+      credits: r.credits ?? 0,
+      grade: r.grade ?? '',
+      is_msl: r.is_msl ? 1 : 0,
+      semester: r.semester ?? '',
+      created_at: r.created_at ?? undefined,
+    }));
+  }
+  // Fallback: localStorage
   const rows = getTable<CourseRow>(KEYS.courses);
   return [...rows].sort((a, b) => {
     const semCmp = (b.semester ?? '').localeCompare(a.semester ?? '');
@@ -254,17 +533,49 @@ export async function updateCourse(
     }
   }
 
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    // Convert is_msl number to boolean for Postgres
+    const dbRow: Record<string, unknown> = { ...row };
+    if ('is_msl' in dbRow) {
+      dbRow.is_msl = !!dbRow.is_msl;
+    }
+    const { error } = await sb
+      .from('courses')
+      .update(dbRow)
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) {
+      console.error('[storage] updateCourse failed:', error);
+      throw error;
+    }
+    return;
+  }
+  // Fallback: localStorage
   const rows = getTable<CourseRow>(KEYS.courses);
   const updatedRows = rows.map((r) => (r.id === id ? { ...r, ...row } : r));
   setTable(KEYS.courses, updatedRows);
 }
 
 export async function deleteCourse(id: number): Promise<void> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { error } = await sb
+      .from('courses')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) console.error('[storage] deleteCourse failed:', error);
+    return;
+  }
+  // Fallback: localStorage
   const rows = getTable<CourseRow>(KEYS.courses);
   setTable(KEYS.courses, rows.filter((r) => r.id !== id));
 }
 
-// ─── Leadership Entries CRUD ─────────────────────────────────────────
+// ─── Leadership Entries CRUD ────────────────────────────────────────
 
 export interface LeadershipEntryRow {
   id?: number;
@@ -280,6 +591,29 @@ export interface LeadershipEntryRow {
 export async function insertLeadershipEntry(
   row: Omit<LeadershipEntryRow, 'id' | 'created_at'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('leadership_entries')
+      .insert({
+        user_id: userId,
+        entry_type: row.type,
+        title: row.title,
+        description: row.description,
+        hours: row.points,
+        start_date: row.start_date,
+        end_date: row.end_date,
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertLeadershipEntry failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<LeadershipEntryRow>(KEYS.leadership);
   const id = nextId();
   const newRow: LeadershipEntryRow = { ...row, id, created_at: nowISO() };
@@ -288,6 +622,30 @@ export async function insertLeadershipEntry(
 }
 
 export async function getLeadershipEntries(): Promise<LeadershipEntryRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('leadership_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .order('start_date', { ascending: false });
+    if (error) {
+      console.error('[storage] getLeadershipEntries failed:', error);
+      return [];
+    }
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      type: r.entry_type ?? '',
+      title: r.title ?? '',
+      description: r.description ?? null,
+      points: r.hours ?? null,
+      start_date: r.start_date ?? null,
+      end_date: r.end_date ?? null,
+      created_at: r.created_at ?? undefined,
+    }));
+  }
+  // Fallback: localStorage
   const rows = getTable<LeadershipEntryRow>(KEYS.leadership);
   return [...rows].sort((a, b) =>
     (b.start_date ?? '').localeCompare(a.start_date ?? '')
@@ -295,11 +653,23 @@ export async function getLeadershipEntries(): Promise<LeadershipEntryRow[]> {
 }
 
 export async function deleteLeadershipEntry(id: number): Promise<void> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { error } = await sb
+      .from('leadership_entries')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) console.error('[storage] deleteLeadershipEntry failed:', error);
+    return;
+  }
+  // Fallback: localStorage
   const rows = getTable<LeadershipEntryRow>(KEYS.leadership);
   setTable(KEYS.leadership, rows.filter((r) => r.id !== id));
 }
 
-// ─── Conversations CRUD ──────────────────────────────────────────────
+// ─── Conversations CRUD ─────────────────────────────────────────────
 
 export interface ConversationRow {
   id?: number;
@@ -311,6 +681,25 @@ export interface ConversationRow {
 export async function insertConversation(
   row: Omit<ConversationRow, 'id' | 'timestamp'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('conversations')
+      .insert({
+        user_id: userId,
+        role: row.role,
+        content: row.content,
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertConversation failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<ConversationRow>(KEYS.conversations);
   const id = nextId();
   const newRow: ConversationRow = { ...row, id, timestamp: nowISO() };
@@ -319,6 +708,27 @@ export async function insertConversation(
 }
 
 export async function getConversations(limit = 50): Promise<ConversationRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('conversations')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+    if (error) {
+      console.error('[storage] getConversations failed:', error);
+      return [];
+    }
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      role: r.role ?? '',
+      content: r.content ?? '',
+      timestamp: r.created_at ?? undefined,
+    }));
+  }
+  // Fallback: localStorage
   const rows = getTable<ConversationRow>(KEYS.conversations);
   return [...rows]
     .sort((a, b) => (a.timestamp ?? '').localeCompare(b.timestamp ?? ''))
@@ -326,10 +736,23 @@ export async function getConversations(limit = 50): Promise<ConversationRow[]> {
 }
 
 export async function clearConversations(): Promise<void> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { error } = await sb
+      .from('conversations')
+      .delete()
+      .eq('user_id', userId);
+    if (error) console.error('[storage] clearConversations failed:', error);
+    return;
+  }
+  // Fallback: localStorage
   setTable(KEYS.conversations, []);
 }
 
-// ─── Offline Queue CRUD ──────────────────────────────────────────────
+// ─── Offline Queue CRUD ─────────────────────────────────────────────
+// Offline queue stays localStorage-only — it's a client-side queue
+// that gets flushed to the AI service, not persisted user data.
 
 export interface OfflineQueueRow {
   id?: number;
@@ -361,7 +784,7 @@ export async function markQuerySent(id: number): Promise<void> {
   setTable(KEYS.offlineQueue, updatedRows);
 }
 
-// ─── KV Cache (localStorage) ────────────────────────────────────────
+// ─── KV Cache (localStorage — client-side only) ────────────────────
 
 const kvCache: Record<string, string> = {};
 let kvInitialized = false;
@@ -475,6 +898,25 @@ export interface GoalRow {
 }
 
 export async function getGoals(status?: string): Promise<GoalRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    let query = sb
+      .from('goals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (status) {
+      query = query.eq('status', status);
+    }
+    const { data, error } = await query;
+    if (error) {
+      console.error('[storage] getGoals failed:', error);
+      return [];
+    }
+    return (data ?? []).map(mapGoalRow);
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalRow>(KEYS.goals);
   const filtered = status ? rows.filter((r) => r.status === status) : rows;
   return [...filtered].sort((a, b) =>
@@ -482,7 +924,38 @@ export async function getGoals(status?: string): Promise<GoalRow[]> {
   );
 }
 
+function mapGoalRow(r: Record<string, unknown>): GoalRow {
+  return {
+    id: r.id as number | undefined,
+    title: (r.title as string) ?? '',
+    category: (r.category as string) ?? '',
+    metric: (r.target_metric as string) ?? '',
+    target_value: (r.target_value as number) ?? 0,
+    current_value: (r.current_value as number) ?? null,
+    baseline_value: 0, // not stored in DB — always 0 fallback
+    deadline: (r.deadline as string) ?? '',
+    status: (r.status as string) ?? 'active',
+    created_by: 'user', // not stored in DB
+    oml_impact: (r.oml_impact as number) ?? null,
+    completed_at: (r.completed_at as string) ?? null,
+    created_at: (r.created_at as string) ?? undefined,
+  };
+}
+
 export async function getGoalById(id: number): Promise<GoalRow | null> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('goals')
+      .select('*')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+    if (error || !data) return null;
+    return mapGoalRow(data);
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalRow>(KEYS.goals);
   return rows.find((r) => r.id === id) ?? null;
 }
@@ -490,6 +963,33 @@ export async function getGoalById(id: number): Promise<GoalRow | null> {
 export async function insertGoal(
   goal: Omit<GoalRow, 'id' | 'created_at'>
 ): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('goals')
+      .insert({
+        user_id: userId,
+        title: goal.title,
+        description: null,
+        category: goal.category,
+        status: goal.status,
+        target_value: goal.target_value,
+        current_value: goal.current_value,
+        target_metric: goal.metric,
+        deadline: goal.deadline || null,
+        oml_impact: goal.oml_impact,
+        completed_at: goal.completed_at,
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertGoal failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalRow>(KEYS.goals);
   const id = nextId();
   const newRow: GoalRow = { ...goal, id, created_at: nowISO() };
@@ -513,12 +1013,54 @@ export async function updateGoal(
     }
   }
 
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    // Map app column names to DB column names
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.category !== undefined) dbUpdates.category = updates.category;
+    if (updates.metric !== undefined) dbUpdates.target_metric = updates.metric;
+    if (updates.target_value !== undefined) dbUpdates.target_value = updates.target_value;
+    if (updates.current_value !== undefined) dbUpdates.current_value = updates.current_value;
+    if (updates.deadline !== undefined) dbUpdates.deadline = updates.deadline || null;
+    if (updates.status !== undefined) dbUpdates.status = updates.status;
+    if (updates.oml_impact !== undefined) dbUpdates.oml_impact = updates.oml_impact;
+    if (updates.completed_at !== undefined) dbUpdates.completed_at = updates.completed_at;
+    // baseline_value and created_by are not in the DB — skip silently
+
+    if (Object.keys(dbUpdates).length > 0) {
+      const { error } = await sb
+        .from('goals')
+        .update(dbUpdates)
+        .eq('id', id)
+        .eq('user_id', userId);
+      if (error) {
+        console.error('[storage] updateGoal failed:', error);
+        throw error;
+      }
+    }
+    return;
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalRow>(KEYS.goals);
   const updatedRows = rows.map((r) => (r.id === id ? { ...r, ...updates } : r));
   setTable(KEYS.goals, updatedRows);
 }
 
 export async function deleteGoal(id: number): Promise<void> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { error } = await sb
+      .from('goals')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', userId);
+    if (error) console.error('[storage] deleteGoal failed:', error);
+    return;
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalRow>(KEYS.goals);
   setTable(KEYS.goals, rows.filter((r) => r.id !== id));
 }
@@ -533,6 +1075,27 @@ export interface GoalProgressLogRow {
 }
 
 export async function getGoalProgressLog(goalId: number): Promise<GoalProgressLogRow[]> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('goal_progress')
+      .select('*')
+      .eq('goal_id', goalId)
+      .eq('user_id', userId)
+      .order('recorded_at', { ascending: true });
+    if (error) {
+      console.error('[storage] getGoalProgressLog failed:', error);
+      return [];
+    }
+    return (data ?? []).map((r) => ({
+      id: r.id,
+      goal_id: r.goal_id,
+      value: r.new_value ?? 0,
+      logged_at: r.recorded_at ?? undefined,
+    }));
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalProgressLogRow>(KEYS.goalProgress);
   return rows
     .filter((r) => r.goal_id === goalId)
@@ -540,6 +1103,34 @@ export async function getGoalProgressLog(goalId: number): Promise<GoalProgressLo
 }
 
 export async function insertGoalProgress(goalId: number, value: number): Promise<number> {
+  const userId = await getUserId();
+  if (userId) {
+    const sb = getSupabase();
+    // Get current value for old_value
+    const { data: goal } = await sb
+      .from('goals')
+      .select('current_value')
+      .eq('id', goalId)
+      .single();
+
+    const { data, error } = await sb
+      .from('goal_progress')
+      .insert({
+        goal_id: goalId,
+        user_id: userId,
+        old_value: goal?.current_value ?? 0,
+        new_value: value,
+        source: 'manual',
+      })
+      .select('id')
+      .single();
+    if (error) {
+      console.error('[storage] insertGoalProgress failed:', error);
+      throw error;
+    }
+    return data?.id ?? nextId();
+  }
+  // Fallback: localStorage
   const rows = getTable<GoalProgressLogRow>(KEYS.goalProgress);
   const id = nextId();
   const newRow: GoalProgressLogRow = { id, goal_id: goalId, value, logged_at: nowISO() };
