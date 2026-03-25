@@ -81,7 +81,8 @@ export interface SharedAchievementRow {
 
 export async function signInWithMagicLink(email: string): Promise<{ error: string | null }> {
   const sb = getSupabase();
-  const redirectTo = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const redirectTo = `${baseUrl}/auth/callback`;
   const { error } = await sb.auth.signInWithOtp({
     email,
     options: {

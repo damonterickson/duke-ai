@@ -11,9 +11,13 @@ export default function RootPage() {
   useEffect(() => {
     async function checkAuth() {
       try {
-        // Handle magic link callback (hash fragment with access_token)
-        if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+        // Handle magic link callback (hash fragment with access_token or token_type)
+        if (typeof window !== 'undefined' &&
+            (window.location.hash.includes('access_token') || window.location.hash.includes('token_type'))) {
+          // Let the Supabase client process the hash fragment
           const sb = getSupabase();
+          // Wait a moment for Supabase to detect and process the URL
+          await new Promise(resolve => setTimeout(resolve, 500));
           const { data, error } = await sb.auth.getSession();
           if (error) console.error('Auth callback error:', error);
           if (data.session) {
