@@ -43,3 +43,6 @@ yarn-error.*
 .claude/worktrees/
 .gstack/
 .idea/
+
+# Next.js web app secrets
+duke-web/.env*.local

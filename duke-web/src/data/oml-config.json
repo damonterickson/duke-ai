@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "scoreRange": { "min": 0, "max": 1000 },
+  "pillars": {
+    "academic": {
+      "weight": 0.40,
+      "maxContribution": 400,
+      "subComponents": {
+        "cumulativeGpa": {
+          "weight": 0.60,
+          "inputRange": { "min": 0.0, "max": 4.0 },
+          "description": "Cumulative undergraduate GPA"
+        },
+        "mslGpa": {
+          "weight": 0.40,
+          "inputRange": { "min": 0.0, "max": 4.0 },
+          "description": "Military Science & Leadership GPA"
+        }
+      }
+    },
+    "leadership": {
+      "weight": 0.40,
+      "maxContribution": 400,
+      "subComponents": {
+        "commanderAssessment": {
+          "weight": 0.35,
+          "inputRange": { "min": 0, "max": 100 },
+          "description": "Commander / PMS evaluation score"
+        },
+        "cstScore": {
+          "weight": 0.25,
+          "inputRange": { "min": 0, "max": 100 },
+          "description": "Cadet Summer Training score"
+        },
+        "clcScore": {
+          "weight": 0.20,
+          "inputRange": { "min": 0, "max": 100 },
+          "description": "Cadet Leadership Course score"
+        },
+        "commandPositions": {
+          "weight": 0.10,
+          "inputRange": { "min": 0, "max": 5 },
+          "description": "Number of command/leadership roles held",
+          "pointsPerUnit": 20
+        },
+        "extracurriculars": {
+          "weight": 0.10,
+          "inputRange": { "min": 0, "max": 500 },
+          "description": "Hours of extracurricular service/activities",
+          "scaleFactor": 0.20,
+          "cap": 100
+        }
+      }
+    },
+    "physical": {
+      "weight": 0.20,
+      "maxContribution": 200,
+      "subComponents": {
+        "acft": {
+          "weight": 1.0,
+          "inputRange": { "min": 0, "max": 600 },
+          "scaledRange": { "min": 0, "max": 200 },
+          "description": "Army Combat Fitness Test total (6 events x 100 max)"
+        }
+      }
+    }
+  },
+  "validation": {
+    "gpa": { "min": 0.0, "max": 4.0 },
+    "mslGpa": { "min": 0.0, "max": 4.0 },
+    "leadershipEval": { "min": 0, "max": 100 },
+    "cstScore": { "min": 0, "max": 100 },
+    "clcScore": { "min": 0, "max": 100 },
+    "commandRoles": { "maxCount": 20 },
+    "extracurricularHours": { "min": 0, "max": 500 },
+    "acftEventScore": { "min": 0, "max": 100 }
+  },
+  "yearGroups": ["MSI", "MSII", "MSIII", "MSIV"],
+  "genders": ["M", "F"],
+  "ageBrackets": ["17-21", "22-26", "27-31"]
+}

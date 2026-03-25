@@ -1,0 +1,111 @@
+/**
+ * Zustand store — Goals
+ *
+ * Web: localStorage for persistence via storage service.
+ */
+
+import { create } from 'zustand';
+import {
+  getGoals,
+  insertGoal,
+  updateGoal,
+  deleteGoal,
+  insertGoalProgress,
+  type GoalRow,
+} from '../services/storage';
+
+export interface GoalsState {
+  goals: GoalRow[];
+  isLoaded: boolean;
+
+  // Actions
+  loadFromSQLite: () => Promise<void>;
+  addGoal: (goal: Omit<GoalRow, 'id' | 'created_at'>) => Promise<number | null>;
+  updateGoalProgress: (goalId: number, newValue: number) => Promise<void>;
+  completeGoal: (goalId: number) => Promise<void>;
+  removeGoal: (goalId: number) => Promise<void>;
+  getActiveGoals: () => GoalRow[];
+  reset: () => void;
+}
+
+const initialState = {
+  goals: [] as GoalRow[],
+  isLoaded: false,
+};
+
+export const useGoalsStore = create<GoalsState>((set, get) => ({
+  ...initialState,
+
+  loadFromSQLite: async () => {
+    try {
+      const rows = await getGoals();
+      set({ goals: rows, isLoaded: true });
+    } catch (error) {
+      console.error('Failed to load goals:', error);
+      set({ isLoaded: true });
+    }
+  },
+
+  addGoal: async (goal) => {
+    try {
+      const activeCount = get().goals.filter((g) => g.status === 'active').length;
+      if (activeCount >= 5) {
+        console.warn('Cannot add goal: active goal cap (5) reached');
+        return null;
+      }
+
+      const id = await insertGoal(goal);
+      const newRow: GoalRow = { ...goal, id };
+      set((state) => ({ goals: [newRow, ...state.goals] }));
+      return id;
+    } catch (error) {
+      console.error('Failed to insert goal:', error);
+      return null;
+    }
+  },
+
+  updateGoalProgress: async (goalId, newValue) => {
+    try {
+      await updateGoal(goalId, { current_value: newValue });
+      await insertGoalProgress(goalId, newValue);
+      set((state) => ({
+        goals: state.goals.map((g) =>
+          g.id === goalId ? { ...g, current_value: newValue } : g
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to update goal progress:', error);
+    }
+  },
+
+  completeGoal: async (goalId) => {
+    try {
+      const completedAt = new Date().toISOString();
+      await updateGoal(goalId, { status: 'completed', completed_at: completedAt });
+      set((state) => ({
+        goals: state.goals.map((g) =>
+          g.id === goalId ? { ...g, status: 'completed', completed_at: completedAt } : g
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to complete goal:', error);
+    }
+  },
+
+  removeGoal: async (goalId) => {
+    try {
+      await deleteGoal(goalId);
+      set((state) => ({ goals: state.goals.filter((g) => g.id !== goalId) }));
+    } catch (error) {
+      console.error('Failed to remove goal:', error);
+    }
+  },
+
+  getActiveGoals: () => {
+    return get().goals.filter((g) => g.status === 'active');
+  },
+
+  reset: () => {
+    set(initialState);
+  },
+}));
