@@ -1,8 +1,8 @@
 /**
  * Supabase Service — Auth, Squads, and Achievement Sync
  *
- * Web migration: uses @supabase/ssr createBrowserClient instead of
- * createClient with AsyncStorage.
+ * Web migration: uses @supabase/supabase-js createClient with localStorage
+ * for session persistence (not @supabase/ssr cookies).
  */
 
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
@@ -18,6 +18,17 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 let supabase: SupabaseClient | null = null;
 
 export function getSupabase(): SupabaseClient {
+  const isBrowser = typeof window !== 'undefined';
+
+  // During SSR, return a throwaway client — don't cache it in the singleton
+  // so the browser gets a fresh client with localStorage access.
+  if (!isBrowser) {
+    return createSupabaseClient(
+      SUPABASE_URL || 'https://placeholder.supabase.co',
+      SUPABASE_ANON_KEY || 'placeholder-key',
+    );
+  }
+
   if (!supabase) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_ANON_KEY. Squad features disabled.');
@@ -31,6 +42,7 @@ export function getSupabase(): SupabaseClient {
           persistSession: true,
           detectSessionInUrl: true,
           autoRefreshToken: true,
+          storage: window.localStorage,
         },
       });
     }
