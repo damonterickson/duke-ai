@@ -201,9 +201,8 @@ export async function createSquad(name: string): Promise<{ squad: SquadRow | nul
   if (!existingProfile) {
     await sb.from('profiles').upsert({
       id: userId,
-      name: session.user.user_metadata?.full_name ?? session.user.email ?? 'Cadet',
+      display_name: session.user.user_metadata?.full_name ?? session.user.email ?? 'Cadet',
       year_group: 'MSIII',
-      onboarding_complete: true,
     });
   }
 

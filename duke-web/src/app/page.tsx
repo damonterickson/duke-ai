@@ -21,9 +21,8 @@ export default function RootPage() {
         // User just signed in via OAuth or magic link — ensure profile exists
         await sb.from('profiles').upsert({
           id: session.user.id,
-          name: session.user.user_metadata?.full_name ?? session.user.email ?? 'Cadet',
+          display_name: session.user.user_metadata?.full_name ?? session.user.email ?? 'Cadet',
           year_group: 'MSIII',
-          onboarding_complete: true,
         }, { onConflict: 'id' });
 
         localStorage.setItem('duke_onboarding_complete', 'true');
