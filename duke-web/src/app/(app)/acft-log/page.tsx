@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useScoresStore } from '@/stores/scores';
+import { loadAuditState, saveAuditState } from '@/services/auditData';
 
 const ACFT_EVENTS = [
   { key: 'mdl', label: 'Max Deadlift (MDL)', unit: 'lbs', max: 340 },
@@ -19,6 +20,93 @@ interface ACFTEntry {
   total: number;
   events: Record<string, string>;
   notes: string;
+}
+
+const ATHLETICS_OPTIONS = [
+  { label: 'NCAA Varsity', value: 3, id: 'ath-varsity' },
+  { label: 'Club / Intramural', value: 2, id: 'ath-club' },
+  { label: 'Community League', value: 1, id: 'ath-community' },
+  { label: 'None', value: 0, id: 'none' },
+] as const;
+
+function AthleticsSection() {
+  const [selected, setSelected] = useState<number>(0);
+
+  useEffect(() => {
+    const auditState = loadAuditState();
+    const athItems = auditState.items.filter((i) => i.category === 'athletics' && i.status !== 'unclaimed');
+    if (athItems.length > 0) {
+      const best = Math.max(...athItems.map((i) => i.value));
+      setSelected(best);
+    }
+  }, []);
+
+  const handleSelect = (val: number, id: string) => {
+    setSelected(val);
+    // Update audit state
+    const auditState = loadAuditState();
+    const newItems = auditState.items.map((item) => {
+      if (item.category !== 'athletics') return item;
+      if (item.id === id && val > 0) {
+        return { ...item, status: 'claimed' as const, value: val };
+      }
+      // Reset other athletics items
+      if (item.id !== id) {
+        return { ...item, status: 'unclaimed' as const, value: 0, evidenceNote: '' };
+      }
+      return item;
+    });
+    // Handle "None" — reset all athletics
+    if (val === 0) {
+      const resetItems = auditState.items.map((item) => {
+        if (item.category !== 'athletics') return item;
+        return { ...item, status: 'unclaimed' as const, value: 0, evidenceNote: '' };
+      });
+      saveAuditState({ ...auditState, items: resetItems });
+    } else {
+      saveAuditState({ ...auditState, items: newItems });
+    }
+  };
+
+  return (
+    <section>
+      <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        Athletics (max 3 OMS)
+      </h3>
+      <div className="glass-panel-acft p-8 rounded-lg space-y-4">
+        <p className="text-xs text-[#968d9d] mb-2">Athletic participation contributes up to 3 OMS points in the physical pillar.</p>
+        <div className="grid grid-cols-2 gap-3">
+          {ATHLETICS_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => handleSelect(opt.value, opt.id)}
+              className={`p-4 rounded-lg text-left transition-all ${
+                selected === opt.value
+                  ? 'bg-[#2c3303] ring-1 ring-[#c3cc8c]/30'
+                  : 'bg-[#211f23] hover:bg-[#2c292d]'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-bold uppercase" style={{ fontFamily: 'Public Sans, sans-serif', color: selected === opt.value ? '#c3cc8c' : '#e7e1e6' }}>
+                  {opt.label}
+                </span>
+                {selected === opt.value && (
+                  <span className="material-symbols-outlined text-sm text-[#c3cc8c]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                )}
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ fontFamily: 'Space Grotesk, sans-serif', color: selected === opt.value ? '#c3cc8c' : '#968d9d' }}>
+                {opt.value > 0 ? `+${opt.value} OMS` : '0 OMS'}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center justify-between bg-[#1d1b1f] p-4 rounded-lg mt-2">
+          <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Athletics OMS Impact</span>
+          <span className="text-xl font-black text-[#c3cc8c]" style={{ fontFamily: 'Public Sans, sans-serif' }}>+{selected} OMS</span>
+        </div>
+      </div>
+    </section>
+  );
 }
 
 export default function ACFTLogPage() {
@@ -280,6 +368,9 @@ export default function ACFTLogPage() {
             </button>
           </section>
         )}
+
+        {/* Athletics Section */}
+        <AthleticsSection />
       </div>
     </div>
   );

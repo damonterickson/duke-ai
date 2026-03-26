@@ -5,6 +5,7 @@ import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useGoalsStore } from '@/stores/goals';
 import { profileFromScores, calculateOMS } from '@/engine/oms';
+import { loadAuditState, computeTotalUnclaimed } from '@/services/auditData';
 
 // ─── Goal category config ───────────────────────────────────
 const CATEGORIES = [
@@ -103,6 +104,25 @@ function getInsights(gpa: number | null, acft: number | null, activeGoals: numbe
       iconColor: '#dbc585',
       bgColor: '#544511',
     });
+  }
+
+  // Check for unclaimed audit points (client-only)
+  if (typeof window !== 'undefined') {
+    try {
+      const auditState = loadAuditState();
+      const unclaimed = computeTotalUnclaimed(auditState.items);
+      if (unclaimed > 0) {
+        insights.push({
+          title: 'Hidden Points Available',
+          body: `You have ${unclaimed.toFixed(1)} unclaimed OMS points. Run the Hidden Points Audit to claim them.`,
+          icon: 'fact_check',
+          iconColor: '#f8e19e',
+          bgColor: '#544511',
+        });
+      }
+    } catch {
+      // Ignore errors in SSR or when localStorage is unavailable
+    }
   }
 
   return insights;

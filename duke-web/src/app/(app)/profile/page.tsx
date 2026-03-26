@@ -116,7 +116,7 @@ export default function ProfilePage() {
   const quickActions = [
     { icon: 'cloud_upload', label: 'Upload & Sync', route: '/upload', desc: 'Import documents' },
     { icon: 'fitness_center', label: 'ACFT Log', route: '/acft-log', desc: 'Log fitness tests' },
-    { icon: 'query_stats', label: 'Intel Brief', route: '/intelligence-brief', desc: 'Full AI analysis' },
+    { icon: 'fact_check', label: 'Points Audit', route: '/audit', desc: 'Find missing OMS points' },
     { icon: 'school', label: 'Canvas', route: '/canvas', desc: 'LMS integration' },
   ];
 
