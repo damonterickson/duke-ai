@@ -123,8 +123,8 @@ export default function ProfilePage() {
 
   const scoreCards = [
     { icon: 'fitness_center', label: 'ACFT', value: acftTotal != null ? String(Math.round(acftTotal)) : '--', sublabel: 'Total Score', accent: '#c3cc8c', bg: '#2c3303', route: '/acft-log' },
-    { icon: 'school', label: 'GPA', value: gpa != null ? gpa.toFixed(2) : '--', sublabel: 'Cumulative', accent: '#f8e19e', bg: '#544511', route: '/intelligence-brief' },
-    { icon: 'military_tech', label: 'Leadership', value: leadershipScore != null ? String(leadershipScore) : '--', sublabel: ls?.leadership_eval != null && ls?.cst_score != null ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}` : 'Eval + CST', accent: '#d9b9ff', bg: '#450084', route: '/intel' },
+    { icon: 'school', label: 'GPA', value: gpa != null ? gpa.toFixed(2) : '--', sublabel: 'Cumulative', accent: '#f8e19e', bg: '#544511', route: '/gpa' },
+    { icon: 'military_tech', label: 'Leadership', value: leadershipScore != null ? String(leadershipScore) : '--', sublabel: ls?.leadership_eval != null && ls?.cst_score != null ? `Eval ${ls.leadership_eval} + CST ${ls.cst_score}` : 'Eval + CST', accent: '#d9b9ff', bg: '#450084', route: '/leadership' },
   ];
 
   const quickActions = [
