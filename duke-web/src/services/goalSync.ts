@@ -28,12 +28,13 @@ export function syncGoalsWithScores(
     { metric: 'leadership_eval', value: latestScore.leadership_eval },
   ];
 
-  // Also compute a rough total_oml for "overall" goals
+  // Also compute a rough total_oms for "overall" goals (100-point model)
+  // academic ~= 22*(gpa/4), leadership ~= cerScore, physical ~= (aft/600)*6
   const gpa = latestScore.gpa ?? 0;
   const acft = latestScore.acft_total ?? 0;
   const lead = latestScore.leadership_eval ?? 0;
-  const roughOml = Math.round(gpa * 100 + acft * 0.4 + lead * 4);
-  metrics.push({ metric: 'total_oml', value: roughOml > 0 ? roughOml : null });
+  const roughOms = Math.round((22 * (gpa / 4) + lead + (acft / 600) * 6) * 100) / 100;
+  metrics.push({ metric: 'total_oms', value: roughOms > 0 ? roughOms : null });
 
   for (const { metric, value } of metrics) {
     if (value === null || value === 0) continue;

@@ -269,7 +269,7 @@ export default function ACFTLogPage() {
               NO ACFT RECORDS
             </h2>
             <p className="text-sm text-[#968d9d] mb-8 max-w-md leading-relaxed">
-              Log your ACFT attempts to track physical fitness progress and its impact on your OML score.
+              Log your ACFT attempts to track physical fitness progress and its impact on your OMS score. Physical pillar is worth up to 9 OMS points: (score / 600) x 2 = fall OMS, (score / 600) x 4 = spring OMS.
             </p>
             <button
               onClick={() => setShowForm(true)}

@@ -6,10 +6,7 @@ import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useEngagementStore } from '@/stores/engagement';
 import { useSquadStore } from '@/stores/squad';
-import { calculateOML } from '@/engine/oml';
-import type { CadetProfile } from '@/engine/oml';
-import omlConfig from '@/data/oml-config.json';
-import acftTables from '@/data/acft-tables.json';
+import { profileFromScores, calculateOMS } from '@/engine/oms';
 
 export default function MissionPage() {
   const router = useRouter();
@@ -20,30 +17,23 @@ export default function MissionPage() {
 
   const latestScore = scores.scoreHistory[0];
 
-  const omlResult = useMemo(() => {
-    if (!profile.yearGroup || !profile.gender || !profile.ageBracket) return null;
-    const cadet: CadetProfile = {
-      gpa: latestScore?.gpa ?? 0,
-      mslGpa: latestScore?.msl_gpa ?? 0,
-      acftScores: {},
-      leadershipEval: latestScore?.leadership_eval ?? 0,
-      cstScore: latestScore?.cst_score ?? undefined,
-      clcScore: latestScore?.clc_score ?? undefined,
-      commandRoles: [],
-      extracurricularHours: 0,
-      yearGroup: profile.yearGroup,
-      gender: profile.gender,
-      ageBracket: profile.ageBracket,
-    };
+  const omsResult = useMemo(() => {
     try {
-      return calculateOML(cadet, omlConfig as any, acftTables as any);
+      const omsProfile = profileFromScores(
+        latestScore?.gpa ?? null,
+        latestScore?.msl_gpa ?? null,
+        latestScore?.acft_total ?? null,
+        latestScore?.leadership_eval ?? null,
+        latestScore?.cst_score ?? null,
+      );
+      return calculateOMS(omsProfile);
     } catch {
       return null;
     }
-  }, [profile, latestScore]);
+  }, [latestScore]);
 
-  const omlTotal = omlResult?.totalScore ?? latestScore?.total_oml ?? 0;
-  const omlProgress = Math.min(omlTotal / 1000, 1);
+  const omsTotal = omsResult?.totalOMS ?? 0;
+  const omsProgress = Math.min(omsTotal / 100, 1);
   const percentile =
     squad.totalCadets > 0
       ? Math.round(((squad.totalCadets - squad.individualRank) / squad.totalCadets) * 100)
@@ -51,9 +41,9 @@ export default function MissionPage() {
 
   const topBranch = engagement.branchFit[0];
 
-  const physical = latestScore?.acft_total ? Math.min(latestScore.acft_total / 600, 1) : 0;
-  const academic = latestScore?.gpa ? Math.min(latestScore.gpa / 4.0, 1) : 0;
-  const leadership = latestScore?.leadership_eval ? Math.min(latestScore.leadership_eval / 100, 1) : 0;
+  const physical = omsResult ? omsResult.physical.total / omsResult.physical.max : 0;
+  const academic = omsResult ? omsResult.academic.total / omsResult.academic.max : 0;
+  const leadership = omsResult ? omsResult.leadership.total / omsResult.leadership.max : 0;
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -84,9 +74,9 @@ export default function MissionPage() {
               </div>
               <h2 className="text-4xl md:text-6xl lg:text-7xl leading-tight tracking-tighter uppercase font-black" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                 {greeting}, {name}. <br />
-                Your OML is{' '}
+                Your OMS is{' '}
                 <span className="text-[#dbc585]" style={{ filter: 'drop-shadow(0 0 15px rgba(219,197,133,0.3))' }}>
-                  {omlTotal > 0 ? Math.round(omlTotal) : '--'}
+                  {omsTotal > 0 ? omsTotal.toFixed(1) : '--'}
                 </span>.
               </h2>
               <p className="text-[#968d9d] max-w-2xl text-lg leading-relaxed">
@@ -98,10 +88,10 @@ export default function MissionPage() {
           </div>
         </section>
 
-        {/* OML Gauge + Achievements Grid */}
+        {/* OMS Gauge + Achievements Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* OML Gauge Panel */}
+          {/* OMS Gauge Panel */}
           <div className="lg:col-span-1">
             <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
               Command Readiness
@@ -114,7 +104,7 @@ export default function MissionPage() {
                   <circle
                     cx="100" cy="100" r="85" fill="none"
                     stroke="url(#omlGradient)" strokeWidth="14"
-                    strokeDasharray={`${omlProgress * 534} 534`}
+                    strokeDasharray={`${omsProgress * 534} 534`}
                     strokeLinecap="round"
                     style={{ filter: 'drop-shadow(0 0 8px rgba(219,197,133,0.4))' }}
                   />
@@ -127,10 +117,10 @@ export default function MissionPage() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-5xl font-black text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif', filter: 'drop-shadow(0 0 10px rgba(219,197,133,0.3))' }}>
-                    {omlTotal > 0 ? Math.round(omlTotal) : '--'}
+                    {omsTotal > 0 ? omsTotal.toFixed(1) : '--'}
                   </span>
                   <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    OML Score
+                    OMS Score
                   </span>
                 </div>
               </div>
@@ -210,9 +200,9 @@ export default function MissionPage() {
               </h3>
               <div className="glass-panel-mission p-8 rounded-lg space-y-6">
                 {[
-                  { label: 'Physical', value: physical, color: '#d9b9ff', icon: 'fitness_center' },
-                  { label: 'Academic', value: academic, color: '#dbc585', icon: 'school' },
-                  { label: 'Leadership', value: leadership, color: '#c3cc8c', icon: 'military_tech' },
+                  { label: 'Physical', value: physical, score: omsResult?.physical.total ?? 0, max: 9, color: '#d9b9ff', icon: 'fitness_center' },
+                  { label: 'Academic', value: academic, score: omsResult?.academic.total ?? 0, max: 29, color: '#dbc585', icon: 'school' },
+                  { label: 'Leadership', value: leadership, score: omsResult?.leadership.total ?? 0, max: 62, color: '#c3cc8c', icon: 'military_tech' },
                 ].map((pillar) => (
                   <div key={pillar.label}>
                     <div className="flex items-center justify-between mb-3">
@@ -221,7 +211,7 @@ export default function MissionPage() {
                         <span className="text-sm font-semibold text-[#e7e1e6]">{pillar.label}</span>
                       </div>
                       <span className="text-xs font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif', color: pillar.color }}>
-                        {Math.round(pillar.value * 100)}%
+                        {pillar.score.toFixed(1)} / {pillar.max}
                       </span>
                     </div>
                     <div className="w-full h-2 bg-[#373438] rounded-full">

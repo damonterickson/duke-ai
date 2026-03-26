@@ -5,10 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useSquadStore } from '@/stores/squad';
-import { calculateOML } from '@/engine/oml';
-import type { OMLConfig, ACFTTables, ACFTScores } from '@/engine/oml';
-import omlConfig from '@/data/oml-config.json';
-import acftTables from '@/data/acft-tables.json';
+import { profileFromScores, calculateOMS } from '@/engine/oms';
 
 function EditableField({
   value,
@@ -74,33 +71,22 @@ export default function ProfilePage() {
   const gpa = ls?.gpa;
   const acftTotal = ls?.acft_total;
 
-  const omlResult = useMemo(() => {
-    if (!profile.yearGroup || !profile.gender || !profile.ageBracket) return null;
+  const omsResult = useMemo(() => {
     try {
-      const gender = (profile.gender ?? 'M') as 'M' | 'F';
-      return calculateOML(
-        {
-          gpa: ls?.gpa ?? 0,
-          mslGpa: ls?.msl_gpa ?? 0,
-          acftScores: {} as ACFTScores,
-          leadershipEval: ls?.leadership_eval ?? 0,
-          cstScore: ls?.cst_score ?? undefined,
-          clcScore: ls?.clc_score ?? undefined,
-          commandRoles: [],
-          extracurricularHours: 0,
-          yearGroup: profile.yearGroup as 'MSI' | 'MSII' | 'MSIII' | 'MSIV',
-          gender,
-          ageBracket: profile.ageBracket as '17-21' | '22-26' | '27-31',
-        },
-        omlConfig as OMLConfig,
-        acftTables as unknown as ACFTTables,
+      const omsProfile = profileFromScores(
+        ls?.gpa ?? null,
+        ls?.msl_gpa ?? null,
+        ls?.acft_total ?? null,
+        ls?.leadership_eval ?? null,
+        ls?.cst_score ?? null,
       );
+      return calculateOMS(omsProfile);
     } catch {
       return null;
     }
-  }, [profile, ls]);
+  }, [ls]);
 
-  const oml = omlResult?.totalScore ?? ls?.total_oml ?? 0;
+  const oms = omsResult?.totalOMS ?? 0;
 
   const initials = useMemo(() => {
     const name = profile.name?.trim();
@@ -189,13 +175,13 @@ export default function ProfilePage() {
                     />
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Goal OML</span>
+                    <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Goal OMS</span>
                     <EditableField
                       value={profile.goalOml != null ? String(profile.goalOml) : ''}
-                      placeholder="0-1000"
+                      placeholder="0-100"
                       onSave={(v) => {
                         const n = parseInt(v, 10);
-                        if (!isNaN(n) && n >= 0 && n <= 1000) {
+                        if (!isNaN(n) && n >= 0 && n <= 100) {
                           profile.updateProfile({ goalOml: n });
                         }
                       }}
@@ -209,13 +195,13 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* OML Command Center + Score Cards Grid */}
+        {/* OMS Command Center + Score Cards Grid */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-          {/* OML Command Center */}
+          {/* OMS Command Center */}
           <div className="lg:col-span-1">
             <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-              OML Command Center
+              OMS Command Center
             </h3>
             <div className="glass-panel-profile p-8 rounded-lg flex flex-col items-center">
               <div className="relative w-[220px] h-[220px] mb-4">
@@ -224,7 +210,7 @@ export default function ProfilePage() {
                   <circle
                     cx="110" cy="110" r="95" fill="none"
                     stroke="url(#omlGradProfile)" strokeWidth="14"
-                    strokeDasharray={`${Math.min(oml / 1000, 1) * 597} 597`}
+                    strokeDasharray={`${Math.min(oms / 100, 1) * 597} 597`}
                     strokeLinecap="round"
                     style={{ filter: 'drop-shadow(0 0 8px rgba(219,197,133,0.4))' }}
                   />
@@ -237,21 +223,21 @@ export default function ProfilePage() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-5xl font-black text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif', filter: 'drop-shadow(0 0 10px rgba(219,197,133,0.3))' }}>
-                    {oml > 0 ? Math.round(oml) : '--'}
+                    {oms > 0 ? oms.toFixed(1) : '--'}
                   </span>
-                  <span className="text-sm text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>/ 1000</span>
+                  <span className="text-sm text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>/ 100</span>
                 </div>
               </div>
               <p className="text-sm italic text-center text-[#968d9d] mb-4">
-                {oml > 0 ? 'Performance trajectory: holding steady' : 'Enter scores to compute your OML'}
+                {oms > 0 ? 'Performance trajectory: holding steady' : 'Enter scores to compute your OMS'}
               </p>
               <div className="grid grid-cols-2 gap-3 w-full">
                 <div className="bg-[#1d1b1f] rounded-sm p-3 flex flex-col items-center">
                   <span className="text-xl font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
-                    {oml > 0 ? `${Math.round((oml / 1000) * 100)}%` : '--'}
+                    {oms > 0 ? `${Math.round(oms)}%` : '--'}
                   </span>
                   <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                    OML Percentile
+                    OMS Percentile
                   </span>
                 </div>
                 <div className="bg-[#1d1b1f] rounded-sm p-3 flex flex-col items-center">
