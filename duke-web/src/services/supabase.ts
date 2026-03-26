@@ -5,7 +5,7 @@
  * createClient with AsyncStorage.
  */
 
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
@@ -21,13 +21,18 @@ export function getSupabase(): SupabaseClient {
   if (!supabase) {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
       console.warn('[Supabase] Missing SUPABASE_URL or SUPABASE_ANON_KEY. Squad features disabled.');
-      // Return a dummy client that won't crash — all operations will fail gracefully
-      supabase = createBrowserClient(
+      supabase = createSupabaseClient(
         'https://placeholder.supabase.co',
         'placeholder-key'
       );
     } else {
-      supabase = createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      supabase = createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: {
+          persistSession: true,
+          detectSessionInUrl: true,
+          autoRefreshToken: true,
+        },
+      });
     }
   }
   return supabase;
@@ -95,10 +100,12 @@ export async function signInWithMagicLink(email: string): Promise<{ error: strin
 export async function signInWithOAuth(provider: 'google' | 'github' | 'apple'): Promise<{ error: string | null }> {
   const sb = getSupabase();
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  // Redirect to root page — the client-side handler in page.tsx will detect the
+  // hash fragment and process the session. This avoids the server/client cookie mismatch.
   const { error } = await sb.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${baseUrl}/auth/callback`,
+      redirectTo: baseUrl,
     },
   });
   return { error: error?.message ?? null };
@@ -116,23 +123,12 @@ export async function getCurrentUserId(): Promise<string | null> {
 
 export async function getSession() {
   const sb = getSupabase();
-  // Try getSession first (reads from storage)
-  const { data } = await sb.auth.getSession();
-  if (data.session) return data.session;
-
-  // If no session in storage, try getUser (validates with server)
-  // This catches cases where cookies were set server-side but client storage is empty
-  try {
-    const { data: userData } = await sb.auth.getUser();
-    if (userData.user) {
-      // User exists but session wasn't in client storage — refresh it
-      const { data: refreshed } = await sb.auth.refreshSession();
-      return refreshed.session;
-    }
-  } catch {
-    // Not authenticated
+  const { data, error } = await sb.auth.getSession();
+  if (error) {
+    console.error('[Supabase] getSession error:', error);
+    return null;
   }
-  return null;
+  return data.session;
 }
 
 export function onAuthStateChange(callback: (session: any) => void) {

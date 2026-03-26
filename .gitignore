@@ -46,3 +46,4 @@ yarn-error.*
 
 # Next.js web app secrets
 duke-web/.env*.local
+.vercel
