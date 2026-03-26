@@ -92,6 +92,26 @@ export interface SharedAchievementRow {
   profiles?: { display_name: string; year_group: string };
 }
 
+export interface SquadChallengeRow {
+  id: string;
+  squad_id: string;
+  created_by: string;
+  title: string;
+  description: string | null;
+  points: number;
+  deadline: string | null;
+  status: 'active' | 'completed' | 'cancelled';
+  created_at: string;
+}
+
+export interface ChallengeCompletionRow {
+  id: string;
+  challenge_id: string;
+  user_id: string;
+  completed_at: string;
+  profiles?: { display_name: string };
+}
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -435,4 +455,141 @@ export function subscribeToSquadAchievements(
       },
     )
     .subscribe();
+}
+
+// ---------------------------------------------------------------------------
+// Squad Management (Leader)
+// ---------------------------------------------------------------------------
+
+export async function updateSquadName(squadId: string, name: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const { error } = await sb
+    .from('squads')
+    .update({ name })
+    .eq('id', squadId)
+    .eq('leader_id', session.user.id);
+
+  return { error: error?.message ?? null };
+}
+
+export async function deleteSquad(squadId: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  // Verify leader before deleting
+  const { data: squad } = await sb
+    .from('squads')
+    .select('leader_id')
+    .eq('id', squadId)
+    .single();
+
+  if (!squad || squad.leader_id !== session.user.id) {
+    return { error: 'Only the squad leader can delete the squad.' };
+  }
+
+  const { error } = await sb
+    .from('squads')
+    .delete()
+    .eq('id', squadId);
+
+  return { error: error?.message ?? null };
+}
+
+// ---------------------------------------------------------------------------
+// Squad Challenges / Ops
+// ---------------------------------------------------------------------------
+
+export async function createChallenge(
+  squadId: string,
+  challenge: { title: string; description?: string; points?: number; deadline?: string },
+): Promise<{ challenge: SquadChallengeRow | null; error: string | null }> {
+  const sb = getSupabase();
+  const session = await getSession();
+  if (!session) return { challenge: null, error: 'Not authenticated' };
+
+  const { data, error } = await sb
+    .from('squad_challenges')
+    .insert({
+      squad_id: squadId,
+      created_by: session.user.id,
+      title: challenge.title,
+      description: challenge.description ?? null,
+      points: challenge.points ?? 0,
+      deadline: challenge.deadline ?? null,
+    })
+    .select()
+    .single();
+
+  return { challenge: data as SquadChallengeRow | null, error: error?.message ?? null };
+}
+
+export async function getSquadChallenges(
+  squadId: string,
+): Promise<{ challenges: SquadChallengeRow[]; error: string | null }> {
+  const sb = getSupabase();
+
+  const { data, error } = await sb
+    .from('squad_challenges')
+    .select('*')
+    .eq('squad_id', squadId)
+    .order('created_at', { ascending: false });
+
+  return { challenges: (data as SquadChallengeRow[]) ?? [], error: error?.message ?? null };
+}
+
+export async function updateChallengeStatus(
+  challengeId: string,
+  status: 'active' | 'completed' | 'cancelled',
+): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+
+  const { error } = await sb
+    .from('squad_challenges')
+    .update({ status })
+    .eq('id', challengeId);
+
+  return { error: error?.message ?? null };
+}
+
+export async function completeChallenge(challengeId: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const { error } = await sb
+    .from('challenge_completions')
+    .insert({ challenge_id: challengeId, user_id: session.user.id });
+
+  return { error: error?.message ?? null };
+}
+
+export async function uncompleteChallenge(challengeId: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  const session = await getSession();
+  if (!session) return { error: 'Not authenticated' };
+
+  const { error } = await sb
+    .from('challenge_completions')
+    .delete()
+    .eq('challenge_id', challengeId)
+    .eq('user_id', session.user.id);
+
+  return { error: error?.message ?? null };
+}
+
+export async function getChallengeCompletions(
+  challengeId: string,
+): Promise<{ completions: ChallengeCompletionRow[]; error: string | null }> {
+  const sb = getSupabase();
+
+  const { data, error } = await sb
+    .from('challenge_completions')
+    .select('*, profiles(display_name)')
+    .eq('challenge_id', challengeId);
+
+  return { completions: (data as ChallengeCompletionRow[]) ?? [], error: error?.message ?? null };
 }
