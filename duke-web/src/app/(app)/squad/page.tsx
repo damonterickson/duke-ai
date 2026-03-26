@@ -24,8 +24,10 @@ export default function SquadPage() {
     async function checkAuth() {
       try {
         const sess = await getSession();
+        console.log('[Squad] getSession result:', sess ? `user=${sess.user?.email}` : 'NULL');
         setSession(sess);
-      } catch {
+      } catch (err) {
+        console.error('[Squad] getSession error:', err);
         setSession(null);
       }
       setAuthChecked(true);
