@@ -164,13 +164,31 @@ function generateInviteCode(): string {
 export async function createSquad(name: string): Promise<{ squad: SquadRow | null; error: string | null }> {
   const sb = getSupabase();
   const session = await getSession();
-  if (!session) return { squad: null, error: 'Not authenticated' };
+  if (!session) return { squad: null, error: 'Not authenticated. Please sign in first.' };
+
+  const userId = session.user.id;
+
+  // Ensure a profiles row exists for this user (required by foreign keys)
+  const { data: existingProfile } = await sb
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (!existingProfile) {
+    await sb.from('profiles').upsert({
+      id: userId,
+      name: session.user.user_metadata?.full_name ?? session.user.email ?? 'Cadet',
+      year_group: 'MSIII',
+      onboarding_complete: true,
+    });
+  }
 
   const invite_code = generateInviteCode();
 
   const { data: squad, error: squadError } = await sb
     .from('squads')
-    .insert({ name, invite_code, leader_id: session.user.id })
+    .insert({ name, invite_code, leader_id: userId })
     .select()
     .single();
 
