@@ -74,7 +74,7 @@ export default function MissionPage() {
       <div className="pt-6 pb-8 px-6 max-w-7xl mx-auto space-y-12">
 
         {/* Briefing Header */}
-        <section className="relative">
+        <section className="relative animate-fadeInUp">
           <div className="glass-panel-mission p-10 md:p-16 rounded-lg relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
               <span className="material-symbols-outlined text-[144px]">shield_with_heart</span>
@@ -163,7 +163,7 @@ export default function MissionPage() {
               <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 Achievements
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-fadeIn delay-200">
                 <div className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 border-l-4 border-[#450084] group">
                   <div className="flex justify-between items-start mb-3">
                     <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
@@ -212,7 +212,7 @@ export default function MissionPage() {
               <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 Strategic Readiness
               </h3>
-              <div className="glass-panel-mission p-8 rounded-lg space-y-6">
+              <div className="glass-panel-mission p-8 rounded-lg space-y-6 animate-fadeIn delay-300">
                 {[
                   { label: 'Physical', value: physical, score: omsResult?.physical.total ?? 0, max: 9, color: '#d9b9ff', icon: 'fitness_center' },
                   { label: 'Academic', value: academic, score: omsResult?.academic.total ?? 0, max: 29, color: '#dbc585', icon: 'school' },

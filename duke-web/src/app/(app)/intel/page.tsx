@@ -306,7 +306,7 @@ export default function IntelPage() {
       <div className="pt-6 pb-8 px-6 max-w-7xl mx-auto space-y-12">
 
         {/* ── Briefing Section ──────────────────────────────── */}
-        <section className="relative">
+        <section className="relative animate-fadeInUp">
           <div className="glass-panel-intel p-10 md:p-16 rounded-lg relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
               <span className="material-symbols-outlined text-[144px]">shield_with_heart</span>
@@ -349,7 +349,7 @@ export default function IntelPage() {
               </button>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 animate-slideInLeft delay-200">
               {/* Optimization Paths */}
               {activeGoals.map((goal) => {
                 const cat = CATEGORIES.find((c) => c.key === goal.category) ?? CATEGORIES[0];
@@ -441,7 +441,7 @@ export default function IntelPage() {
           {/* OMS Trajectory */}
           <div className="lg:col-span-2 space-y-6">
             <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OMS Trajectory</h3>
-            <div className="glass-panel-intel p-8 rounded-lg h-[450px] flex flex-col relative">
+            <div className="glass-panel-intel p-8 rounded-lg h-[450px] flex flex-col relative animate-fadeIn delay-300">
               <div className="flex-1 flex items-end gap-2 px-2 relative">
                 {/* Grid */}
                 <div className="absolute inset-0 flex flex-col justify-between py-12 pointer-events-none opacity-10">

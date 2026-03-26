@@ -144,10 +144,14 @@ function CategorySection({
   category,
   items,
   onUpdateItem,
+  expanded,
+  onToggle,
 }: {
   category: AuditCategory;
   items: AuditItem[];
   onUpdateItem: (updated: AuditItem) => void;
+  expanded: boolean;
+  onToggle: () => void;
 }) {
   const meta = CATEGORY_META[category];
   const catItems = items.filter((i) => i.category === category);
@@ -166,7 +170,11 @@ function CategorySection({
 
   return (
     <section>
-      <div className="flex items-center justify-between mb-4">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full flex items-center justify-between mb-4 cursor-pointer group"
+      >
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-sm" style={{ backgroundColor: meta.bgColor }}>
             <span
@@ -176,7 +184,7 @@ function CategorySection({
               {meta.icon}
             </span>
           </div>
-          <div>
+          <div className="text-left">
             <h3
               className="text-xl font-black uppercase tracking-tighter"
               style={{ fontFamily: 'Public Sans, sans-serif' }}
@@ -186,16 +194,24 @@ function CategorySection({
             <p className="text-xs text-[#968d9d]">{meta.description}</p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <span
+              className="text-2xl font-black"
+              style={{ fontFamily: 'Public Sans, sans-serif', color: meta.color }}
+            >
+              {displayOMS}
+            </span>
+            <span className="text-sm text-[#968d9d]"> / {meta.maxOMS} OMS</span>
+          </div>
           <span
-            className="text-2xl font-black"
-            style={{ fontFamily: 'Public Sans, sans-serif', color: meta.color }}
+            className="material-symbols-outlined text-[#968d9d] group-hover:text-[#d9b9ff] transition-all"
+            style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
           >
-            {displayOMS}
+            expand_more
           </span>
-          <span className="text-sm text-[#968d9d]"> / {meta.maxOMS} OMS</span>
         </div>
-      </div>
+      </button>
 
       {/* Progress bar */}
       <div className="w-full h-1.5 bg-[#373438] rounded-full mb-5">
@@ -209,11 +225,13 @@ function CategorySection({
         />
       </div>
 
-      <div className="space-y-3">
-        {catItems.map((item) => (
-          <AuditItemCard key={item.id} item={item} onUpdate={onUpdateItem} />
-        ))}
-      </div>
+      {expanded && (
+        <div className="space-y-3 animate-fadeIn">
+          {catItems.map((item) => (
+            <AuditItemCard key={item.id} item={item} onUpdate={onUpdateItem} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -222,6 +240,12 @@ function CategorySection({
 export default function AuditPage() {
   const router = useRouter();
   const [state, setState] = useState<AuditState | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    language: true,
+    training: true,
+    maturity: true,
+    athletics: true,
+  });
 
   useEffect(() => {
     setState(loadAuditState());
@@ -264,7 +288,7 @@ export default function AuditPage() {
 
       <div className="pt-6 pb-8 px-6 max-w-5xl mx-auto space-y-10">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fadeInUp">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -366,13 +390,16 @@ export default function AuditPage() {
 
         {/* Category Sections */}
         <div className="space-y-12">
-          {(['language', 'training', 'maturity', 'athletics'] as AuditCategory[]).map((cat) => (
-            <CategorySection
-              key={cat}
-              category={cat}
-              items={state.items}
-              onUpdateItem={handleUpdateItem}
-            />
+          {(['language', 'training', 'maturity', 'athletics'] as AuditCategory[]).map((cat, idx) => (
+            <div key={cat} className={`animate-fadeInUp delay-${(idx + 1) * 100}`}>
+              <CategorySection
+                category={cat}
+                items={state.items}
+                onUpdateItem={handleUpdateItem}
+                expanded={!!expandedCategories[cat]}
+                onToggle={() => setExpandedCategories((prev) => ({ ...prev, [cat]: !prev[cat] }))}
+              />
+            </div>
           ))}
         </div>
 
