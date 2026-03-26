@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useEngagementStore } from '@/stores/engagement';
 import { useSquadStore } from '@/stores/squad';
 import { profileFromScores, calculateOMS } from '@/engine/oms';
+import { loadAuditState, computeTotalClaimed, computeTotalUnclaimed } from '@/services/auditData';
 
 export default function MissionPage() {
   const router = useRouter();
@@ -44,6 +45,19 @@ export default function MissionPage() {
   const physical = omsResult ? omsResult.physical.total / omsResult.physical.max : 0;
   const academic = omsResult ? omsResult.academic.total / omsResult.academic.max : 0;
   const leadership = omsResult ? omsResult.leadership.total / omsResult.leadership.max : 0;
+
+  const [hiddenClaimed, setHiddenClaimed] = useState(0);
+  const [hiddenUnclaimed, setHiddenUnclaimed] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const auditState = loadAuditState();
+        setHiddenClaimed(computeTotalClaimed(auditState.items));
+        setHiddenUnclaimed(computeTotalUnclaimed(auditState.items));
+      } catch { /* ignore */ }
+    }
+  }, []);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -203,6 +217,7 @@ export default function MissionPage() {
                   { label: 'Physical', value: physical, score: omsResult?.physical.total ?? 0, max: 9, color: '#d9b9ff', icon: 'fitness_center' },
                   { label: 'Academic', value: academic, score: omsResult?.academic.total ?? 0, max: 29, color: '#dbc585', icon: 'school' },
                   { label: 'Leadership', value: leadership, score: omsResult?.leadership.total ?? 0, max: 62, color: '#c3cc8c', icon: 'military_tech' },
+                  { label: 'Hidden Points', value: hiddenClaimed / 18, score: hiddenClaimed, max: 18, color: '#f8e19e', icon: 'fact_check' },
                 ].map((pillar) => (
                   <div key={pillar.label}>
                     <div className="flex items-center justify-between mb-3">

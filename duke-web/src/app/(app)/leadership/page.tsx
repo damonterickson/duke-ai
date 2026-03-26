@@ -1,8 +1,132 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useScoresStore } from '@/stores/scores';
+import { loadAuditState, saveAuditState } from '@/services/auditData';
+
+// ─── Training & Extracurricular Section ──────────────────────
+function TrainingSection() {
+  const router = useRouter();
+  const [activityPts, setActivityPts] = useState(0);
+
+  useEffect(() => {
+    const auditState = loadAuditState();
+    const trainItems = auditState.items.filter((i) => i.category === 'training' && i.status !== 'unclaimed');
+    const total = trainItems.reduce((sum, i) => sum + i.value, 0);
+    setActivityPts(total);
+  }, []);
+
+  const oms = Math.min(activityPts, 100) / 100 * 5;
+  const progress = Math.min(activityPts / 100, 1) * 100;
+
+  const handleChange = (val: number) => {
+    const clamped = Math.max(0, Math.min(285, val));
+    setActivityPts(clamped);
+    localStorage.setItem('duke_training_pts', String(clamped));
+  };
+
+  return (
+    <section>
+      <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        Training & Extracurricular (max 5 OMS)
+      </h3>
+      <div className="glass-panel-lead p-8 rounded-lg space-y-5">
+        <div>
+          <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Activity Points (0-100 for full 5 OMS)
+          </label>
+          <p className="text-xs text-[#968d9d] mb-2">100 activity points = full 5 OMS. Ranger Challenge, community service, clubs, etc.</p>
+          <input
+            type="number"
+            min="0"
+            max="285"
+            value={activityPts}
+            onChange={(e) => handleChange(parseInt(e.target.value, 10) || 0)}
+            className="w-full bg-[#151317] text-[#e7e1e6] rounded-sm px-4 py-3 text-lg font-black outline-none focus:ring-2 focus:ring-[#d9b9ff]/30 placeholder:text-[#968d9d]"
+            style={{ border: 'none', fontFamily: 'Public Sans, sans-serif' }}
+          />
+        </div>
+        <div className="space-y-2">
+          <div className="flex justify-between">
+            <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              Progress to cap (100 pts)
+            </span>
+            <span className="text-[10px] font-bold text-[#d9b9ff]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              {oms.toFixed(1)} / 5 OMS
+            </span>
+          </div>
+          <div className="h-2 w-full bg-[#373438] rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all"
+              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #d9b9ff88, #d9b9ff)', boxShadow: '0 0 8px rgba(217,185,255,0.3)' }}
+            />
+          </div>
+        </div>
+        <button
+          onClick={() => router.push('/audit')}
+          className="w-full py-3 rounded-sm bg-[#450084] text-[#b27ff5] font-bold uppercase tracking-wider text-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+          style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
+        >
+          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>fact_check</span>
+          Full Audit
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ─── Maturity & Responsibility Section ───────────────────────
+function MaturitySection() {
+  const router = useRouter();
+  const [maturityPts, setMaturityPts] = useState(0);
+
+  useEffect(() => {
+    const auditState = loadAuditState();
+    const matItems = auditState.items.filter((i) => i.category === 'maturity' && i.status !== 'unclaimed');
+    const total = matItems.reduce((sum, i) => sum + i.value, 0);
+    setMaturityPts(Math.min(total, 5));
+  }, []);
+
+  const handleChange = (val: number) => {
+    const clamped = Math.max(0, Math.min(5, val));
+    setMaturityPts(clamped);
+    localStorage.setItem('duke_maturity_pts', String(clamped));
+  };
+
+  return (
+    <section>
+      <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        Maturity & Responsibility (max 5 OMS)
+      </h3>
+      <div className="glass-panel-lead p-8 rounded-lg space-y-5">
+        <div>
+          <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Maturity Score (0-5 OMS)
+          </label>
+          <p className="text-xs text-[#968d9d] mb-2">Employment, SMP, Green-to-Gold. Documented work experience while enrolled.</p>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            value={maturityPts}
+            onChange={(e) => handleChange(parseInt(e.target.value, 10) || 0)}
+            className="w-full bg-[#151317] text-[#e7e1e6] rounded-sm px-4 py-3 text-lg font-black outline-none focus:ring-2 focus:ring-[#c3cc8c]/30 placeholder:text-[#968d9d]"
+            style={{ border: 'none', fontFamily: 'Public Sans, sans-serif' }}
+          />
+        </div>
+        <button
+          onClick={() => router.push('/audit')}
+          className="w-full py-3 rounded-sm bg-[#2c3303] text-[#c3cc8c] font-bold uppercase tracking-wider text-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+          style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(44,51,3,0.3)' }}
+        >
+          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>fact_check</span>
+          Full Audit
+        </button>
+      </div>
+    </section>
+  );
+}
 
 export default function LeadershipPage() {
   const router = useRouter();
@@ -154,6 +278,12 @@ export default function LeadershipPage() {
             ))}
           </div>
         </section>
+
+        {/* Training & Extracurricular */}
+        <TrainingSection />
+
+        {/* Maturity & Responsibility */}
+        <MaturitySection />
 
         {/* History */}
         {history.length > 0 && (

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useScoresStore } from '@/stores/scores';
+import { loadAuditState, saveAuditState } from '@/services/auditData';
 
 // ─── Types ──────────────────────────────────────────────────
 interface Course {
@@ -104,6 +105,73 @@ function AddCourseModal({ onClose, onAdd }: { onClose: () => void; onAdd: (c: Om
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Language & Cultural Section ─────────────────────────────
+function LanguageCulturalSection() {
+  const router = useRouter();
+  const [adm, setAdm] = useState(0);
+  const [langPoints, setLangPoints] = useState(0);
+
+  useEffect(() => {
+    const auditState = loadAuditState();
+    // Compute language points from audit items
+    const langItems = auditState.items.filter((i) => i.category === 'language' && i.status !== 'unclaimed');
+    const total = langItems.reduce((sum, i) => sum + i.value, 0);
+    setLangPoints(Math.min(total, 5));
+
+    // Load ADM from localStorage
+    const savedAdm = localStorage.getItem('duke_adm');
+    if (savedAdm) setAdm(parseInt(savedAdm, 10) || 0);
+  }, []);
+
+  const handleAdmChange = (val: number) => {
+    const clamped = Math.max(0, Math.min(2, val));
+    setAdm(clamped);
+    localStorage.setItem('duke_adm', String(clamped));
+  };
+
+  return (
+    <section>
+      <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+        Language & Cultural Points (max 5 OMS)
+      </h3>
+      <div className="glass-panel-gpa p-8 rounded-lg space-y-5">
+        <div>
+          <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Academic Discipline Mix (0-2 OMS)
+          </label>
+          <p className="text-xs text-[#968d9d] mb-2">Does your major qualify for Academic Discipline Mix points?</p>
+          <input
+            type="number"
+            min="0"
+            max="2"
+            value={adm}
+            onChange={(e) => handleAdmChange(parseInt(e.target.value, 10) || 0)}
+            className="w-full bg-[#151317] text-[#e7e1e6] rounded-sm px-4 py-3 text-lg font-black outline-none focus:ring-2 focus:ring-[#f8e19e]/30 placeholder:text-[#968d9d]"
+            style={{ border: 'none', fontFamily: 'Public Sans, sans-serif' }}
+          />
+        </div>
+        <div>
+          <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+            Language/Cultural Points (0-5 OMS)
+          </label>
+          <div className="flex items-center justify-between bg-[#151317] rounded-sm px-4 py-3">
+            <span className="text-lg font-black text-[#f8e19e]" style={{ fontFamily: 'Public Sans, sans-serif' }}>{langPoints} / 5</span>
+            <span className="text-xs text-[#968d9d]">from audit checklist</span>
+          </div>
+        </div>
+        <button
+          onClick={() => router.push('/audit')}
+          className="w-full py-3 rounded-sm bg-[#544511] text-[#f8e19e] font-bold uppercase tracking-wider text-sm hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+          style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 15px rgba(84,69,17,0.3)' }}
+        >
+          <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>fact_check</span>
+          Full Audit
+        </button>
+      </div>
+    </section>
   );
 }
 
@@ -428,6 +496,9 @@ export default function GPAPage() {
             <span className="text-[9px] text-[#968d9d] mt-1">MANAGE LMS</span>
           </button>
         </section>
+
+        {/* Language & Cultural Points */}
+        <LanguageCulturalSection />
       </div>
 
       {showAddCourse && <AddCourseModal onClose={() => setShowAddCourse(false)} onAdd={handleAddCourse} />}
