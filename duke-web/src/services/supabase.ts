@@ -116,8 +116,23 @@ export async function getCurrentUserId(): Promise<string | null> {
 
 export async function getSession() {
   const sb = getSupabase();
+  // Try getSession first (reads from storage)
   const { data } = await sb.auth.getSession();
-  return data.session;
+  if (data.session) return data.session;
+
+  // If no session in storage, try getUser (validates with server)
+  // This catches cases where cookies were set server-side but client storage is empty
+  try {
+    const { data: userData } = await sb.auth.getUser();
+    if (userData.user) {
+      // User exists but session wasn't in client storage — refresh it
+      const { data: refreshed } = await sb.auth.refreshSession();
+      return refreshed.session;
+    }
+  } catch {
+    // Not authenticated
+  }
+  return null;
 }
 
 export function onAuthStateChange(callback: (session: any) => void) {
