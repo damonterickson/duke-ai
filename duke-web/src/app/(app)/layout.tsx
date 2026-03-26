@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MdGpsFixed, MdAnalytics, MdGroups, MdPerson } from 'react-icons/md';
 
 const tabs = [
-  { href: '/mission', label: 'MISSION', icon: MdGpsFixed },
-  { href: '/intel', label: 'INTEL', icon: MdAnalytics },
-  { href: '/squad', label: 'SQUAD', icon: MdGroups },
-  { href: '/profile', label: 'PROFILE', icon: MdPerson },
+  { href: '/mission', label: 'MISSION', icon: 'gps_fixed' },
+  { href: '/intel', label: 'INTEL', icon: 'psychology' },
+  { href: '/squad', label: 'SQUAD', icon: 'groups' },
+  { href: '/profile', label: 'PROFILE', icon: 'account_circle' },
 ] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +15,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-[var(--color-background)]">
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
       {/* Main content area */}
       <main className="flex-1 pb-[64px] overflow-y-auto">
         {children}
@@ -25,17 +26,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <nav className="fixed bottom-0 inset-x-0 h-[64px] bg-[#1d1b1f]/90 backdrop-blur-xl flex items-center z-50 shadow-[0_-4px_30px_rgba(69,0,132,0.15)]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
         {tabs.map((tab) => {
           const isActive = pathname.startsWith(tab.href);
-          const Icon = tab.icon;
           return (
             <Link
               key={tab.href}
               href={tab.href}
               className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 transition-opacity ${isActive ? 'opacity-100' : 'opacity-50 hover:opacity-70'}`}
             >
-              <Icon
-                size={22}
-                className={isActive ? 'text-[#d9b9ff]' : 'text-[#968d9d]'}
-              />
+              <span
+                className={`material-symbols-outlined text-[22px] ${isActive ? 'text-[#d9b9ff]' : 'text-[#968d9d]'}`}
+                style={{ fontVariationSettings: isActive ? "'FILL' 1" : "'FILL' 0" }}
+              >
+                {tab.icon}
+              </span>
               <span
                 className={`text-[10px] uppercase tracking-[1.5px] font-[family-name:var(--font-label)] ${isActive ? 'text-[#d9b9ff] font-bold' : 'text-[#968d9d] font-medium'}`}
               >

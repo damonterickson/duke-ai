@@ -131,7 +131,7 @@ export default function ProfilePage() {
       <div className="pt-6 pb-8 px-6 max-w-7xl mx-auto space-y-12">
 
         {/* Profile Header */}
-        <section className="relative">
+        <section className="relative animate-fadeInUp">
           <div className="glass-panel-profile p-10 md:p-12 rounded-lg relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-30 transition-opacity">
               <span className="material-symbols-outlined text-[120px]">person</span>
@@ -267,7 +267,7 @@ export default function ProfilePage() {
               <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 Performance Overview
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-4 animate-fadeIn delay-200">
                 {scoreCards.map((card) => (
                   <div
                     key={card.label}

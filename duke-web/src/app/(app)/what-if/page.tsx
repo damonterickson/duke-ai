@@ -160,21 +160,27 @@ export default function WhatIfPage() {
 
       <div className="pt-6 pb-8 px-6 max-w-7xl mx-auto space-y-10">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors">
-            <span className="material-symbols-outlined">arrow_back</span>
-          </button>
-          <h1 className="text-3xl font-black uppercase tracking-tighter text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
-            OMS SIMULATOR
-          </h1>
+        <div className="glass-panel-whatif p-10 md:p-12 rounded-lg relative overflow-hidden animate-fadeInUp">
+          <div className="absolute top-0 right-0 p-6 opacity-10">
+            <span className="material-symbols-outlined text-[120px]">auto_fix_high</span>
+          </div>
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center gap-4">
+              <button onClick={() => router.back()} className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors">
+                <span className="material-symbols-outlined">arrow_back</span>
+              </button>
+              <h1 className="text-3xl font-black uppercase tracking-tighter text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
+                OMS SIMULATOR
+              </h1>
+            </div>
+            <p className="text-[#968d9d] text-lg leading-relaxed max-w-2xl">
+              Adjust your inputs to see how changes impact your Order of Merit Score.
+            </p>
+          </div>
         </div>
 
-        <p className="text-[#968d9d] text-lg leading-relaxed max-w-2xl">
-          Adjust your inputs to see how changes impact your Order of Merit Score.
-        </p>
-
         {/* Mode Toggle */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 animate-fadeIn delay-200">
           {(['planning', 'exact'] as Mode[]).map((m) => (
             <button
               key={m}
@@ -222,7 +228,7 @@ export default function WhatIfPage() {
 
         {mode === 'planning' ? (
           /* Planning Mode Sliders */
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn delay-200">
             {/* Academic Pillar */}
             <div>
               <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4 flex items-center gap-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
