@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useGoalsStore } from '@/stores/goals';
+import { profileFromScores, calculateOMS } from '@/engine/oms';
 
 // ─── Goal category config ───────────────────────────────────
 const CATEGORIES = [
@@ -23,7 +24,7 @@ function getSuggestedGoals(gpa: number | null, acft: number | null, leadership: 
       category: 'academic',
       metric: 'gpa',
       target_value: 3.5,
-      description: 'Target a 3.5+ cumulative GPA to maximize academic OML contribution.',
+      description: 'Target a 3.5+ cumulative GPA to maximize academic OMS contribution.',
     });
   }
   if (!acft || acft < 500) {
@@ -32,7 +33,7 @@ function getSuggestedGoals(gpa: number | null, acft: number | null, leadership: 
       category: 'physical',
       metric: 'acft_total',
       target_value: 500,
-      description: 'Push your ACFT total above 500 for significant OML improvement.',
+      description: 'Push your ACFT total above 500 for significant OMS improvement.',
     });
   }
   if (!leadership || leadership < 80) {
@@ -48,8 +49,8 @@ function getSuggestedGoals(gpa: number | null, acft: number | null, leadership: 
     suggestions.push({
       title: 'Maintain Top Performance',
       category: 'overall',
-      metric: 'total_oml',
-      target_value: 900,
+      metric: 'total_oms',
+      target_value: 85,
       description: 'You\'re performing well. Keep all pillars above target to maintain ranking.',
     });
   }
@@ -63,7 +64,7 @@ function getInsights(gpa: number | null, acft: number | null, activeGoals: numbe
   if (gpa && gpa >= 3.0) {
     insights.push({
       title: 'Academic Strength Detected',
-      body: `Your ${gpa.toFixed(2)} GPA is a strong OML contributor. Focus physical training to create a balanced profile.`,
+      body: `Your ${gpa.toFixed(2)} GPA is a strong OMS contributor. Focus physical training to create a balanced profile.`,
       icon: 'school',
       iconColor: '#dbc585',
       bgColor: '#544511',
@@ -71,7 +72,7 @@ function getInsights(gpa: number | null, acft: number | null, activeGoals: numbe
   } else {
     insights.push({
       title: 'Academic Focus Recommended',
-      body: 'GPA has the highest OML weight (40%). Prioritize study hours for maximum impact.',
+      body: 'Academic pillar is worth up to 29 OMS points. Prioritize study hours for maximum impact.',
       icon: 'psychology',
       iconColor: '#c3cc8c',
       bgColor: '#2c3303',
@@ -97,7 +98,7 @@ function getInsights(gpa: number | null, acft: number | null, activeGoals: numbe
   } else {
     insights.push({
       title: 'Squad Leadership Opportunity',
-      body: 'Volunteer for lead roles during field exercises. Leadership OML impact: +8-12 points per evaluation.',
+      body: 'Volunteer for lead roles during field exercises. Leadership pillar is worth up to 62 OMS points.',
       icon: 'military_tech',
       iconColor: '#dbc585',
       bgColor: '#544511',
@@ -113,7 +114,7 @@ function CreateGoalModal({ onClose, onSave }: { onClose: () => void; onSave: (go
   const [category, setCategory] = useState('physical');
   const [target, setTarget] = useState('');
 
-  const metrics: Record<string, string> = { physical: 'acft_total', academic: 'gpa', leadership: 'leadership_eval', overall: 'total_oml' };
+  const metrics: Record<string, string> = { physical: 'acft_total', academic: 'gpa', leadership: 'leadership_eval', overall: 'total_oms' };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
@@ -199,7 +200,21 @@ export default function IntelPage() {
   }, [goalsStore]);
 
   const latest = scores.scoreHistory[scores.scoreHistory.length - 1];
-  const omlScore = latest?.total_oml ? Math.round(latest.total_oml) : 350;
+  const omsScore = useMemo(() => {
+    try {
+      const omsProfile = profileFromScores(
+        latest?.gpa ?? null,
+        latest?.msl_gpa ?? null,
+        latest?.acft_total ?? null,
+        latest?.leadership_eval ?? null,
+        latest?.cst_score ?? null,
+      );
+      const result = calculateOMS(omsProfile);
+      return result.totalOMS > 0 ? result.totalOMS : 35;
+    } catch {
+      return 35;
+    }
+  }, [latest]);
   const gpa = latest?.gpa ?? null;
   const acft = latest?.acft_total ?? null;
   const leadership = latest?.leadership_eval ?? null;
@@ -211,10 +226,15 @@ export default function IntelPage() {
   // Build trajectory from score history (up to 5 most recent)
   const trajectory = useMemo(() => {
     const hist = scores.scoreHistory.slice(-5);
-    if (hist.length === 0) return [200, 280, 310, 330, omlScore]; // Placeholder ramp
-    return hist.map((s) => s.total_oml ?? 0);
-  }, [scores.scoreHistory, omlScore]);
-  const maxTrajectory = Math.max(...trajectory, 1000);
+    if (hist.length === 0) return [20, 28, 31, 33, omsScore]; // Placeholder ramp
+    return hist.map((s) => {
+      try {
+        const p = profileFromScores(s.gpa ?? null, s.msl_gpa ?? null, s.acft_total ?? null, s.leadership_eval ?? null, s.cst_score ?? null);
+        return calculateOMS(p).totalOMS;
+      } catch { return 0; }
+    });
+  }, [scores.scoreHistory, omsScore]);
+  const maxTrajectory = Math.max(...trajectory, 100);
 
   // Personalized greeting
   const hour = new Date().getHours();
@@ -278,7 +298,7 @@ export default function IntelPage() {
               </div>
               <h2 className="text-4xl md:text-6xl lg:text-7xl leading-tight tracking-tighter uppercase font-black" style={{ fontFamily: 'Public Sans, sans-serif' }}>
                 {greeting}, {name}. <br />
-                Your OML is <span className="text-[#dbc585]" style={{ filter: 'drop-shadow(0 0 15px rgba(219,197,133,0.3))' }}>{omlScore}</span>.
+                Your OMS is <span className="text-[#dbc585]" style={{ filter: 'drop-shadow(0 0 15px rgba(219,197,133,0.3))' }}>{omsScore.toFixed(1)}</span>.
               </h2>
               <p className="text-[#968d9d] max-w-2xl text-lg leading-relaxed">
                 {gpa ? `Academic pillar: ${gpa.toFixed(2)} GPA. ` : 'Enter your GPA to unlock academic insights. '}
@@ -398,9 +418,9 @@ export default function IntelPage() {
             </div>
           </div>
 
-          {/* OML Trajectory */}
+          {/* OMS Trajectory */}
           <div className="lg:col-span-2 space-y-6">
-            <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OML Trajectory</h3>
+            <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OMS Trajectory</h3>
             <div className="glass-panel-intel p-8 rounded-lg h-[450px] flex flex-col relative">
               <div className="flex-1 flex items-end gap-2 px-2 relative">
                 {/* Grid */}
@@ -424,7 +444,7 @@ export default function IntelPage() {
                       {!isLast && <div className="absolute inset-x-0 bottom-0 bg-[#d9b9ff] h-full opacity-0 group-hover:opacity-20 transition-opacity" />}
                       {isLast && (
                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#dbc585] text-[#3c2f00] px-2 py-1 rounded text-[10px] font-black whitespace-nowrap" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-                          CURRENT: {omlScore}
+                          CURRENT: {omsScore.toFixed(1)}
                         </div>
                       )}
                       {/* Hover tooltip */}
@@ -445,7 +465,7 @@ export default function IntelPage() {
               <div className="absolute top-8 right-8 flex gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-[#d9b9ff] rounded-full" />
-                  <span className="text-[10px] text-[#e7e1e6]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Your OML</span>
+                  <span className="text-[10px] text-[#e7e1e6]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Your OMS</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-[#dbc585] rounded-full" style={{ boxShadow: '0 0 10px #dbc585' }} />

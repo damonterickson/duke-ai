@@ -71,17 +71,17 @@ export default function LeadershipPage() {
             </span>
             <div className="grid grid-cols-2 gap-6 mt-6">
               <div className="bg-[#1d1b1f] rounded-sm p-4">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Commander&apos;s Eval</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>CER (PMS Eval)</span>
                 <span className="text-2xl font-black text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>{currentEval ?? '--'}</span>
-                <span className="text-xs text-[#968d9d]"> / 100</span>
+                <span className="text-xs text-[#968d9d]"> / 25 OMS</span>
               </div>
               <div className="bg-[#1d1b1f] rounded-sm p-4">
                 <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] block mb-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>CST Score</span>
                 <span className="text-2xl font-black text-[#c3cc8c]" style={{ fontFamily: 'Public Sans, sans-serif' }}>{currentCst ?? '--'}</span>
-                <span className="text-xs text-[#968d9d]"> / 100</span>
+                <span className="text-xs text-[#968d9d]"> / 25 OMS</span>
               </div>
             </div>
-            <p className="text-sm text-[#968d9d] mt-4">Leadership contributes 40% of your OML. Command roles, CST, and extracurriculars all factor in.</p>
+            <p className="text-sm text-[#968d9d] mt-4">Leadership is worth up to 62 of your 100 OMS points. CER, Training, Maturity, CST, and RECONDO all factor in.</p>
           </div>
         </section>
 
@@ -90,11 +90,11 @@ export default function LeadershipPage() {
           <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Update Scores</h3>
           <div className="glass-panel-lead p-8 rounded-lg space-y-5">
             <div>
-              <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Commander&apos;s Assessment (0-100)</label>
+              <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>CER / PMS Evaluation (0-25)</label>
               <input
                 type="number"
                 min="0"
-                max="100"
+                max="25"
                 value={eval_}
                 onChange={(e) => setEval(e.target.value)}
                 placeholder="85"
@@ -103,11 +103,11 @@ export default function LeadershipPage() {
               />
             </div>
             <div>
-              <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Cadet Summer Training Score (0-100)</label>
+              <label className="text-[10px] text-[#968d9d] uppercase tracking-[0.3em] block mb-2" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Cadet Summer Training Score (0-25)</label>
               <input
                 type="number"
                 min="0"
-                max="100"
+                max="25"
                 value={cst}
                 onChange={(e) => setCst(e.target.value)}
                 placeholder="90"
@@ -138,9 +138,9 @@ export default function LeadershipPage() {
           <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-4" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Boost Your Leadership Score</h3>
           <div className="space-y-4">
             {[
-              { icon: 'groups', title: 'Seek Command Roles', desc: 'Squad leader, platoon sergeant, and XO positions carry the highest OML weight.' },
+              { icon: 'groups', title: 'Seek Command Roles', desc: 'Squad leader, platoon sergeant, and XO positions boost your CER score (up to 25 OMS points).' },
               { icon: 'volunteer_activism', title: 'Log Volunteer Hours', desc: 'Community service and extracurricular leadership show well-roundedness.' },
-              { icon: 'event', title: 'CST Preparation', desc: 'Cadet Summer Training is the single highest-impact leadership evaluation.' },
+              { icon: 'event', title: 'CST Preparation', desc: 'Cadet Summer Training is worth up to 25 OMS points — the single highest-impact event.' },
             ].map((tip, i) => (
               <div key={i} className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 flex gap-5 items-start border-l-4 border-[#450084]">
                 <div className="p-3 rounded-sm bg-[#450084]">

@@ -1,0 +1,38 @@
+{
+  "version": "FY2026",
+  "scoreRange": { "min": 0, "max": 100 },
+  "pillars": {
+    "academic": {
+      "max": 29,
+      "subComponents": {
+        "gpa": { "max": 22, "description": "Accessions GPA (Academic + ROTC GPA)" },
+        "adm": { "max": 2, "description": "Academic Discipline Mix" },
+        "language": { "max": 5, "description": "Language/Cultural Awareness" }
+      }
+    },
+    "leadership": {
+      "max": 62,
+      "subComponents": {
+        "cer": { "max": 25, "description": "PMS Experience Based Observations (CER)" },
+        "training": { "max": 5, "description": "Training/Extracurricular Activities (cap: 100 activity pts = full 5 OMS)" },
+        "maturity": { "max": 5, "description": "Maturity & Responsibility" },
+        "cst": { "max": 25, "description": "Cadet Summer Training" },
+        "recondo": { "max": 2, "description": "RECONDO Badge" }
+      }
+    },
+    "physical": {
+      "max": 9,
+      "subComponents": {
+        "fallAft": { "max": 2, "description": "Fall MSIII AFT (for record)" },
+        "springAft": { "max": 4, "description": "Spring MSIII AFT (for record)" },
+        "athletics": { "max": 3, "description": "Athletics (varsity/intramural/community)" }
+      }
+    }
+  },
+  "disclaimer": "Planning estimates use illustrative linear scaling. Official OMS uses standardized scores computed in CCIMM. Values are not comparable across fiscal years.",
+  "roiEstimates": {
+    "academic": { "hoursPerUnit": 100, "omsPerUnit": 5.5, "label": "1 hr studying ≈ +0.055 OMS" },
+    "physical": { "hoursPerUnit": 100, "omsPerUnit": 1.3, "label": "1 hr training ≈ +0.013 OMS" },
+    "leadership": { "hoursPerUnit": 50, "omsPerUnit": 2.5, "label": "1 hr leadership ≈ +0.050 OMS" }
+  }
+}

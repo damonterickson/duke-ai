@@ -33,10 +33,12 @@ function computeGPA(courses: Course[]): number {
   return totalCredits > 0 ? totalPoints / totalCredits : 0;
 }
 
-function omlImpact(grade: string, credits: number): string {
+function omsImpact(grade: string, credits: number, totalCredits: number): string {
   const gp = GRADE_POINTS[grade] ?? 0;
-  const impact = (gp / 4.0) * credits * 0.8; // rough OML impact
-  return `+${impact.toFixed(1)} pts`;
+  const tc = totalCredits > 0 ? totalCredits : 1;
+  // OMS academic GPA component: 22 * (gradePoints / 4.0) * (credits / totalCredits)
+  const impact = 22 * (gp / 4.0) * (credits / tc);
+  return `+${impact.toFixed(2)} OMS`;
 }
 
 // ─── Add Course Modal ───────────────────────────────────────
@@ -273,8 +275,8 @@ export default function GPAPage() {
                 {cumulativeGPA >= 3.5
                   ? `"Strong academic performance at ${cumulativeGPA.toFixed(2)}. Consider adding MSL courses to maximize both GPA and leadership pillars."`
                   : cumulativeGPA > 0
-                  ? `"Focus on raising GPA above 3.5 — academic pillar is 40% of OML. Every 0.1 GPA point matters."`
-                  : `"Add your courses below to start tracking your academic pillar. GPA contributes 40% of your total OML score."`}
+                  ? `"Focus on raising GPA above 3.5 — academic pillar is worth up to 29 OMS points. Every 0.1 GPA point matters."`
+                  : `"Add your courses below to start tracking your academic pillar. GPA contributes up to 22 of your 100 OMS points."`}
               </p>
             </div>
             <button
@@ -311,7 +313,7 @@ export default function GPAPage() {
             <div className="glass-panel-gpa p-12 rounded-lg text-center space-y-4">
               <span className="material-symbols-outlined text-5xl text-[#968d9d]">menu_book</span>
               <h4 className="text-xl font-black uppercase tracking-tighter" style={{ fontFamily: 'Public Sans, sans-serif' }}>No Courses Yet</h4>
-              <p className="text-sm text-[#968d9d] max-w-md mx-auto">Add your courses manually or sync from Canvas LMS. Your GPA will auto-calculate and feed into your OML score.</p>
+              <p className="text-sm text-[#968d9d] max-w-md mx-auto">Add your courses manually or sync from Canvas LMS. Your GPA will auto-calculate and feed into your OMS score.</p>
               <div className="flex gap-3 justify-center pt-2">
                 <button onClick={() => setShowAddCourse(true)} className="px-5 py-2.5 rounded-sm bg-[#544511] text-[#f8e19e] text-xs font-bold uppercase tracking-wider" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                   Add Manually
@@ -328,7 +330,7 @@ export default function GPAPage() {
                 <span className="col-span-2 text-[10px] text-[#968d9d] uppercase tracking-[0.2em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Code</span>
                 <span className="col-span-4 text-[10px] text-[#968d9d] uppercase tracking-[0.2em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Title</span>
                 <span className="col-span-2 text-[10px] text-[#968d9d] uppercase tracking-[0.2em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Grade</span>
-                <span className="col-span-2 text-[10px] text-[#968d9d] uppercase tracking-[0.2em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OML Impact</span>
+                <span className="col-span-2 text-[10px] text-[#968d9d] uppercase tracking-[0.2em] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OMS Impact</span>
                 <span className="col-span-2 text-[10px] text-[#968d9d] uppercase tracking-[0.2em] font-bold text-right" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Actions</span>
               </div>
 
@@ -375,7 +377,7 @@ export default function GPAPage() {
                     <div className="col-span-2">
                       <span className="text-sm font-bold text-[#dbc585] flex items-center gap-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                         <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-                        {omlImpact(course.grade, course.credits)}
+                        {omsImpact(course.grade, course.credits, totalCredits)}
                       </span>
                     </div>
                     <div className="col-span-2 text-right">
@@ -410,10 +412,10 @@ export default function GPAPage() {
             </div>
           </div>
           <div className="bg-[#1d1b1f] p-6 rounded-lg">
-            <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em] block mb-3" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OML Weight</span>
+            <span className="text-[10px] text-[#968d9d] uppercase tracking-[0.2em] block mb-3" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>OMS Weight</span>
             <div className="flex items-end justify-between">
-              <span className="text-3xl font-black text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif' }}>40%</span>
-              <span className="text-xs text-[#968d9d]">OF TOTAL</span>
+              <span className="text-3xl font-black text-[#dbc585]" style={{ fontFamily: 'Public Sans, sans-serif' }}>29</span>
+              <span className="text-xs text-[#968d9d]">/ 100 PTS</span>
             </div>
           </div>
           <button
