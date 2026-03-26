@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSession, getMySquads, getSquadMembers, onAuthStateChange } from '@/services/supabase';
 
 interface SquadItem {
   id: string;
@@ -18,15 +19,45 @@ export default function SquadPage() {
   const [squads, setSquads] = useState<SquadItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // Check actual Supabase session
   useEffect(() => {
-    setAuthChecked(true);
-    setSession(null);
+    async function checkAuth() {
+      try {
+        const sess = await getSession();
+        setSession(sess);
+      } catch {
+        setSession(null);
+      }
+      setAuthChecked(true);
+    }
+    checkAuth();
+
+    // Listen for auth changes (e.g., user signs in from another tab)
+    const { data } = onAuthStateChange((sess) => {
+      setSession(sess);
+      setAuthChecked(true);
+    });
+
+    return () => {
+      data?.subscription?.unsubscribe();
+    };
   }, []);
 
   const fetchSquads = useCallback(async () => {
     if (!session) return;
     setLoading(true);
-    setSquads([]);
+    try {
+      const { squads: mySquads } = await getMySquads();
+      const withCounts = await Promise.all(
+        mySquads.map(async (sq) => {
+          const { members } = await getSquadMembers(sq.id);
+          return { ...sq, memberCount: members.length };
+        })
+      );
+      setSquads(withCounts);
+    } catch (err) {
+      console.error('Failed to fetch squads:', err);
+    }
     setLoading(false);
   }, [session]);
 
@@ -35,7 +66,7 @@ export default function SquadPage() {
   }, [session, fetchSquads]);
 
   const renderUnauthenticated = () => (
-    <section className="relative">
+    <section className="relative animate-fadeInUp">
       <div className="glass-panel-squad p-10 md:p-16 rounded-lg flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 p-6 opacity-10">
           <span className="material-symbols-outlined text-[120px]">shield</span>
@@ -47,8 +78,8 @@ export default function SquadPage() {
           <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter mb-3" style={{ fontFamily: 'Public Sans, sans-serif' }}>
             SIGN IN TO UNLOCK SQUADS
           </h2>
-          <p className="text-sm text-[#968d9d] mb-8 max-w-md leading-relaxed">
-            Create squads, invite your battle buddies, and share achievements.
+          <p className="text-sm text-[#b0a8b8] mb-8 max-w-md leading-relaxed">
+            Create squads, invite your battle buddies, and share achievements. Sign in with Google or email to get started.
           </p>
           <button
             className="px-10 py-4 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
@@ -63,19 +94,22 @@ export default function SquadPage() {
   );
 
   const renderEmpty = () => (
-    <section className="relative">
+    <section className="relative animate-fadeInUp">
       <div className="glass-panel-squad p-10 md:p-16 rounded-lg flex flex-col items-center text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 p-6 opacity-10">
           <span className="material-symbols-outlined text-[120px]">groups</span>
         </div>
         <div className="relative z-10 flex flex-col items-center">
           <div className="w-20 h-20 rounded-lg bg-[#211f23] flex items-center justify-center mb-6">
-            <span className="material-symbols-outlined text-4xl text-[#968d9d]" style={{ fontVariationSettings: "'FILL' 1" }}>groups</span>
+            <span className="material-symbols-outlined text-4xl text-[#b0a8b8]" style={{ fontVariationSettings: "'FILL' 1" }}>groups</span>
           </div>
           <h2 className="text-3xl font-black uppercase tracking-tighter mb-3" style={{ fontFamily: 'Public Sans, sans-serif' }}>
             NO SQUADS YET
           </h2>
-          <div className="flex gap-4 mt-6">
+          <p className="text-sm text-[#b0a8b8] mb-6 max-w-md">
+            Create a squad and invite your battle buddies, or join an existing squad with an invite code.
+          </p>
+          <div className="flex gap-4 mt-2">
             <button
               className="py-3 px-8 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
               style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
@@ -96,7 +130,7 @@ export default function SquadPage() {
   );
 
   const renderSquads = () => (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fadeIn">
       <div className="space-y-4">
         {squads.map((sq) => {
           const isLeader = session?.user?.id === sq.leader_id;
@@ -117,12 +151,12 @@ export default function SquadPage() {
                 )}
               </div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="material-symbols-outlined text-sm text-[#968d9d]">people</span>
-                <span className="text-xs text-[#968d9d]">
+                <span className="material-symbols-outlined text-sm text-[#b0a8b8]">people</span>
+                <span className="text-xs text-[#b0a8b8]">
                   {sq.memberCount} {sq.memberCount === 1 ? 'member' : 'members'}
                 </span>
               </div>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-[#b0a8b8]" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
                 Code: {sq.invite_code}
               </span>
             </button>
@@ -177,18 +211,18 @@ export default function SquadPage() {
 
       <div className="pt-6 pb-8 px-6 max-w-4xl mx-auto space-y-10">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-fadeInUp">
           <div>
             <h1 className="text-3xl font-black uppercase tracking-tighter text-[#d9b9ff]" style={{ fontFamily: 'Public Sans, sans-serif' }}>
               SQUAD OPERATIONS
             </h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-[#968d9d] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-              Duke Vanguard
+            <p className="text-[10px] uppercase tracking-[0.3em] text-[#b0a8b8] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+              {session ? `Signed in as ${session.user?.email ?? 'Cadet'}` : 'Duke Vanguard'}
             </p>
           </div>
           <button
             onClick={() => router.push('/settings')}
-            className="text-[#968d9d] hover:text-[#d9b9ff] transition-colors"
+            className="text-[#b0a8b8] hover:text-[#d9b9ff] transition-colors"
           >
             <span className="material-symbols-outlined">settings</span>
           </button>
