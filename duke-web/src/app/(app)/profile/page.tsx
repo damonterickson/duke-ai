@@ -6,6 +6,7 @@ import { useProfileStore } from '@/stores/profile';
 import { useScoresStore } from '@/stores/scores';
 import { useSquadStore } from '@/stores/squad';
 import { profileFromScores, calculateOMS } from '@/engine/oms';
+import { signOut } from '@/services/supabase';
 
 function EditableField({
   value,
@@ -345,6 +346,20 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Actions */}
+        <section className="flex justify-center">
+          <button
+            onClick={async () => {
+              await signOut();
+              localStorage.removeItem('duke_onboarding_complete');
+              router.replace('/landing');
+            }}
+            className="bg-[#211f23] text-[#ffb4ab] text-sm font-semibold hover:bg-[#2c292d] rounded-sm py-3 px-6 cursor-pointer transition-colors"
+          >
+            Sign Out
+          </button>
         </section>
       </div>
     </div>

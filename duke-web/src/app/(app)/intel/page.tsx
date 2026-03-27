@@ -11,7 +11,7 @@ import { loadAuditState, computeTotalUnclaimed } from '@/services/auditData';
 const CATEGORIES = [
   { key: 'physical', label: 'Physical', icon: 'fitness_center', color: '#d9b9ff', bgColor: '#450084' },
   { key: 'academic', label: 'Academic', icon: 'school', color: '#dbc585', bgColor: '#544511' },
-  { key: 'leadership', label: 'Leadership', icon: 'diversity_3', color: '#c3cc8c', bgColor: '#2c3303' },
+  { key: 'leadership', label: 'Leadership', icon: 'military_tech', color: '#c3cc8c', bgColor: '#2c3303' },
   { key: 'overall', label: 'Overall', icon: 'military_tech', color: '#f8e19e', bgColor: '#544511' },
 ] as const;
 
@@ -162,7 +162,7 @@ function CreateGoalModal({ onClose, onSave }: { onClose: () => void; onSave: (go
               <button
                 key={cat.key}
                 onClick={() => setCategory(cat.key)}
-                className={`p-3 rounded-sm text-sm font-bold uppercase tracking-wider transition-all ${
+                className={`p-3 rounded-sm text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   category === cat.key
                     ? 'bg-[#450084] text-[#d9b9ff]'
                     : 'bg-[#151317] text-[#968d9d] hover:bg-[#1d1b1f]'
@@ -188,7 +188,7 @@ function CreateGoalModal({ onClose, onSave }: { onClose: () => void; onSave: (go
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button onClick={onClose} className="flex-1 py-3 rounded-sm text-[#968d9d] hover:text-[#e7e1e6] transition-colors text-sm font-bold uppercase" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
+          <button onClick={onClose} className="flex-1 py-3 rounded-sm text-[#968d9d] hover:text-[#e7e1e6] transition-colors text-sm font-bold uppercase cursor-pointer" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             Cancel
           </button>
           <button
@@ -197,7 +197,7 @@ function CreateGoalModal({ onClose, onSave }: { onClose: () => void; onSave: (go
                 onSave({ title: title.trim(), category, metric: metrics[category], target_value: parseFloat(target) });
               }
             }}
-            className="flex-1 py-3 rounded-sm bg-[#450084] text-[#b27ff5] hover:scale-[1.02] transition-all text-sm font-bold uppercase tracking-wider"
+            className="flex-1 py-3 rounded-sm bg-[#450084] text-[#b27ff5] hover:scale-[1.02] transition-all text-sm font-bold uppercase tracking-wider cursor-pointer"
             style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
           >
             Create

@@ -36,7 +36,7 @@ export default function MissionPage() {
   const omsTotal = omsResult?.totalOMS ?? 0;
   const omsProgress = Math.min(omsTotal / 100, 1);
   const percentile =
-    squad.totalCadets > 0
+    omsTotal > 0 && squad.totalCadets > 0
       ? Math.round(((squad.totalCadets - squad.individualRank) / squad.totalCadets) * 100)
       : 0;
 
@@ -148,7 +148,7 @@ export default function MissionPage() {
               </div>
               <button
                 onClick={() => router.push('/what-if')}
-                className="mt-6 px-6 py-2.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all"
+                className="mt-6 px-6 py-2.5 rounded-sm bg-[#450084] text-[#b27ff5] text-sm font-bold uppercase tracking-wider hover:scale-[1.02] transition-all cursor-pointer"
                 style={{ fontFamily: 'Space Grotesk, sans-serif', boxShadow: '0 0 20px rgba(69,0,132,0.3)' }}
               >
                 <span className="flex items-center gap-2">
@@ -180,13 +180,13 @@ export default function MissionPage() {
                   </span>
                 </div>
 
-                <div className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 border-l-4 border-[#544511] group">
+                <div onClick={() => router.push('/squad')} className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 border-l-4 border-[#544511] group cursor-pointer">
                   <div className="flex justify-between items-start mb-3">
                     <span className="material-symbols-outlined text-[#dbc585]" style={{ fontVariationSettings: "'FILL' 1" }}>trending_up</span>
                     <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Ranking</span>
                   </div>
                   <span className="text-4xl font-black text-[#f8e19e] block" style={{ fontFamily: 'Public Sans, sans-serif' }}>
-                    {squad.totalCadets > 0
+                    {omsTotal > 0 && squad.totalCadets > 0
                       ? `Top ${Math.round((squad.individualRank / squad.totalCadets) * 100)}%`
                       : '--'}
                   </span>
@@ -195,7 +195,7 @@ export default function MissionPage() {
                   </span>
                 </div>
 
-                <div className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 border-l-4 border-[#2c3303] group">
+                <div onClick={() => router.push('/profile')} className="bg-[#211f23] hover:bg-[#2c292d] transition-all rounded-lg p-6 border-l-4 border-[#2c3303] group cursor-pointer">
                   <div className="flex justify-between items-start mb-3">
                     <span className="material-symbols-outlined text-[#c3cc8c]" style={{ fontVariationSettings: "'FILL' 1" }}>my_location</span>
                     <span className="text-[10px] uppercase tracking-[0.2em] text-[#968d9d] font-bold" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>Branch</span>
@@ -254,7 +254,7 @@ export default function MissionPage() {
           <h3 className="text-[12px] text-[#968d9d] uppercase tracking-[0.3em] font-bold mb-6" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
             Active Mission
           </h3>
-          <div className="glass-panel-mission p-8 rounded-lg flex items-start gap-6">
+          <div onClick={() => router.push('/profile')} className="glass-panel-mission p-8 rounded-lg flex items-start gap-6 cursor-pointer hover:bg-[#2c292d] transition-colors">
             <div className="p-4 rounded-sm bg-[#450084]">
               <span className="material-symbols-outlined text-[#d9b9ff]" style={{ fontVariationSettings: "'FILL' 1" }}>track_changes</span>
             </div>
@@ -289,7 +289,7 @@ export default function MissionPage() {
               <button
                 key={action.label}
                 onClick={() => router.push(action.route)}
-                className="bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-6 flex flex-col items-center gap-3 transition-all hover:scale-[1.02] group"
+                className="bg-[#211f23] hover:bg-[#2c292d] rounded-lg p-6 flex flex-col items-center gap-3 transition-all hover:scale-[1.02] group cursor-pointer"
                 style={{ boxShadow: 'none' }}
               >
                 <span className="material-symbols-outlined text-2xl transition-colors" style={{ color: action.color, fontVariationSettings: "'FILL' 1" }}>{action.icon}</span>
