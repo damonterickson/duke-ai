@@ -219,7 +219,7 @@ export default function SquadPage() {
               SQUAD OPERATIONS
             </h1>
             <p className="text-[10px] uppercase tracking-[0.3em] text-[#b0a8b8] mt-1" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>
-              {session ? `Signed in as ${session.user?.email ?? 'Cadet'}` : 'Duke Vanguard'}
+              {authChecked ? (session ? `Signed in as ${session.user?.email ?? 'Cadet'}` : 'Duke Vanguard') : 'Duke Vanguard'}
             </p>
           </div>
           <button

@@ -256,9 +256,11 @@ export default function IntelPage() {
   }, [scores.scoreHistory, omsScore]);
   const maxTrajectory = Math.max(...trajectory, 100);
 
-  // Personalized greeting
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const [greeting, setGreeting] = useState('Welcome');
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening');
+  }, []);
   const name = profile.name || 'Duke';
 
   async function handleCreateGoal(goal: { title: string; category: string; metric: string; target_value: number }) {
